@@ -1,10 +1,12 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react'
+import { useHaptics } from '../../libs/hooks/useHaptics'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'accent' | 'ghost' | 'link'
   size?: 'xs' | 'sm' | 'md' | 'lg'
   loading?: boolean
   children: ReactNode
+  hapticFeedback?: boolean
 }
 
 export function Button({
@@ -14,8 +16,18 @@ export function Button({
   children,
   className = '',
   disabled,
+  hapticFeedback = true,
+  onClick,
   ...props
 }: ButtonProps) {
+  const { lightImpact } = useHaptics()
+
+  const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (hapticFeedback && !disabled && !loading) {
+      await lightImpact()
+    }
+    onClick?.(e)
+  }
   const baseClasses = 'btn'
   const variantClasses = {
     primary: 'btn-primary',
@@ -45,6 +57,7 @@ export function Button({
     <button
       className={classes}
       disabled={disabled || loading}
+      onClick={handleClick}
       {...props}
     >
       {loading ? '' : children}

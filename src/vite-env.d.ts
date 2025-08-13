@@ -7,3 +7,12 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+// Capacitor global types
+declare global {
+  interface Window {
+    Capacitor?: {
+      isNative: boolean
+    }
+  }
+}
