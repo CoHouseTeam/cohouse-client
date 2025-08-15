@@ -20,7 +20,7 @@ export interface Participant {
 
 // 정산 내역 정보
 export interface Settlement {
-  SettlementId: string // 정산내역 ID
+  settlementId: string // 정산내역 ID
   title: string // 제목
   description?: string // 설명
   category: Category // 카테고리
