@@ -40,7 +40,7 @@ const p_ongoing: SettlementParticipant[] = [
     status: 'SENT',
     paidAt: '2025-08-13T01:00:00.000Z',
   },
-  { id: 102, group_member_id: 2, per_person_amount: 200000, status: 'WAITING', paidAt: null },
+  { id: 102, group_member_id: 2, per_person_amount: 200000, status: 'PENDING', paidAt: null },
   {
     id: 103,
     group_member_id: 3,
