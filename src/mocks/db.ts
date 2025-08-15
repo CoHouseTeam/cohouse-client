@@ -37,7 +37,7 @@ const p_ongoing: SettlementParticipant[] = [
     id: 101,
     group_member_id: 1,
     per_person_amount: 200000,
-    status: 'SENT',
+    status: 'PAID',
     paidAt: '2025-08-13T01:00:00.000Z',
   },
   { id: 102, group_member_id: 2, per_person_amount: 200000, status: 'PENDING', paidAt: null },
@@ -45,7 +45,7 @@ const p_ongoing: SettlementParticipant[] = [
     id: 103,
     group_member_id: 3,
     per_person_amount: 200000,
-    status: 'SENT',
+    status: 'PAID',
     paidAt: '2025-08-13T01:15:00.000Z',
   },
 ]
@@ -55,33 +55,33 @@ const p_completed_chicken: SettlementParticipant[] = [
     id: 201,
     group_member_id: 1,
     per_person_amount: 12500,
-    status: 'SENT',
+    status: 'PAID',
     paidAt: '2025-08-08T13:00:00.000Z',
   },
-  { id: 202, group_member_id: 2, per_person_amount: 12500, status: 'SENT', paidAt: null }, // 결제자도 SENT로 표시 가능
+  { id: 202, group_member_id: 2, per_person_amount: 12500, status: 'PAID', paidAt: null }, // 결제자도 SENT로 표시 가능
   {
     id: 203,
     group_member_id: 3,
     per_person_amount: 12500,
-    status: 'SENT',
+    status: 'PAID',
     paidAt: '2025-08-08T13:32:00.000Z',
   },
 ]
 
 const p_completed_lifestyle: SettlementParticipant[] = [
-  { id: 301, group_member_id: 1, per_person_amount: 26500, status: 'SENT', paidAt: null }, // 결제자
+  { id: 301, group_member_id: 1, per_person_amount: 26500, status: 'PAID', paidAt: null }, // 결제자
   {
     id: 302,
     group_member_id: 2,
     per_person_amount: 26500,
-    status: 'SENT',
+    status: 'PAID',
     paidAt: '2025-08-03T09:15:00.000Z',
   },
   {
     id: 303,
     group_member_id: 3,
     per_person_amount: 26500,
-    status: 'SENT',
+    status: 'PAID',
     paidAt: '2025-08-03T09:16:00.000Z',
   },
 ]
@@ -141,7 +141,7 @@ export const myPaymentHistory: PaymentHistoryItem[] = [
     senderId: 1, // 보낸 사람: 1
     receiverId: 2, // 받는 사람: 결제자 2
     amount: 12500, // p_completed_chicken에서 member 1의 per_person_amount
-    status: 'SENT', // 송금 완료
+    status: 'PAID', // 송금 완료
     createdAt: '2025-08-08T13:00:00.000Z', // participants[1]의 paidAt과 일치
   },
   {
