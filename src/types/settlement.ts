@@ -2,7 +2,7 @@
 export type SettlementStatus = 'PENDING' | 'COMPLETED' | 'CANCELED'
 
 // 송금 상태
-export type TransferStatus = 'WAITING' | 'SENT' | 'REFUNDED' | 'REFUND_FAILED' | 'CANCELED'
+export type TransferStatus = 'PENDING' | 'SENT' | 'REFUNDED' | 'FAILED'
 
 // 정산 카테고리
 export type SettlementCategory = 'FOOD' | 'DAILY_SUPPLIES' | 'CULTURE' | 'ETC'
@@ -61,7 +61,7 @@ export interface PaymentHistoryItem {
   senderId: number // 그룹 멤버 ID
   receiverId: number // 그룹 멤버 ID
   amount: number
-  status: 'PENDING' | 'SENT' | 'REFUNDED' | 'REFUND_FAILED' | 'FAILED'
+  status: TransferStatus
   createdAt: string
 }
 
