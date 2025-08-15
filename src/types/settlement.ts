@@ -61,7 +61,7 @@ export interface PaymentHistoryItem {
   senderId: number // 그룹 멤버 ID
   receiverId: number // 그룹 멤버 ID
   amount: number
-  status: 'SENT' | 'REFUNDED' | 'REFUND_FAILED' | 'CANCELED'
+  status: 'PENDING' | 'SENT' | 'REFUNDED' | 'REFUND_FAILED' | 'FAILED'
   createdAt: string
 }
 
@@ -76,5 +76,5 @@ export interface SettlementHistoryItem {
   per_person_after: number
   statusBefore: SettlementStatus
   statusAfter: SettlementStatus
-  createdAt: string // ISO
+  createdAt: string
 }
