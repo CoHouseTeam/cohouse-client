@@ -38,6 +38,14 @@ export type SettlementListItem = Pick<
 >
 
 // 정산 등록
+export type CreateSettlementSpecDTO = {
+  title: string
+  description?: string | null
+  category: string
+  settlementAmount: number
+  participantIds: number[]
+}
+
 export interface CreateSettlementBody {
   payerId: number // 결제자 ID(group_member_id)
   category: SettlementCategory | string

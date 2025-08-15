@@ -58,7 +58,7 @@ const p_completed_chicken: SettlementParticipant[] = [
     status: 'PAID',
     paidAt: '2025-08-08T13:00:00.000Z',
   },
-  { id: 202, group_member_id: 2, per_person_amount: 12500, status: 'PAID', paidAt: null }, // 결제자도 SENT로 표시 가능
+  { id: 202, group_member_id: 2, per_person_amount: 12500, status: 'PAID', paidAt: null },
   {
     id: 203,
     group_member_id: 3,
@@ -140,26 +140,26 @@ export const myPaymentHistory: PaymentHistoryItem[] = [
     settlementId: 2, // 치킨 배달 정산 (id:2, payerId:2)
     senderId: 1, // 보낸 사람: 1
     receiverId: 2, // 받는 사람: 결제자 2
-    amount: 12500, // p_completed_chicken에서 member 1의 per_person_amount
+    amount: 12500,
     status: 'PAID', // 송금 완료
-    createdAt: '2025-08-08T13:00:00.000Z', // participants[1]의 paidAt과 일치
+    createdAt: '2025-08-08T13:00:00.000Z',
   },
   {
     paymentHistoryId: 13,
     settlementId: 3, // 생활용품 (id:3, payerId:1)
-    senderId: 3,
-    receiverId: 1, // 결제자 1
-    amount: 26500, // p_completed_lifestyle에서 member 3의 per_person_amount
+    senderId: 1,
+    receiverId: 3, // 결제자 1
+    amount: 26500,
     status: 'REFUNDED', // 송금 취소
-    createdAt: '2025-08-03T09:16:00.000Z', // 해당 참여자의 paidAt과 일치
+    createdAt: '2025-08-03T09:16:00.000Z',
   },
   {
     paymentHistoryId: 14,
     settlementId: 1, // 회식비 (id:1, payerId:1)
     senderId: 3,
-    receiverId: 1, // 결제자 1  ← (수정) 원래 2로 되어있던 것 교정
-    amount: 200000, // p_ongoing에서 member 3의 per_person_amount ← (수정) 50,000 → 200,000
+    receiverId: 1, // 결제자 1
+    amount: 200000,
     status: 'FAILED', // 송금 실패 (이후 2025-08-13에 성공 이력 존재)
-    createdAt: '2025-08-04T11:20:00.000Z', // 실패 이력이 성공 이전 시각이라 자연스러움
+    createdAt: '2025-08-04T11:20:00.000Z',
   },
 ]
