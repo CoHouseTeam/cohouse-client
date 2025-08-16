@@ -10,7 +10,7 @@ import type {
   CreateSettlementSpecDTO,
 } from '../../types/settlement'
 
-import { settlements, myPaymentHistory, members, toCategory } from '../../mocks/db'
+import { settlements, myPaymentHistory, members, toCategory } from '../../mocks/db/settlement'
 
 /* ─────────────────────────────────────────────
    0) 엔드포인트
@@ -366,3 +366,13 @@ export const getPaymentHistory = http.get('/api/payments/history', () => {
 
   return HttpResponse.json<{ items: PaymentHistoryItem[] }>({ items }, { status: 200 })
 })
+
+export const settlementHandlers = [
+  getSettlementList,
+  getSettlementDetail,
+  getMembers,
+  createSettlement,
+  patchPayments,
+  cancelSettlement,
+  getPaymentHistory,
+]
