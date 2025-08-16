@@ -23,19 +23,19 @@ const initializeApp = async () => {
   try {
     // Check if running in Capacitor environment by trying to access native features
     const isCapacitor = !!(window as any).Capacitor?.isNative
-    
+
     if (isCapacitor) {
       // Set status bar style
       await StatusBar.setStyle({ style: Style.Dark })
-      
+
       // Hide splash screen after app is ready
       await SplashScreen.hide()
-      
+
       // Handle app state changes
       CapApp.addListener('appStateChange', ({ isActive }) => {
         console.log('App state changed. Is active?', isActive)
       })
-      
+
       CapApp.addListener('appUrlOpen', (data) => {
         console.log('App opened with URL:', data.url)
       })
@@ -55,8 +55,18 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Toaster position="top-right" />
       </BrowserRouter>
     </QueryClientProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 )
 
 // Initialize app after render
 initializeApp()
+
+// DEV일 때만 MSW 시작
+if (import.meta.env.DEV) {
+  import('./mocks/browser').then(({ worker }) =>
+    worker.start({
+      serviceWorker: { url: '/mockServiceWorker.js' },
+      onUnhandledRequest: 'bypass',
+    })
+  )
+}
