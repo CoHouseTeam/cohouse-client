@@ -1,4 +1,5 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react'
+import React from 'react'
 import { useHaptics } from '../../libs/hooks/useHaptics'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -54,12 +55,7 @@ export function Button({
     .join(' ')
 
   return (
-    <button
-      className={classes}
-      disabled={disabled || loading}
-      onClick={handleClick}
-      {...props}
-    >
+    <button className={classes} disabled={disabled || loading} onClick={handleClick} {...props}>
       {loading ? '' : children}
     </button>
   )
