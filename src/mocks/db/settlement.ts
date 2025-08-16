@@ -3,7 +3,7 @@ import {
   SettlementParticipant,
   PaymentHistoryItem,
   SettlementCategory,
-} from '../types/settlement'
+} from '../../types/settlement'
 
 /* ─────────────────────────────────────────────
    1) 멤버(표시용) & 그룹 멤버 ID 매핑
