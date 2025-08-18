@@ -1,3 +1,4 @@
+import React from 'react'
 import { useRef, useState, useEffect } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { Menu, Bell, Share2, Copy, Check } from 'lucide-react'
@@ -168,6 +169,16 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
                     </ul>
                   )}
                 </div>
+
+                {onLogout && (
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={onLogout}
+                    aria-label="Logout"
+                  >
+                    로그아웃
+                  </button>
+                )}
               </>
             ) : (
               <Link to="/login" className="btn btn-primary">로그인</Link>

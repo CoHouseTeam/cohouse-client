@@ -9,6 +9,13 @@ import { SplashScreen } from '@capacitor/splash-screen'
 import App from './App.tsx'
 import './styles/globals.css'
 
+// Define a more specific type for the window object with Capacitor
+interface WindowWithCapacitor extends Window {
+  Capacitor?: {
+    isNative: boolean
+  }
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -22,7 +29,7 @@ const queryClient = new QueryClient({
 const initializeApp = async () => {
   try {
     // Check if running in Capacitor environment by trying to access native features
-    const isCapacitor = !!(window as any).Capacitor?.isNative
+    const isCapacitor = !!(window as WindowWithCapacitor).Capacitor?.isNative
 
     if (isCapacitor) {
       // Set status bar style

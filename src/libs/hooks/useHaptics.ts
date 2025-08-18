@@ -1,8 +1,15 @@
 import { Haptics, ImpactStyle } from '@capacitor/haptics'
 
+// Define a more specific type for the window object with Capacitor
+interface WindowWithCapacitor extends Window {
+  Capacitor?: {
+    isNative: boolean
+  }
+}
+
 export function useHaptics() {
   // Check if running in Capacitor environment
-  const isCapacitor = !!(window as any).Capacitor?.isNative
+  const isCapacitor = !!(window as WindowWithCapacitor).Capacitor?.isNative
 
   const lightImpact = async () => {
     if (!isCapacitor) return
