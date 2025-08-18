@@ -22,8 +22,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
       setUser({
         id: '1',
         name: '테스트 사용자',
-        email: 'test@example.com',
-        role: 'user'
+        email: 'test@example.com'
       })
       localStorage.setItem('token', 'temp-token')
     }
