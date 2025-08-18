@@ -9,7 +9,7 @@ const TasksPage: React.FC = () => {
   const [repeat, setRepeat] = React.useState(true)
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-primary">주간 업무표</h1>
         <TaskHistoryButton onClick={() => {}} />
