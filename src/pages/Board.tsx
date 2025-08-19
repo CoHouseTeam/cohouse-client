@@ -182,7 +182,7 @@ export default function Board() {
       title: '반려동물 산책 친구',
       content: '강아지와 함께 산책할 친구를 구합니다. 저희 강아지는 골든리트리버 2살이고, 아주 순합니다. 주로 저녁 6시에 산책하는데 함께 하실 분 있으시면 좋겠어요.',
       author: '503호 정수진',
-      date: '2024-01-10',
+      date: '2024-01-13',
       likes: 9,
       isPinned: false,
       color: 'bg-yellow-100 border-yellow-200 text-yellow-800',
