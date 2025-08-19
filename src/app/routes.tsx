@@ -5,6 +5,8 @@ import { lazy } from 'react'
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Login = lazy(() => import('../pages/Login'))
 const Settlements = lazy(() => import('../pages/Settlements'))
+const SettlementHistory = lazy(() => import('../pages/SettlementHistory'))
+const PaymentHistory = lazy(() => import('../pages/PaymentHistory'))
 const Tasks = lazy(() => import('../pages/Tasks'))
 const Board = lazy(() => import('../pages/Board'))
 const MyPage = lazy(() => import('../pages/MyPage'))
@@ -16,6 +18,8 @@ export function Routes() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/login" element={<Login />} />
       <Route path="/settlements" element={<Settlements />} />
+      <Route path="/settlements/history" element={<SettlementHistory />} />
+      <Route path="/payments/history" element={<PaymentHistory />} />
       <Route path="/tasks" element={<Tasks />} />
       <Route path="/board" element={<Board />} />
       <Route path="/mypage" element={<MyPage />} />
