@@ -20,6 +20,14 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({ days, onClose, position
     else setCheckedDays([...days])
   }
 
+  const handleConfirm = () => {
+    onClose()
+  }
+
+  const handleCancel = () => {
+    onClose()
+  }
+
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/10" onClick={onClose} />
@@ -46,6 +54,24 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({ days, onClose, position
                 <span className="ml-2 text-sm font-medium">{day}</span>
               </label>
             ))}
+          </div>
+
+          {/* 확인, 취소 */}
+          <div className="flex justify-center space-x-2 mt-1 px-1 pt-2 pb-1 border-t border-gray-200">
+            <button
+              type="button"
+              className="btn btn-sm min-w-[60px] btn-outline"
+              onClick={handleCancel}
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm min-w-[60px] btn-primary"
+              onClick={handleConfirm}
+            >
+              확인
+            </button>
           </div>
         </div>
       </div>
