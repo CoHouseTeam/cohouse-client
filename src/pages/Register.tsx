@@ -25,10 +25,22 @@ export default function Register() {
   const [showMarketingModal, setShowMarketingModal] = useState(false)
   const [modalType, setModalType] = useState<'terms' | 'privacy' | 'marketing'>('terms')
 
-  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<RegisterForm>()
+  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<RegisterForm>({
+    defaultValues: {
+      email: '',
+      verificationCode: '',
+      name: '',
+      password: '',
+      confirmPassword: '',
+      marketingAgreement: false,
+      termsAgreement: false,
+      privacyAgreement: false,
+      allAgreement: false
+    }
+  })
 
   const watchedPassword = watch('password')
-  const watchedAllAgreement = watch('allAgreement')
+  const watchedAllAgreement = watch('allAgreement') || false
 
   // 전체 동의 체크박스 처리
   const handleAllAgreement = (checked: boolean) => {
@@ -302,7 +314,7 @@ export default function Register() {
                     <input 
                       type="checkbox" 
                       className="checkbox checkbox-primary rounded"
-                      checked={watch('termsAgreement')}
+                      checked={watch('termsAgreement') || false}
                       onChange={(e) => handleIndividualAgreement('termsAgreement', e.target.checked)}
                     />
                     <span className="label-text flex-1">이용약관 동의 <span className="text-error">(필수)</span></span>
@@ -321,7 +333,7 @@ export default function Register() {
                     <input 
                       type="checkbox" 
                       className="checkbox checkbox-primary rounded"
-                      checked={watch('privacyAgreement')}
+                      checked={watch('privacyAgreement') || false}
                       onChange={(e) => handleIndividualAgreement('privacyAgreement', e.target.checked)}
                     />
                     <span className="label-text flex-1">개인정보 수집·이용 동의 <span className="text-error">(필수)</span></span>
@@ -340,7 +352,7 @@ export default function Register() {
                     <input 
                       type="checkbox" 
                       className="checkbox checkbox-primary rounded"
-                      checked={watch('marketingAgreement')}
+                      checked={watch('marketingAgreement') || false}
                       onChange={(e) => handleIndividualAgreement('marketingAgreement', e.target.checked)}
                     />
                     <span className="label-text flex-1">마케팅 정보 수신 동의 <span className="text-info">(선택)</span></span>
