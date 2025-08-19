@@ -87,7 +87,7 @@ export default function SettlementListItem() {
           <div className="flex flex-col pl-1 gap-1">
             <span className="text-sm">금액: {settlement.totalAmount.toLocaleString()}원</span>
             <span
-              className={`block overflow-hidden text-sm transition-[max-height, opacity] duration-500 ease-in-out ${cardOpen ? 'opacity-0 max-h-0' : 'opacity-100 delay-300 max-h-10'}`}
+              className={`block overflow-hidden text-sm transition-[max-height, opacity] duration-500 ease-in-out ${cardOpen ? 'opacity-0' : 'opacity-100 delay-300 max-h-10'}`}
             >
               참여자 {settlement.participants.length + 1}명
             </span>
