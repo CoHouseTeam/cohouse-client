@@ -6,7 +6,7 @@ export default function SettlementListItem() {
   const [cardOpen, SetCardOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const currentUserId = 2 // 로그인 유저 가정
+  const currentUserId = 1 // 로그인 유저 가정
   const settlement = {
     id: 10,
     category: '식비',
