@@ -4,6 +4,8 @@ import { lazy } from 'react'
 // Lazy load pages
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Login = lazy(() => import('../pages/Login'))
+const Register = lazy(() => import('../pages/Register'))
+const ForgotPassword = lazy(() => import('../pages/ForgotPassword'))
 const Settlements = lazy(() => import('../pages/Settlements'))
 const SettlementHistory = lazy(() => import('../pages/SettlementHistory'))
 const PaymentHistory = lazy(() => import('../pages/PaymentHistory'))
@@ -16,7 +18,9 @@ export function Routes() {
   return (
     <RouterRoutes>
       <Route path="/" element={<Dashboard />} />
-      <Route path="/login" element={<Login />} />
+                        <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/settlements" element={<Settlements />} />
       <Route path="/settlements/history" element={<SettlementHistory />} />
       <Route path="/payments/history" element={<PaymentHistory />} />

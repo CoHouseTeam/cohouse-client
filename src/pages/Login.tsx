@@ -16,20 +16,20 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center">
-      <div className="card w-96 bg-base-200 shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title text-2xl font-bold text-center mb-6">로그인</h2>
+    <div className="min-h-[80vh] flex items-center justify-center py-8 px-4">
+      <div className="card w-full max-w-md bg-base-200 shadow-xl">
+        <div className="card-body p-6 sm:p-8">
+          <h2 className="card-title text-2xl font-bold text-center mb-8 justify-center">로그인</h2>
           
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="form-control">
               <label className="label">
-                <span className="label-text">이메일</span>
+                <span className="label-text font-medium">이메일</span>
               </label>
               <input
                 type="email"
                 placeholder="이메일을 입력하세요"
-                className="input input-bordered"
+                className="input input-bordered focus:input-primary"
                 {...register('email', { 
                   required: '이메일을 입력해주세요',
                   pattern: {
@@ -47,12 +47,12 @@ export default function Login() {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text">비밀번호</span>
+                <span className="label-text font-medium">비밀번호</span>
               </label>
               <input
                 type="password"
                 placeholder="비밀번호를 입력하세요"
-                className="input input-bordered"
+                className="input input-bordered focus:input-primary"
                 {...register('password', { 
                   required: '비밀번호를 입력해주세요',
                   minLength: {
@@ -68,18 +68,28 @@ export default function Login() {
               )}
             </div>
 
-            <div className="form-control mt-6">
-              <button type="submit" className="btn btn-primary">
+            <div className="form-control">
+              <label className="cursor-pointer flex items-center gap-3">
+                <input type="checkbox" className="checkbox checkbox-primary rounded" />
+                <span className="label-text">로그인 유지하기</span>
+              </label>
+            </div>
+
+            <div className="form-control mt-8">
+              <button type="submit" className="btn btn-primary h-12">
                 로그인
               </button>
             </div>
           </form>
 
-          <div className="divider">또는</div>
+          <div className="divider my-6">또는</div>
           
-          <div className="text-center">
-            <a href="/register" className="link link-primary">
-              회원가입하기
+          <div className="flex justify-between">
+            <a href="/register" className="link link-primary font-medium">
+              회원가입
+            </a>
+            <a href="/forgot-password" className="link link-primary font-medium">
+              비밀번호 찾기
             </a>
           </div>
         </div>
