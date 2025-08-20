@@ -26,8 +26,8 @@ const CalendarBox = () => {
         nextLabel=">"
         prev2Label={null}
         next2Label={null}
-        formatMonthYear={(locale, date) => `${date.getFullYear()}.${date.getMonth() + 1}`}
-        formatDay={(locale, date) => String(date.getDate())}
+        formatMonthYear={(_locale, date) => `${date.getFullYear()}.${date.getMonth() + 1}`}
+        formatDay={(_locale, date) => String(date.getDate())}
         tileContent={({ date, view }) =>
           view === 'month' && isDay(date) ? <div className="calendar-date-dot" /> : null
         }

@@ -23,7 +23,7 @@ const TodoListBox = () => {
 
   return (
     <>
-      <div className="card w-full max-w-xs mx-auto mt-4 bg-base-100 shadow">
+      <div className="card w-full mx-auto mt-4 bg-base-100 shadow">
         <div className="card-body p-4">
           <div className="flex justify-between items-center mb-3">
             <span className="font-bold text-base-content text-base">오늘의 할일</span>
