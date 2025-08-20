@@ -60,17 +60,17 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({ days, onClose, position
           <div className="flex justify-center space-x-2 mt-1 px-1 pt-2 pb-1 border-t border-gray-200">
             <button
               type="button"
-              className="btn btn-sm min-w-[60px] btn-outline"
-              onClick={handleCancel}
-            >
-              취소
-            </button>
-            <button
-              type="button"
               className="btn btn-sm min-w-[60px] btn-primary"
               onClick={handleConfirm}
             >
               확인
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm min-w-[60px] btn-outline"
+              onClick={handleCancel}
+            >
+              취소
             </button>
           </div>
         </div>
