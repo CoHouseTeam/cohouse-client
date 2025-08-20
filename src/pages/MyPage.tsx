@@ -1,3 +1,6 @@
+import { Cake2, Gear, PersonCircle } from 'react-bootstrap-icons'
+import { Link } from 'react-router-dom'
+
 export default function MyPage() {
   // TODO: Use user data from store when authentication is implemented
   // const { user } = useAppStore()
@@ -6,117 +9,82 @@ export default function MyPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-neutral">마이페이지</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
-        <div className="card bg-base-200 shadow-xl">
-          <div className="card-body">
+        <div className="card bg-base-200 shadow-md">
+          <div className="card-body relative">
+            {/* 프로필 편집 버튼 */}
+            <div className="flex justify-end absolute right-5 top-5">
+              <button>
+                <Gear />
+              </button>
+            </div>
+
+            {/* 프로필 영역 */}
             <div className="flex items-center space-x-4">
               <div className="avatar placeholder">
-                <div className="bg-neutral text-neutral-content rounded-full w-16">
-                  <span className="text-xl">김</span>
+                <div className="rounded-full w-16">
+                  <PersonCircle size={60} />
                 </div>
               </div>
+
               <div>
                 <h2 className="card-title">김철수</h2>
                 <p className="text-base-content/70">101동 1001호</p>
-                <p className="text-sm text-base-content/50">입주민</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="card bg-base-200 shadow-xl">
-          <div className="card-body">
-            <h2 className="card-title text-neutral">내 활동</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span>완료한 할일</span>
-                <span className="font-bold text-success">12개</span>
-              </div>
-              <div className="flex justify-between">
-                <span>참여한 정산</span>
-                <span className="font-bold text-secondary">8건</span>
-              </div>
-              <div className="flex justify-between">
-                <span>작성한 글</span>
-                <span className="font-bold text-accent">5개</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Settings */}
-        <div className="card bg-base-200 shadow-xl">
-          <div className="card-body">
-            <h2 className="card-title text-neutral">설정</h2>
-            <div className="space-y-2">
-              <button className="btn btn-sm btn-ghost w-full justify-start">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                프로필 수정
-              </button>
-              <button className="btn btn-sm btn-ghost w-full justify-start">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                비밀번호 변경
-              </button>
-              <button className="btn btn-sm btn-ghost w-full justify-start">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-5 5v-5zM4 19h6v-2H4v2zM4 15h6v-2H4v2zM4 11h6V9H4v2zM4 7h6V5H4v2zM10 7h10V5H10v2zM10 11h10V9H10v2zM10 15h10v-2H10v2z" />
-                </svg>
-                알림 설정
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="card bg-base-200 shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title text-neutral">최근 활동</h2>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-3 bg-base-100 rounded-lg">
-              <div className="avatar placeholder">
-                <div className="bg-success text-success-content rounded-full w-8">
-                  <span className="text-xs">✓</span>
+                <div className="flex text-sm text-base-content items-center gap-2">
+                  <Cake2 />
+                  <p>2000.00.00</p>
                 </div>
               </div>
-              <div className="flex-1">
-                <p className="font-semibold">공동 구역 청소 완료</p>
-                <p className="text-sm text-base-content/70">2024-01-15 14:30</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4 p-3 bg-base-100 rounded-lg">
-              <div className="avatar placeholder">
-                <div className="bg-secondary text-secondary-content rounded-full w-8">
-                  <span className="text-xs">₩</span>
-                </div>
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold">관리비 정산 참여</p>
-                <p className="text-sm text-base-content/70">2024-01-12 10:15</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4 p-3 bg-base-100 rounded-lg">
-              <div className="avatar placeholder">
-                <div className="bg-accent text-accent-content rounded-full w-8">
-                  <span className="text-xs">📝</span>
-                </div>
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold">건의사항 작성</p>
-                <p className="text-sm text-base-content/70">2024-01-10 16:45</p>
-              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* 마이페이지 리스트 목록 */}
+      <section className="grid grid-cols-2 gap-3">
+        <Link
+          to={'/settlements/history'}
+          className="h-14 flex items-center justify-center rounded-xl border bg-base-200"
+        >
+          정산 히스토리
+        </Link>
+
+        <Link
+          to={'/payments/history'}
+          className="h-14 flex items-center justify-center rounded-xl border bg-base-200"
+        >
+          송금 히스토리
+        </Link>
+
+        <Link
+          to={'/tasks'}
+          className="h-14 flex items-center justify-center rounded-xl border bg-base-200"
+        >
+          할 일 내역
+        </Link>
+
+        <Link
+          to={'/board'}
+          className="h-14 flex items-center justify-center rounded-xl border bg-base-200"
+        >
+          공지사항
+        </Link>
+      </section>
+
+      <section>
+        <h3>계정</h3>
+        <div className="card bg-base-200 border p-2">
+          <div className="card-body px-3 py-1">
+            <Link to={'/board'} className="py-1">
+              알림 설정
+            </Link>
+            <button className="text-start py-1">로그아웃</button>
+            <button className="text-start py-1">그룹 탈퇴</button>
+            <button className="text-start py-1">회원 탈퇴</button>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
