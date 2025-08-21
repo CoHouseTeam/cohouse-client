@@ -75,6 +75,11 @@ export default function MyPageEdit() {
               popperPlacement="bottom" // 달력 위치
               showPopperArrow={false} // 화살표 숨김
               maxDate={new Date()} // 오늘 이후(미래) 선택 못 하게
+              showYearDropdown
+              showMonthDropdown
+              dropdownMode="scroll"
+              scrollableYearDropdown // ← 스크롤 가능
+              yearDropdownItemNumber={85} // 보이는 연도 개수
               className="input input-bordered h-10 w-full md:max-w-md text-sm"
             />
           </div>
