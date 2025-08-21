@@ -17,12 +17,9 @@ type TaskTemplateRequest = {
 }
 
 let templates = [
-  {
-    templateId: 1,
-    groupId: 1,
-    category: '청소',
-    createdAt: '2025-08-05T10:00:00',
-  },
+  { templateId: 1, groupId: 1, category: '', createdAt: '' },
+  { templateId: 2, groupId: 1, category: '', createdAt: '' },
+  { templateId: 3, groupId: 1, category: '', createdAt: '' },
 ]
 
 export const tasksHandlers = [
