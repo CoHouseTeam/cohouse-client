@@ -12,21 +12,23 @@ const PaymentHistory = lazy(() => import('../pages/PaymentHistory'))
 const Tasks = lazy(() => import('../pages/Tasks'))
 const Board = lazy(() => import('../pages/Board'))
 const MyPage = lazy(() => import('../pages/MyPage'))
+const MyPgeEdit = lazy(() => import('../pages/MyPageEdit'))
 const MainPage = lazy(() => import('../pages/MainPage'))
 
 export function Routes() {
   return (
     <RouterRoutes>
       <Route path="/" element={<Dashboard />} />
-                        <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/settlements" element={<Settlements />} />
       <Route path="/settlements/history" element={<SettlementHistory />} />
       <Route path="/payments/history" element={<PaymentHistory />} />
       <Route path="/tasks" element={<Tasks />} />
       <Route path="/board" element={<Board />} />
       <Route path="/mypage" element={<MyPage />} />
+      <Route path="/mypage/edit" element={<MyPgeEdit />} />
       <Route path="/main" element={<MainPage />} />
       <Route path="*" element={<NotFound />} />
     </RouterRoutes>
