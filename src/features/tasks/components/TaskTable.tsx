@@ -2,20 +2,15 @@ import React, { useEffect, useState } from 'react'
 import DaySelectModal from './DaySelectModal'
 import { ChevronRight, PlusCircleFill } from 'react-bootstrap-icons'
 import axios from 'axios'
+import { Template } from '../../../types/tasks'
+import { daysKr } from '../../../libs/utils/dayMapping'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
 
-type Template = {
-  templateId: number
-  groupId: number
-  category: string
-  createdAt: string
-}
-
 const initialEmptyTemplates: Template[] = [
-  { templateId: -1, groupId: 1, category: '', createdAt: '' },
-  { templateId: -2, groupId: 1, category: '', createdAt: '' },
-  { templateId: -3, groupId: 1, category: '', createdAt: '' },
+  { templateId: -1, groupId: 1, category: '', createdAt: '', updatedAt: '' },
+  { templateId: -2, groupId: 1, category: '', createdAt: '', updatedAt: '' },
+  { templateId: -3, groupId: 1, category: '', createdAt: '', updatedAt: '' },
 ]
 
 const TaskTable: React.FC = () => {
@@ -140,7 +135,8 @@ const TaskTable: React.FC = () => {
                   </button>
                   {openModal === rowIdx && (
                     <DaySelectModal
-                      days={days}
+                      days={daysKr}
+                      templateId={template.templateId}
                       onClose={() => setOpenModal(null)}
                       positionClass="left-full -top-3 ml-1"
                     />
