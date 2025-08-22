@@ -15,7 +15,7 @@ export default function ForgotPassword() {
   const [verificationSent, setVerificationSent] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
 
-  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<ForgotPasswordForm>()
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<ForgotPasswordForm>()
 
   // 이메일 인증 요청
   const handleEmailVerification = () => {
