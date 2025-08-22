@@ -5,6 +5,11 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+export function formatPriceKRW(price: number): string {
+  const formatted = new Intl.NumberFormat('ko-KR').format(price)
+  return `${formatted}원`
+}
+
 export function formatDate(date: string | Date): string {
   return new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric',
