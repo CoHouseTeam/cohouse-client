@@ -18,7 +18,7 @@ export default function SettlementCreateModal({ onClose }: OnCloseProps) {
   return (
     <>
       <div className="modal modal-open">
-        <div className="modal-box">
+        <div className="modal-box max-h-[90vh] overflow-y-auto">
           <button
             onClick={onClose}
             className="btn btn-sm btn-circle absolute right-2 top-2 bg-transparent border-none"
@@ -32,7 +32,7 @@ export default function SettlementCreateModal({ onClose }: OnCloseProps) {
             <h3 className="font-bold text-xl text-center mb-3">정산 등록</h3>
 
             {/* 본문 */}
-            <div className="flex flex-col overflow-auto">
+            <div className="flex flex-col">
               {/* 제목 */}
               <label className="form-control">
                 <span className="label-text text-base mb-2 font-semibold">제목</span>
@@ -101,7 +101,7 @@ export default function SettlementCreateModal({ onClose }: OnCloseProps) {
               {/* 총 정산 금액 */}
               <div className="form-control">
                 <span
-                  className={`${open ? 'mt-[3.25rem] pt-14' : ''}label-text text-base mt-3 mb-2 font-semibold`}
+                  className={`${open ? 'mt-[3.25rem] pt-14' : ''} label-text text-base mt-3 mb-2 font-semibold`}
                 >
                   총 정산 금액
                 </span>
