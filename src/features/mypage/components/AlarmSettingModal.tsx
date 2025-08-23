@@ -1,6 +1,7 @@
 import { XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Toggle from '../../common/Toggle'
+import AmPmTimePicker from './AmPmTimePicker'
 
 interface OnCloseProps {
   onClose: () => void
@@ -67,20 +68,20 @@ export default function AlarmSettingModal({ onClose }: OnCloseProps) {
               {/* 할 일 알림 */}
               <div
                 className={`shadow-md px-4 py-3 rounded-xl bg-base-200 transition-[height] duration-500 ease-in-out 
-                            ${taskToggleOn ? 'h-44' : ''}`}
+                            ${taskToggleOn ? 'h-40' : ''}`}
               >
-                <div className="flex justify-between">
+                <div className="flex justify-between mb-2">
                   <span>할 일 알림</span>
                   <Toggle checked={taskToggleOn} onChange={setTaskToggleOn} />
                 </div>
+
                 {taskToggleOn && (
-                  <div className="flex flex-col">
-                    <span>알림 시간 설정</span>
+                  <div className="flex flex-col gap-2 pl-2 pt-4">
+                    <span className="text-sm font-semibold">알림 시간 설정</span>
+                    <AmPmTimePicker />
                   </div>
                 )}
               </div>
-
-              {taskToggleOn && <div></div>}
 
               {/* 공지사항 알림 */}
               <div className="flex justify-between items-center shadow-md px-4 py-3 rounded-xl bg-base-200">
