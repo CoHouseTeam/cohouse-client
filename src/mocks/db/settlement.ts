@@ -33,6 +33,29 @@ export function toCategory(input: string): SettlementCategory {
    ───────────────────────────────────────────── */
 export const settlements: Settlement[] = [
   {
+    id: 9,
+    category: 'FOOD',
+    title: '마라탕 배달비4',
+    description: '저녁 식사 비용',
+    settlementAmount: 44500,
+    status: 'COMPLETED',
+    imageUrl:
+      'https://cohouse-bucket.s3.ap-northeast-2.amazonaws.com/groups/1/settlements/8/receipt/0e8d76d5-756b-4221-9d7a-d59ec184a283_pizza.jpg',
+    payerId: 2,
+    payerName: members[1].name,
+    platformSupportAmount: 0,
+    equalDistribution: true,
+    participants: [
+      { id: 30, memberId: 1, memberName: members[1].name, shareAmount: 8900, status: 'PAID' },
+      { id: 31, memberId: 2, memberName: members[2].name, shareAmount: 8900, status: 'PAID' },
+      { id: 32, memberId: 3, memberName: members[3].name, shareAmount: 8900, status: 'PAID' },
+      { id: 33, memberId: 4, memberName: members[4].name, shareAmount: 8900, status: 'PAID' },
+      { id: 34, memberId: 5, memberName: members[5].name, shareAmount: 8900, status: 'PAID' },
+    ],
+    createdAt: '2025-08-19T19:53:15.560542Z',
+    updatedAt: '2025-08-21T22:07:47.543158Z',
+  },
+  {
     id: 8,
     category: 'FOOD',
     title: '마라탕 배달비3',
@@ -118,7 +141,7 @@ export const myPaymentHistory: PaymentHistoryItem[] = [
   {
     paymentHistoryId: 8,
     settlementId: 6,
-    senderId: 3,
+    senderId: 1,
     receiverId: 2,
     amount: 15000,
     status: 'REFUNDED',
@@ -127,7 +150,7 @@ export const myPaymentHistory: PaymentHistoryItem[] = [
   {
     paymentHistoryId: 11,
     settlementId: 8,
-    senderId: 3,
+    senderId: 2,
     receiverId: 1,
     amount: 8900,
     status: 'PAID',
