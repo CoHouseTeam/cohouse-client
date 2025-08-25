@@ -25,3 +25,13 @@ export interface DaySelectModalProps {
   onClose: () => void
   positionClass?: string
 }
+
+export interface Assignment {
+  groupId: number
+  groupMemberId?: number
+  templateId: number
+  date: string
+  assignType: 'MANUAL' | 'AUTO'
+  repeatType?: string
+  updatedAt?: string
+}
