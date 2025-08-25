@@ -36,38 +36,7 @@ export const repeatDays: RepeatDay[] = [
 ]
 
 //할일 배정
-export const assignments = [
-  {
-    assignmentId: 1,
-    groupMemberId: 1,
-    templateId: 1,
-    date: '2025-08-05',
-    status: 'PENDING',
-    repeatType: 'WEEKLY',
-    createdAt: '2025-08-05T12:00:00',
-    updatedAt: '',
-  },
-  {
-    assignmentId: 2,
-    groupMemberId: 2,
-    templateId: 2,
-    date: '2025-08-05',
-    status: 'COMPLETED',
-    repeatType: 'WEEKLY',
-    createdAt: '2025-08-05T12:00:00',
-    updatedAt: '',
-  },
-  {
-    assignmentId: 3,
-    groupMemberId: 3,
-    templateId: 3,
-    date: '2025-08-05',
-    status: 'COMPLETED',
-    repeatType: 'WEEKLY',
-    createdAt: '2025-08-05T12:00:00',
-    updatedAt: '',
-  },
-]
+export const assignments = []
 
 // 담당자 변경 요청
 export const overrideRequests = [

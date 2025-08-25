@@ -26,12 +26,35 @@ export interface DaySelectModalProps {
   positionClass?: string
 }
 
-export interface Assignment {
+//POST 요청으로 받는
+export interface AssignmentBody {
   groupId: number
   groupMemberId?: number
   templateId: number
   date: string
-  assignType: 'MANUAL' | 'AUTO'
+  status?: string
   repeatType?: string
   updatedAt?: string
+}
+
+export interface Assignment {
+  assignmentId: number
+  groupId: number
+  groupMemberId?: number
+  templateId: number
+  date?: string
+  dayOfWeek: string
+  status: string
+  repeatType?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface RandomProps {
+  onClick: () => void
+  disabled?: boolean
+}
+
+export interface TaskTableProps {
+  assignments: Assignment[]
 }
