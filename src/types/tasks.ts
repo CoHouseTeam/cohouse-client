@@ -33,6 +33,7 @@ export interface AssignmentBody {
   templateId: number
   date: string
   status?: string
+  dayOfWeek: string
   repeatType?: string
   updatedAt?: string
 }

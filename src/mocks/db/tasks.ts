@@ -1,7 +1,7 @@
-import { Member, RepeatDay, Template } from '../../types/tasks'
+import { Assignment, Member, RepeatDay, Template } from '../../types/tasks'
 
 /* ─────────────────────────────────────────────
-   1) 멤버(표시용) & 그룹 멤버 ID 매핑 (정산과 동일)
+   1) 멤버(표시용) & 그룹 멤버 ID 매핑
    ───────────────────────────────────────────── */
 export const members: Record<number, Member> = {
   1: { name: '최꿀꿀', profileUrl: '/avatars/u1.png' },
@@ -36,7 +36,7 @@ export const repeatDays: RepeatDay[] = [
 ]
 
 //할일 배정
-export const assignments = []
+export const assignments: Assignment[] = []
 
 // 담당자 변경 요청
 export const overrideRequests = [
