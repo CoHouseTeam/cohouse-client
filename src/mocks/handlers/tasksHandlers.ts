@@ -7,7 +7,7 @@ import {
   assignmentHistories,
   overrideRequestHistories,
 } from '../db/tasks'
-import { Assignment, RepeatDay, Template } from '../../types/tasks'
+import { Assignment, AssignmentBody, RepeatDay, Template } from '../../types/tasks'
 
 /* ─────────────────────────────────────────────
    0) 엔드포인트
@@ -108,39 +108,20 @@ export const tasksHandlers = [
     if (idx !== -1) repeatDays.splice(idx, 1)
     return new HttpResponse(null, { status: 204 })
   }),
-  http.get('/api/tasks/assignments', ({ request }) => {
-    const url = new URL(request.url)
-    const groupMemberId = url.searchParams.get('groupId')
-    const week = url.searchParams.get('week')
-    const memberId = url.searchParams.get('memberId')
 
-    let result = assignments
-
-    // groupId 필터링
-    if (groupMemberId) {
-      result = result.filter((a) => String(a.groupMemberId) === String(groupMemberId))
-    }
-    // week/date 필터링
-    if (week) {
-      // ISO week 포맷??
-      result = result.filter((a) => a.date.startsWith(week.split('-')[1]))
-    }
-    // memberId 필터링
-    if (memberId) {
-      result = result.filter((a) => String(a.groupMemberId) === String(memberId))
-    }
-
-    return HttpResponse.json(result, { status: 200 })
+  // 할일 배정 (GET)
+  http.get('/api/tasks/assignments', () => {
+    return HttpResponse.json(assignments, { status: 200 }) // 위에서 assignments 빈 배열이면 됨
   }),
 
   // 할일 배정 생성 (POST)
   http.post('/api/tasks/assignments', async ({ request }) => {
-    const body = (await request.json()) as Assignment
+    const body = (await request.json()) as AssignmentBody
     if (!body) {
       return HttpResponse.json({ error: 'Request body required.' }, { status: 400 })
     }
 
-    const newAssignment = {
+    const newAssignment: Assignment = {
       assignmentId: assignments.length + 1,
       status: 'PENDING',
       createdAt: new Date().toISOString(),

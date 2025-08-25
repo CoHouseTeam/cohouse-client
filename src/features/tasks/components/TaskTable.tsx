@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react'
 import DaySelectModal from './DaySelectModal'
 import { ChevronRight, PlusCircleFill } from 'react-bootstrap-icons'
 import axios from 'axios'
-import { Template } from '../../../types/tasks'
-import { daysKr } from '../../../libs/utils/dayMapping'
+import { Assignment, TaskTableProps, Template } from '../../../types/tasks'
+import { members } from '../../../mocks/db/tasks'
+import { daysKr, toEngDay } from '../../../libs/utils/dayMapping'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
+
+const getMemberAvatar = (groupMemberId: number) => members[groupMemberId]?.profileUrl || ''
 
 const initialEmptyTemplates: Template[] = [
   { templateId: -1, groupId: 1, category: '', createdAt: '', updatedAt: '' },
@@ -13,7 +16,7 @@ const initialEmptyTemplates: Template[] = [
   { templateId: -3, groupId: 1, category: '', createdAt: '', updatedAt: '' },
 ]
 
-const TaskTable: React.FC = () => {
+const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
   const [openModal, setOpenModal] = useState<number | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [editValues, setEditValues] = useState<Record<number, string>>({})
@@ -24,9 +27,8 @@ const TaskTable: React.FC = () => {
 
   const fetchTemplates = async () => {
     try {
-      const res = await axios.get<Template[]>('/tasks/templates')
+      const res = await axios.get<Template[]>('/api/tasks/templates')
       if (res.data.length === 0) {
-        // 서버에 데이터 없으면 기본 3줄 유지
         setTemplates(initialEmptyTemplates)
       } else {
         setTemplates(res.data)
@@ -45,7 +47,7 @@ const TaskTable: React.FC = () => {
     const edited = editValues[templateId]
     if (edited !== undefined && edited !== category && edited.trim() !== '') {
       try {
-        await axios.put(`/tasks/templates/${templateId}`, { category: edited })
+        await axios.put(`/api/tasks/templates/${templateId}`, { category: edited })
         setTemplates((prev) =>
           prev.map((t) => (t.templateId === templateId ? { ...t, category: edited } : t))
         )
@@ -66,7 +68,7 @@ const TaskTable: React.FC = () => {
         groupId: 1,
         category: '',
       }
-      const res = await axios.post<Template>('/tasks/templates', newTemplate)
+      const res = await axios.post<Template>('/api/tasks/templates', newTemplate)
       setTemplates((prev) => [...prev, res.data])
     } catch (error) {
       console.error('템플릿 생성 실패', error)
@@ -75,6 +77,13 @@ const TaskTable: React.FC = () => {
 
   const toggleModal = (rowIdx: number) => {
     setOpenModal((prev) => (prev === rowIdx ? null : rowIdx))
+  }
+
+  const findAssignmentForCell = (templateId: number, dayIdx: number): Assignment | undefined => {
+    const korDay = daysKr[dayIdx]
+    const engDay = toEngDay(korDay)
+
+    return assignments.find((a) => a.templateId === templateId && a.dayOfWeek === engDay)
   }
 
   return (
@@ -143,15 +152,26 @@ const TaskTable: React.FC = () => {
                   )}
                 </div>
               </td>
-              {days.map((_, colIdx) => (
-                <td
-                  key={colIdx}
-                  className="border-t border-gray-300 p-1"
-                  style={{
-                    borderRight: colIdx === days.length - 1 ? undefined : '1px solid #D1D5DB',
-                  }}
-                />
-              ))}
+              {days.map((_, dayIdx) => {
+                const assignment = findAssignmentForCell(template.templateId, dayIdx)
+                const avatarUrl =
+                  assignment?.groupMemberId !== undefined
+                    ? getMemberAvatar(assignment.groupMemberId)
+                    : ''
+                return (
+                  <td
+                    key={dayIdx}
+                    className="border-t border-gray-300 p-1"
+                    style={{
+                      borderRight: dayIdx === days.length - 1 ? undefined : '1px solid #D1D5DB',
+                    }}
+                  >
+                    {avatarUrl && (
+                      <img src={avatarUrl} alt="profile" className="w-8 h-8 rounded-full mx-auto" />
+                    )}
+                  </td>
+                )
+              })}
             </tr>
           ))}
           <tr>
