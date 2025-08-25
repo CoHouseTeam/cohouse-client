@@ -1,10 +1,5 @@
 import { KorDay } from '../libs/utils/dayMapping'
 
-export interface Member {
-  name: string
-  profileUrl: string
-}
-
 export interface Template {
   templateId: number
   groupId: number
@@ -24,14 +19,4 @@ export interface DaySelectModalProps {
   templateId: number
   onClose: () => void
   positionClass?: string
-}
-
-export interface Assignment {
-  groupId: number
-  groupMemberId?: number
-  templateId: number
-  date: string
-  assignType: 'MANUAL' | 'AUTO'
-  repeatType?: string
-  updatedAt?: string
 }
