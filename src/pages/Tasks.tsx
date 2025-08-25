@@ -43,24 +43,35 @@ const TasksPage: React.FC = () => {
   }, [fetchAssignments])
 
   const handleRandomAssign = useCallback(async () => {
-    const memberIds = Object.keys(members).map(Number)
+    // 0 이상의 유효한 멤버 ID만 필터링
+    const memberIds = Object.keys(members)
+      .map(Number)
+      .filter((id) => id > 0)
+
+    if (memberIds.length === 0) {
+      console.error('유효한 멤버가 없습니다.')
+      return
+    }
 
     for (const tpl of templates) {
       const repeatInfo = repeatDays.filter((rd) => rd.templateId === tpl.templateId)
 
-      for (const repeatDay of repeatInfo) {
+      // 템플릿별 반복일에 동시 배정 Promise 생성
+      const assignmentPromises = repeatInfo.map(async (repeatDay) => {
         const randomMemberId = memberIds[Math.floor(Math.random() * memberIds.length)]
-
-        await axios.post('/api/tasks/assignments', {
+        return axios.post('/api/tasks/assignments', {
           groupId: tpl.groupId,
           groupMemberId: randomMemberId,
           templateId: tpl.templateId,
           dayOfWeek: repeatDay.dayOfWeek,
           repeatType: 'WEEKLY',
         })
-      }
+      })
+
+      await Promise.all(assignmentPromises)
     }
 
+    // 모든 배정 완료 후 데이터 새로고침
     await fetchAssignments()
     setIsAssigned(true)
   }, [fetchAssignments, templates, repeatDays, members])
