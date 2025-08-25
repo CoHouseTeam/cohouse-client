@@ -1,5 +1,10 @@
 import { KorDay } from '../libs/utils/dayMapping'
 
+export interface Member {
+  name: string
+  profileUrl: string
+}
+
 export interface Template {
   templateId: number
   groupId: number
