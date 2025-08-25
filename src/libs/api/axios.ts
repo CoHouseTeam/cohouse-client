@@ -1,11 +1,19 @@
 import axios from 'axios'
 
+const isMock = import.meta.env.DEV && import.meta.env.VITE_USE_MSW === 'true'
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000',
+  baseURL: isMock
+    ? '/api' // DEV + MSW일 때는 /api (상대경로)로 통일 → MSW가 잡음
+    : import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000',
   timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
+})
+
+// ★ 디버깅 로그: 최종 요청이 뭔지 무조건 찍자
+api.interceptors.request.use((c) => {
+  console.log('[REQ]', c.baseURL, c.url) // 예: /api  /settlements/my
+  return c
 })
 
 // Request interceptor - attach auth token
