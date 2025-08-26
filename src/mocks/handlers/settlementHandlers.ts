@@ -30,7 +30,7 @@ import { settlements, myPaymentHistory, members, toCategory } from '../../mocks/
 
 const BASE = '/api'
 
-const CURRENT_GM_ID = 1 // 데모: 로그인 사용자 3(이서연)
+const CURRENT_GM_ID = 3 // 데모: 로그인 사용자 3(이서연)
 const getCurrentGmId = () => CURRENT_GM_ID
 
 /* ─────────────────────────────────────────────

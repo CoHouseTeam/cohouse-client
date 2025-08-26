@@ -38,7 +38,7 @@ export default function Settlements() {
         </div>
       </div>
 
-      {isModalOpen && <SettlementCreateModal onClose={() => setIsModalOpen(false)} />}
+      {isModalOpen && <SettlementCreateModal onClose={() => setIsModalOpen(false)} mode="create" />}
     </>
   )
 }

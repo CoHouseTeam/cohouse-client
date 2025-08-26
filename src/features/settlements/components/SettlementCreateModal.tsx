@@ -1,26 +1,60 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { XCircle, Images, CaretDown } from 'react-bootstrap-icons'
 import ParticipantsSelectModal from './ParticipantsSelectModal'
+import { useSettlementDetail } from '../../../libs/hooks/settlements/useMySettlements'
+import { fromCategory } from '../../../libs/utils/categoryMapping'
+import LoadingSpinner from '../../common/LoadingSpinner'
 
-interface OnCloseProps {
+type CreateProps = {
+  mode?: 'create'
   onClose: () => void
 }
+
+type DetailProps = {
+  mode: 'detail'
+  detailId: number
+  onClose: () => void
+}
+
+type Props = CreateProps | DetailProps
 
 const categoryList = ['식비', '생활용품', '문화생활', '기타']
 type categoryLabel = (typeof categoryList)[number]
 
-export default function SettlementCreateModal({ onClose }: OnCloseProps) {
+export default function SettlementCreateModal(props: Props) {
+  const readOnly = props.mode === 'detail'
+  const detailId = readOnly ? (props as DetailProps).detailId : undefined
+
+  // 글자수 카운트
+  const [title, setTitle] = useState('')
+  const [desc, setDesc] = useState('')
+  const [amount, setAmount] = useState<number | ''>('')
+  const [participants, setParticipants] = useState<{ id: number; name: string }[]>([])
+
   const [open, setOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<categoryLabel | null>(null)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  const { data, isLoading, error } = useSettlementDetail(detailId)
+
+  useEffect(() => {
+    if (!data) return
+    setTitle(data.title ?? '')
+    setDesc(data.description ?? '')
+    setAmount(data.settlementAmount ?? '')
+    setSelectedCategory(fromCategory(data.category) as categoryLabel)
+    setParticipants(data.participants.map((p) => ({ id: p.memberId, name: p.memberName })))
+  }, [data])
+
+  if (isLoading) return <LoadingSpinner />
+  if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
   return (
     <>
       <div className="modal modal-open">
-        <div className="modal-box">
+        <div className="modal-box ">
           <button
-            onClick={onClose}
+            onClick={props.onClose}
             className="btn btn-sm btn-circle absolute right-2 top-2 bg-transparent border-none"
             aria-label="닫기"
           >
@@ -29,7 +63,9 @@ export default function SettlementCreateModal({ onClose }: OnCloseProps) {
 
           <div className="flex flex-col h-full">
             {/* 헤더 */}
-            <h3 className="font-bold text-xl text-center mb-3">정산 등록</h3>
+            <h3 className="font-bold text-xl text-center mb-3">
+              {readOnly ? '정산 상세' : '정산 등록'}
+            </h3>
 
             {/* 본문 */}
             <div className="flex flex-col overflow-auto">
@@ -40,8 +76,13 @@ export default function SettlementCreateModal({ onClose }: OnCloseProps) {
                   type="text"
                   placeholder="정산 제목을 입력해주세요."
                   className="input input-bordered text-sm rounded-xl h-10"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  disabled={readOnly}
                 />
-                <span className="label-text-alt text-end mr-2 text-base-300 pt-1">0/30</span>
+                <span className="label-text-alt text-end mr-2 text-base-300 pt-1">
+                  {title.length}/30
+                </span>
               </label>
 
               {/* 설명 */}
@@ -51,8 +92,13 @@ export default function SettlementCreateModal({ onClose }: OnCloseProps) {
                   type="text"
                   placeholder="정산에 대한 설명을 입력해주세요."
                   className="input input-bordered text-sm rounded-xl h-10"
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                  disabled={readOnly}
                 />
-                <span className="label-text-alt text-end mr-2 text-base-300 pt-1">0/100</span>
+                <span className="label-text-alt text-end mr-2 text-base-300 pt-1">
+                  {desc.length}/100
+                </span>
               </label>
 
               {/* 카테고리 */}
@@ -61,7 +107,7 @@ export default function SettlementCreateModal({ onClose }: OnCloseProps) {
 
                 <div className="relative w-full z-30">
                   <div
-                    onClick={() => setOpen(!open)}
+                    onClick={() => !readOnly && setOpen(!open)}
                     role="button"
                     className={`w-full border border-gray-300 rounded-xl px-4 py-2 bg-white overflow-hidden ${open ? 'max-h-64 absolute z-50' : 'max-h-10'}`}
                   >
@@ -84,7 +130,8 @@ export default function SettlementCreateModal({ onClose }: OnCloseProps) {
                           role="option"
                           aria-selected={selectedCategory === category}
                           onClick={(e) => {
-                            e.stopPropagation() // 상위 onClick 토글 방지
+                            e.stopPropagation() // 상위 onClick 토글 방지\
+                            if (readOnly) return
                             setSelectedCategory(category)
                             setOpen(false)
                           }}
@@ -113,6 +160,9 @@ export default function SettlementCreateModal({ onClose }: OnCloseProps) {
                     type="number"
                     placeholder="정산 금액을 입력해주세요"
                     className="input input-bordered text-sm rounded-xl flex-1 min-w-0 h-10 no-spinner"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                    disabled={readOnly}
                   />
                 </div>
               </div>
@@ -121,30 +171,55 @@ export default function SettlementCreateModal({ onClose }: OnCloseProps) {
               <div className="form-control">
                 <div className="flex items-center justify-between mt-3 mb-2">
                   <span className="label-text text-base font-semibold">참여자</span>
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="btn btn-sm border rounded-xl border-black text-xs px-2"
-                  >
-                    참여자 선택
-                  </button>
+                  {!readOnly && (
+                    <button
+                      onClick={() => setIsModalOpen(true)}
+                      className="btn btn-sm border rounded-xl border-black text-xs px-2"
+                    >
+                      참여자 선택
+                    </button>
+                  )}
                 </div>
 
-                <div className="flex border border-dashed h-[7rem] w-full justify-center items-center">
-                  <span className="text-sm text-gray-400">참여자를 선택해주세요</span>
-                </div>
+                {participants.length > 0 ? (
+                  <ul
+                    className={`border rounded-xl p-3 grid grid-cols-2 gap-2 ${readOnly ? 'bg-base-200' : 'border-dashed'}`}
+                  >
+                    {participants.map((p) => (
+                      <li key={p.id} className="text-sm">
+                        {p.name}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex border border-dashed h-[7rem] w-full justify-center items-center">
+                    <span className="text-sm text-gray-400">참여자를 선택해주세요</span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* 푸터 */}
             <div className="flex justify-center items-center h-16">
-              <button className="btn bg-[oklch(44%_0.043_257.281)] text-white btn-sm w-32 mt-4">
-                등록
-              </button>
+              {readOnly ? (
+                <button
+                  className="btn bg-[oklch(44%_0.043_257.281)] text-white btn-sm w-32 mt-4"
+                  onClick={props.onClose}
+                >
+                  닫기
+                </button>
+              ) : (
+                <button className="btn bg-[oklch(44%_0.043_257.281)] text-white btn-sm w-32 mt-4">
+                  등록
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
-      {isModalOpen && <ParticipantsSelectModal onClose={() => setIsModalOpen(false)} />}
+      {!readOnly && isModalOpen && (
+        <ParticipantsSelectModal onClose={() => setIsModalOpen(false)} />
+      )}
     </>
   )
 }
