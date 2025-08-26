@@ -20,3 +20,9 @@ export const postPaymentDone = (id: number) =>
 
 // 정산 취소
 export const cancelSettlement = (id: number) => axios.delete(SETTLEMENTS_ENDPOINTS.DELETE(id))
+
+// 정산 상세 조회
+export async function fetchSettlementDetail(id: number): Promise<Settlement> {
+  const { data } = await axios.get<Settlement>(SETTLEMENTS_ENDPOINTS.DETAIL(id))
+  return data
+}
