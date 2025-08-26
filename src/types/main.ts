@@ -1,5 +1,5 @@
 export interface CalendarDateDetailsProps {
-  selectedDate: string
+  selectedDate: Date
   events: string[]
 }
 
