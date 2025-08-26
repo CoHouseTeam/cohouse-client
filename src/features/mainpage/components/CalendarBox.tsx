@@ -1,13 +1,13 @@
 import React from 'react'
 import Calendar from 'react-calendar'
-import { CalendarBoxProps } from '../../../types/main'
 import { useCalendarStore } from '../../../app/store'
 import CalendarDateDots from './CalendarDateDots'
 import '../../../styles/Calendar.css'
 import { Value } from 'react-calendar/dist/shared/types.js'
+import { CalendarBoxProps } from '../../../types/main'
 
 const CalendarBox: React.FC<CalendarBoxProps> = ({ onDateSelect, value }) => {
-  const { selectedDate } = useCalendarStore()
+  const { selectedDate, setSelectedDate } = useCalendarStore()
 
   const isDay = (date: Date) => {
     const day = new Date()
@@ -21,10 +21,12 @@ const CalendarBox: React.FC<CalendarBoxProps> = ({ onDateSelect, value }) => {
   const onChangeHandler = (value: Value) => {
     if (!value) return
     if (value instanceof Date) {
+      setSelectedDate(value)
       if (onDateSelect) onDateSelect(value)
     } else if (Array.isArray(value)) {
-      if (value[0] instanceof Date && onDateSelect) {
-        onDateSelect(value[0])
+      if (value[0] instanceof Date) {
+        setSelectedDate(value[0])
+        if (onDateSelect) onDateSelect(value[0])
       }
     }
   }
