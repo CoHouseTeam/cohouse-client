@@ -15,8 +15,8 @@ export interface Todo {
 
 export interface Member {
   name: string
-  role: string
-  avatar: string
+  profileUrl: string
+  task: string
 }
 
 export interface Group {
