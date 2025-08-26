@@ -1,13 +1,30 @@
 import { useState } from 'react'
 import { Search, CaretDown } from 'react-bootstrap-icons'
 import SettlementListItem from '../features/settlements/components/SettlementListItem'
+import { useMySettlementHistory } from '../libs/hooks/settlements/useMySettlements'
+import LoadingSpinner from '../features/common/LoadingSpinner'
 
 const CATEGORY_LIST = ['전체', '식비', '생활용품', '문화생활', '기타'] as const
 type Category = (typeof CATEGORY_LIST)[number]
 
 export default function SettlementHistory() {
   const [open, setOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<Category>('전체')
+
+  const { data, isLoading, error } = useMySettlementHistory()
+  if (isLoading) return <LoadingSpinner />
+  if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
+
+  // 보여줄 정산(진행중인 내역 제외 모두)
+  const history = (data ?? []).filter((s) => s.status !== 'PENDING')
+
+  // 최신순 정렬
+  const sorted = history.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )
+
+  const isEmpty = history.length === 0
+
   return (
     <div className="space-y-6 w-full max-w-5xl mx-auto">
       <div className="grid grid-cols-1 gap-6">
@@ -66,9 +83,24 @@ export default function SettlementHistory() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start md:gap-6">
-        <SettlementListItem />
-      </div>
+      {isEmpty ? (
+        <div className="flex flex-col justify-center text-center mt-4">
+          <img
+            src="/src/assets/icons/settlementIcon.svg"
+            alt="empty icon"
+            className="h-10 w-10 mx-auto"
+          />
+          <p className="text-sm font-medium text-neutral-400 text-center p-3">
+            진행 중인 정산이 없어요
+          </p>
+        </div>
+      ) : (
+        <>
+          {sorted?.map((s) => (
+            <SettlementListItem key={s.id} item={s} viewerId={3} />
+          ))}
+        </>
+      )}
     </div>
   )
 }

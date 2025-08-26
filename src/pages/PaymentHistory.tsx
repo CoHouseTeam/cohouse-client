@@ -1,13 +1,39 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Search, CaretDown } from 'react-bootstrap-icons'
-import SettlementListItem from '../features/settlements/components/SettlementListItem'
+import { useMyPayments } from '../libs/hooks/settlements/useMyPayments'
+import LoadingSpinner from '../features/common/LoadingSpinner'
+import { useMySettlements } from '../libs/hooks/settlements/useMySettlements'
+import { PaymentHistoryItem, Settlement } from '../types/settlement'
+import PaymentsListItem from '../features/payments/components/paymentsListItem'
 
 const CATEGORY_LIST = ['전체', '송금 완료', '송금 실패', '송금 취소'] as const
 type Category = (typeof CATEGORY_LIST)[number]
 
 export default function SettlementHistory() {
   const [open, setOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<Category>('전체')
+
+  const { data: payments = [], isLoading, error } = useMyPayments()
+  const { data: settlements = [] } = useMySettlements()
+
+  // 정산 데이터 key(settlementId), value(settlement 전체)로 맵핑
+  const settlementMap = useMemo(
+    () => new Map<number, Settlement>((settlements ?? []).map((s) => [s.id, s] as const)),
+    [settlements]
+  )
+
+  // 최신순 정렬
+  const sorted = useMemo(() => {
+    return [...payments].sort(
+      (a, b) => new Date(b.transferAt).getTime() - new Date(a.transferAt).getTime()
+    )
+  }, [payments])
+
+  if (isLoading) return <LoadingSpinner />
+  if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
+
+  const isEmpty = sorted?.length === 0
+
   return (
     <div className="space-y-6 w-full max-w-5xl mx-auto">
       <div className="grid grid-cols-1 gap-6">
@@ -66,9 +92,28 @@ export default function SettlementHistory() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start md:gap-6">
-        <SettlementListItem />
-      </div>
+      {isEmpty ? (
+        <div className="flex flex-col justify-center text-center">
+          <img
+            src="/src/assets/icons/settlementIcon.svg"
+            alt="empty icon"
+            className="h-10 w-10 mx-auto"
+          />
+          <p className="text-sm font-medium text-neutral-400 text-center p-3">
+            송금 히스토리가 없어요
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start md:gap-6">
+          {sorted?.map((p: PaymentHistoryItem) => (
+            <PaymentsListItem
+              key={p.paymentHistoryId}
+              item={p}
+              settlement={settlementMap.get(p.settlementId)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
