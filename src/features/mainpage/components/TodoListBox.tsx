@@ -1,10 +1,6 @@
 import { useState } from 'react'
 import UncompletedTasksModal from './UncompletedTasksModal'
-
-type Todo = {
-  text: string
-  checked: boolean
-}
+import { Todo } from '../../../types/main.ts'
 
 const initialTodos: Todo[] = [
   { text: '설거지', checked: false },
