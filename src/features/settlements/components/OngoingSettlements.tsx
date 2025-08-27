@@ -1,12 +1,13 @@
 import LoadingSpinner from '../../common/LoadingSpinner'
 import SettlementListItem from './SettlementListItem'
 import { useMySettlements } from '../../../libs/hooks/settlements/useMySettlements'
+import ErrorCard from '../../common/ErrorCard'
 
 export default function OngoingSettlements() {
   const { data, isLoading, error } = useMySettlements()
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
+  if (error) return <ErrorCard />
 
   const ongoing = (data ?? []).filter((s) => s.status === 'PENDING')
   const isEmpty = ongoing.length === 0
