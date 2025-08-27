@@ -13,7 +13,7 @@ interface GroupMemberListProps {
 const GroupMemberList: React.FC<GroupMemberListProps> = ({ members }) => (
   <div style={{ marginTop: '8px' }}>
     <div>
-      {members.map((member, idx) => (
+      {Array.isArray(members) && members.map((member, idx) => (
         <GroupMemberItem key={idx} name={member.name} avatarUrl={member.avatarUrl} />
       ))}
     </div>

@@ -28,10 +28,11 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
   const fetchTemplates = async () => {
     try {
       const res = await axios.get<Template[]>('/api/tasks/templates')
-      if (res.data.length === 0) {
+      const data = Array.isArray(res.data) ? res.data : []
+      if (data.length === 0) {
         setTemplates(initialEmptyTemplates)
       } else {
-        setTemplates(res.data)
+        setTemplates(data)
       }
     } catch (error) {
       console.error('템플릿 목록 조회 실패', error)
@@ -104,7 +105,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
         </thead>
 
         <tbody>
-          {templates.map((template, rowIdx) => (
+          {Array.isArray(templates) && templates.map((template, rowIdx) => (
             <tr key={template.templateId}>
               <td
                 className={
@@ -133,7 +134,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
                 <div className="relative flex items-center">
                   <button
                     type="button"
-                    className="text-gray-400 focus:text-black z-20 -ml-3"
+                    className="bbt text-gray-400 focus:text-black z-20 -ml-3"
                     onClick={() => toggleModal(rowIdx)}
                   >
                     <ChevronRight

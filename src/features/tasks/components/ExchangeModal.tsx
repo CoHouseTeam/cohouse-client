@@ -45,7 +45,7 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
             />
             <span className="text-sm">전체선택</span>
           </label>
-          {members.map((member, idx) => (
+          {Array.isArray(members) && members.map((member, idx) => (
             <label
               key={member.name}
               className="flex items-center space-x-3 p-3 bg-base-100 rounded-lg cursor-pointer border mt-2"

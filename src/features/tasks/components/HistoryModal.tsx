@@ -35,7 +35,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ open, onClose, items }) => 
 
         {/* 내역 리스트 */}
         <div className="flex flex-col space-y-2">
-          {items.map((item, idx) => (
+          {Array.isArray(items) && items.map((item, idx) => (
             <div
               key={idx}
               className="
