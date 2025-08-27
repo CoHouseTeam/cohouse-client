@@ -48,23 +48,12 @@ api.interceptors.response.use(
     if (import.meta.env.PROD && error.config?.url) {
       console.warn('API Error, providing fallback data:', error.config.url)
       
-      // settlements API용 Mock 데이터
-      if (error.config.url.includes('settlements')) {
-        return Promise.resolve({
-          data: [],
-          status: 200,
-          statusText: 'OK (Mock Data)'
-        })
-      }
-      
-      // tasks API용 Mock 데이터
-      if (error.config.url.includes('tasks')) {
-        return Promise.resolve({
-          data: [],
-          status: 200,
-          statusText: 'OK (Mock Data)'
-        })
-      }
+      // 모든 API 오류에 대해 빈 배열 반환
+      return Promise.resolve({
+        data: [],
+        status: 200,
+        statusText: 'OK (Mock Data)'
+      })
     }
     
     return Promise.reject(error)

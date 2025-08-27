@@ -105,7 +105,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
         </thead>
 
         <tbody>
-          {templates.map((template, rowIdx) => (
+          {Array.isArray(templates) && templates.map((template, rowIdx) => (
             <tr key={template.templateId}>
               <td
                 className={
