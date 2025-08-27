@@ -1,6 +1,6 @@
-import { Heart, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import ConfirmModal from '../features/common/ConfirmModal'
+import { Heart, X, ChevronDown, ChevronUp, User } from 'lucide-react'
 
 // 게시글 타입 정의
 interface Post {
@@ -16,8 +16,8 @@ interface Post {
   likedBy: string[] // 좋아요를 누른 사용자 목록
 }
 
-// 좋아요 사용자 타입 정의
-interface LikeUser {
+// 사용자 타입 정의
+interface User {
   id: string
   name: string
   profileImage: string
@@ -383,7 +383,7 @@ export default function Board() {
   }
 
   // 좋아요 사용자 목록 (실제로는 API에서 가져올 데이터)
-  const likeUsers: LikeUser[] = [
+  const likeUsers: User[] = [
     { id: 'user1', name: '김철수', profileImage: '' },
     { id: 'user2', name: '이영희', profileImage: '' },
     { id: 'user3', name: '박민수', profileImage: '' },
