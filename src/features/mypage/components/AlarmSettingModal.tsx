@@ -55,7 +55,7 @@ export default function AlarmSettingModal({ onClose }: OnCloseProps) {
             {/* 전체 알림 */}
             <div className="flex items-center justify-end px-4 py-3 gap-2 overflow-auto">
               <span className="text-sm">전체 알림 설정</span>
-              <Toggle checked={allToggleOn} onChange={setAllToggleOn} />
+              <Toggle checked={allToggleOn} onChange={setAllToggleOn} disabled />
             </div>
 
             {/* 개별 알림 */}
