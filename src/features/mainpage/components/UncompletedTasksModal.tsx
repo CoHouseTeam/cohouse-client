@@ -1,5 +1,5 @@
 import React from 'react'
-import { Group, UncompletedTasksModalProps } from '../../../types/main.ts'
+import { Group, ModalProps } from '../../../types/main.ts'
 import { XCircleFill } from 'react-bootstrap-icons'
 
 const pendingData: Group[] = [
@@ -24,7 +24,7 @@ const pendingData: Group[] = [
   },
 ]
 
-const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({ onClose }) => {
+const UncompletedTasksModal: React.FC<ModalProps> = ({ onClose }) => {
   return (
     <dialog open className="modal">
       <div className="modal-box max-w-xs max-h-[90vh] overflow-y-auto relative">
