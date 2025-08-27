@@ -10,7 +10,7 @@ export default function RecentSettlements() {
   if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
 
   // 완료된 정산
-  const completed = (data ?? []).filter((s) => s.status === 'COMPLETED')
+  const completed = Array.isArray(data) ? data.filter((s) => s.status === 'COMPLETED') : []
 
   // 최신순 정렬
   const sorted = completed.sort(

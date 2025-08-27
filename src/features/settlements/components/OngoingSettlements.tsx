@@ -8,7 +8,7 @@ export default function OngoingSettlements() {
   if (isLoading) return <LoadingSpinner />
   if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
 
-  const ongoing = (data ?? []).filter((s) => s.status === 'PENDING')
+  const ongoing = Array.isArray(data) ? data.filter((s) => s.status === 'PENDING') : []
   const isEmpty = ongoing.length === 0
 
   return (

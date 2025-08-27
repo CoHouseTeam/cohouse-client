@@ -35,7 +35,7 @@ const TasksPage: React.FC = () => {
 
   const fetchAssignments = useCallback(async () => {
     const res = await axios.get('/api/tasks/assignments')
-    setAssignments(res.data || [])
+    setAssignments(Array.isArray(res.data) ? res.data : [])
   }, [])
 
   useEffect(() => {
