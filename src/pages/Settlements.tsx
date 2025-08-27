@@ -1,11 +1,22 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { PlusCircle } from 'react-bootstrap-icons'
 import SettlementCreateModal from '../features/settlements/components/SettlementCreateModal'
 import OngoingSettlements from '../features/settlements/components/OngoingSettlements'
 import RecentSettlements from '../features/settlements/components/RecentSettlements'
+import { GroupMembers, Groups } from '../mocks/db/groupMembers'
+import { useParams } from 'react-router-dom'
 
 export default function Settlements() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  // 라우트 파람이 없을 수도 있으니 optional로
+  const { groupId: groupIdParam } = useParams<{ groupId?: string }>()
+
+  // 항상 "숫자" groupId를 만들기 + 파람이 없으면 목데이터 첫 그룹 사용
+  const groupId = useMemo(() => {
+    const parsed = groupIdParam ? Number(groupIdParam) : NaN
+    if (Number.isFinite(parsed)) return parsed
+    return Groups?.[0]?.id ?? GroupMembers?.[0]?.groupId ?? 1
+  }, [groupIdParam])
 
   return (
     <>
@@ -38,7 +49,13 @@ export default function Settlements() {
         </div>
       </div>
 
-      {isModalOpen && <SettlementCreateModal onClose={() => setIsModalOpen(false)} mode="create" />}
+      {isModalOpen && (
+        <SettlementCreateModal
+          onClose={() => setIsModalOpen(false)}
+          mode="create"
+          groupId={groupId}
+        />
+      )}
     </>
   )
 }

@@ -5,23 +5,29 @@ import { useSettlementDetail } from '../../../libs/hooks/settlements/useMySettle
 import { fromCategory } from '../../../libs/utils/categoryMapping'
 import LoadingSpinner from '../../common/LoadingSpinner'
 
+import Toggle from '../../common/Toggle'
+import ErrorCard from '../../common/ErrorCard'
+import { applyEvenSplit, fromServerList, UIParticipant } from '../utils/participants'
+
 type CreateProps = {
   mode?: 'create'
   onClose: () => void
+  groupId: number
 }
 
 type DetailProps = {
   mode: 'detail'
   detailId: number
   onClose: () => void
+  groupId: number
 }
 
 type Props = CreateProps | DetailProps
 
 const categoryList = ['식비', '생활용품', '문화생활', '기타']
-type categoryLabel = (typeof categoryList)[number]
 
 export default function SettlementCreateModal(props: Props) {
+  const { groupId } = props
   const readOnly = props.mode === 'detail'
   const detailId = readOnly ? (props as DetailProps).detailId : undefined
 
@@ -29,33 +35,51 @@ export default function SettlementCreateModal(props: Props) {
   const [title, setTitle] = useState('')
   const [desc, setDesc] = useState('')
   const [amount, setAmount] = useState<number | ''>('')
-  const [participants, setParticipants] = useState<{ id: number; name: string }[]>([])
 
+  const [participants, setParticipants] = useState<UIParticipant[]>([])
+
+  // 카테고리
   const [open, setOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<categoryLabel | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
+  // 참여자 선택 모달
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // 균등 분배 on/off
+  const [evenSplitOn, setEvenSplitOn] = useState(false)
 
   const { data, isLoading, error } = useSettlementDetail(detailId)
 
+  // 상세조회 화면 데이터 매핑
   useEffect(() => {
     if (!data) return
     setTitle(data.title ?? '')
     setDesc(data.description ?? '')
     setAmount(data.settlementAmount ?? '')
-    setSelectedCategory(fromCategory(data.category) as categoryLabel)
-    setParticipants(data.participants.map((p) => ({ id: p.memberId, name: p.memberName })))
+    setSelectedCategory(fromCategory(data.category))
+    setEvenSplitOn(!!data.equalDistribution)
+    setParticipants(fromServerList(data.participants))
   }, [data])
 
+  // 균등분배 재계산
+  useEffect(() => {
+    if (readOnly) return
+    if (!evenSplitOn) return
+    if (!participants.length) return
+    const total = typeof amount === 'number' ? amount : Number(amount || 0)
+    if (total <= 0) return
+    setParticipants((prev) => applyEvenSplit(prev, total))
+  }, [evenSplitOn, amount, participants.length, readOnly])
+
   if (isLoading) return <LoadingSpinner />
-  if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
+  if (error) return <ErrorCard />
   return (
     <>
       <div className="modal modal-open">
         <div className="modal-box max-h-[90vh] overflow-y-auto">
           <button
             onClick={props.onClose}
-            className="btn btn-sm btn-circle absolute right-2 top-2 bg-transparent border-none"
+            className="absolute right-2 top-2 bg-transparent border-none mt-2 mr-2"
             aria-label="닫기"
           >
             <XCircle size={15} />
@@ -182,15 +206,45 @@ export default function SettlementCreateModal(props: Props) {
                 </div>
 
                 {participants.length > 0 ? (
-                  <ul
-                    className={`border rounded-xl p-3 grid grid-cols-2 gap-2 ${readOnly ? 'bg-base-200' : 'border-dashed'}`}
-                  >
-                    {participants.map((p) => (
-                      <li key={p.id} className="text-sm">
-                        {p.name}
-                      </li>
-                    ))}
-                  </ul>
+                  <>
+                    <div className="flex items-center justify-end gap-2 mb-2">
+                      <span>균등 분배</span>
+                      <Toggle
+                        checked={evenSplitOn}
+                        onChange={(v) => {
+                          if (readOnly) return
+                          setEvenSplitOn(v)
+                        }}
+                        disabled={readOnly}
+                      />
+                    </div>
+                    <div
+                      className={`border rounded-xl p-3 flex flex-col gap-2 ${readOnly ? 'bg-white' : ''}`}
+                    >
+                      {participants.map((p) => (
+                        <div
+                          key={p.memberId}
+                          className="text-sm flex items-center justify-between gap-6"
+                        >
+                          <div className="flex items-center gap-3 ml-2">
+                            <img
+                              src={p.avatar ?? '/placeholder-avatar.png'}
+                              alt="avatar"
+                              className="rounded-full w-6 h-6"
+                            />
+                            <span>{p.memberName}</span>
+                          </div>
+                          <input
+                            type="number"
+                            placeholder="금액 입력"
+                            value={p.shareAmount ?? ''}
+                            className="input input-bordered text-sm rounded-lg w-28 h-8 no-spinner mr-2"
+                            disabled={readOnly}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 ) : (
                   <div className="flex border border-dashed h-[7rem] w-full justify-center items-center">
                     <span className="text-sm text-gray-400">참여자를 선택해주세요</span>
@@ -218,7 +272,13 @@ export default function SettlementCreateModal(props: Props) {
         </div>
       </div>
       {!readOnly && isModalOpen && (
-        <ParticipantsSelectModal onClose={() => setIsModalOpen(false)} />
+        <ParticipantsSelectModal
+          onClose={() => setIsModalOpen(false)}
+          onSelect={(list) => {
+            setParticipants(list)
+          }}
+          groupId={groupId}
+        />
       )}
     </>
   )
