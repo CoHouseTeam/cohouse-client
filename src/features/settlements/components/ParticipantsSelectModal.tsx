@@ -15,7 +15,7 @@ interface Props {
 export default function ParticipantsSelectModal({ onClose, onSelect, groupId }: Props) {
   const [checked, setChecked] = useState<Record<number, boolean>>({})
 
-  // groupMember 정보 추출(users 정보 이용)
+  // groupId에 해당하는 groupMember 정보 추출(users 정보 이용)
   const list = useMemo<UIParticipant[]>(() => {
     const inGroup = GroupMembers.filter((gm) => gm.groupId === groupId && gm.status === 'ACTIVE')
 
