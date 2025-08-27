@@ -1,3 +1,4 @@
+// main.tsx (최소 수정판)
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -9,40 +10,37 @@ import { SplashScreen } from '@capacitor/splash-screen'
 import App from './App.tsx'
 import './styles/globals.css'
 
-// Define a more specific type for the window object with Capacitor
 interface WindowWithCapacitor extends Window {
-  Capacitor?: {
-    isNative: boolean
-  }
+  Capacitor?: { isNative: boolean }
 }
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-    },
+    queries: { staleTime: 5 * 60 * 1000, retry: 1 },
   },
 })
 
-// Initialize Capacitor app
+// [추가] DEV에서만 렌더 전에 MSW 먼저 시작
+async function enableMocking() {
+  if (!import.meta.env.DEV || import.meta.env.MODE !== 'development') return
+
+  const { worker } = await import('./mocks/browser')
+  await worker.start({
+    serviceWorker: { url: '/mockServiceWorker.js' },
+    onUnhandledRequest: 'bypass',
+  })
+}
+
+// 기존 Capacitor 초기화는 그대로
 const initializeApp = async () => {
   try {
-    // Check if running in Capacitor environment by trying to access native features
     const isCapacitor = !!(window as WindowWithCapacitor).Capacitor?.isNative
-
     if (isCapacitor) {
-      // Set status bar style
       await StatusBar.setStyle({ style: Style.Dark })
-
-      // Hide splash screen after app is ready
       await SplashScreen.hide()
-
-      // Handle app state changes
       CapApp.addListener('appStateChange', ({ isActive }) => {
         console.log('App state changed. Is active?', isActive)
       })
-
       CapApp.addListener('appUrlOpen', (data) => {
         console.log('App opened with URL:', data.url)
       })
@@ -54,26 +52,22 @@ const initializeApp = async () => {
   }
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-        <Toaster position="top-right" />
-      </BrowserRouter>
-    </QueryClientProvider>
-  </React.StrictMode>
-)
+// [변경] 부트스트랩 순서만 살짝 조정: MSW → 렌더 → Capacitor
+async function bootstrap() {
+  await enableMocking() // ← 여기서 MSW가 먼저 켜짐
 
-// Initialize app after render
-initializeApp()
-
-// DEV일 때만 MSW 시작
-if (import.meta.env.DEV) {
-  import('./mocks/browser').then(({ worker }) =>
-    worker.start({
-      serviceWorker: { url: '/mockServiceWorker.js' },
-      onUnhandledRequest: 'bypass',
-    })
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <App />
+          <Toaster position="top-right" />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </React.StrictMode>
   )
+
+  initializeApp()
 }
+
+bootstrap()

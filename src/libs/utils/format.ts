@@ -18,22 +18,6 @@ export function formatDate(date: string | Date): string {
   }).format(new Date(date))
 }
 
-export function formatDateWithWeekday(date: string | Date): string {
-  const parts = new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    weekday: 'short',
-  }).formatToParts(new Date(date))
-
-  const year = parts.find((p) => p.type === 'year')?.value
-  const month = parts.find((p) => p.type === 'month')?.value
-  const day = parts.find((p) => p.type === 'day')?.value
-  const weekday = parts.find((p) => p.type === 'weekday')?.value
-
-  return `${year}.${month}.${day}(${weekday})`
-}
-
 export function formatDateTime(date: string | Date): string {
   return new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric',
