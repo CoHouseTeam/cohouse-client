@@ -17,7 +17,7 @@ export default function OngoingSettlements() {
         className={`${isEmpty ? 'card-body p-4' : 'card-body p-4 bg-base-200 shadow rounded-xl'}`}
       >
         <div className="flex justify-between items-center">
-          <h2 className="card-title text-xl text-[oklch(44%_0.043_257.281)]">진행 중인 정산</h2>
+          <h2 className="card-title text-xl">진행 중인 정산</h2>
         </div>
         {isEmpty ? (
           <div className="flex flex-col justify-center text-center mt-4">

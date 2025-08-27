@@ -29,7 +29,7 @@ export default function Login() {
               <input
                 type="email"
                 placeholder="이메일을 입력하세요"
-                className="input input-bordered focus:input-primary"
+                className="input input-bordered rounded-lg focus:input-primary"
                 {...register('email', { 
                   required: '이메일을 입력해주세요',
                   pattern: {
@@ -52,7 +52,7 @@ export default function Login() {
               <input
                 type="password"
                 placeholder="비밀번호를 입력하세요"
-                className="input input-bordered focus:input-primary"
+                className="input input-bordered rounded-lg focus:input-primary"
                 {...register('password', { 
                   required: '비밀번호를 입력해주세요',
                   minLength: {
@@ -75,8 +75,8 @@ export default function Login() {
               </label>
             </div>
 
-            <div className="form-control mt-8">
-              <button type="submit" className="btn btn-primary h-12">
+            <div className="form-control mt-8 rounded-lg">
+              <button type="submit" className="btn btn-custom btn-primary h-12">
                 로그인
               </button>
             </div>

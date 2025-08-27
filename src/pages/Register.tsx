@@ -132,7 +132,7 @@ export default function Register() {
         <div className="card-body p-6 sm:p-8">
           {/* 뒤로가기 버튼 */}
           <div className="mb-4">
-            <Link to="/login" className="btn btn-ghost btn-sm gap-2">
+            <Link to="/login" className="btn btn-ghost btn-sm gap-2 rounded-lg">
               <ArrowLeft className="w-4 h-4" />
               로그인으로 돌아가기
             </Link>
@@ -150,7 +150,7 @@ export default function Register() {
                 <input
                   type="email"
                   placeholder="이메일을 입력하세요"
-                  className="input input-bordered flex-1 focus:input-primary"
+                  className="input input-bordered rounded-lg flex-1 focus:input-primary"
                   {...register('email', { 
                     required: '이메일을 입력해주세요',
                     pattern: {
@@ -161,7 +161,7 @@ export default function Register() {
                 />
                 <button
                   type="button"
-                  className="btn btn-primary whitespace-nowrap h-12"
+                  className="btn btn-neutral whitespace-nowrap h-12 rounded-lg"
                   onClick={handleEmailVerification}
                 >
                   인증
@@ -184,14 +184,14 @@ export default function Register() {
                   <input
                     type="text"
                     placeholder="인증번호를 입력하세요"
-                    className="input input-bordered flex-1 focus:input-primary"
+                    className="input input-bordered rounded-lg flex-1 focus:input-primary"
                     {...register('verificationCode', { 
                       required: '인증번호를 입력해주세요'
                     })}
                   />
                   <button
                     type="button"
-                    className="btn btn-secondary whitespace-nowrap h-12"
+                    className="btn btn-neutral whitespace-nowrap h-12 rounded-lg"
                     onClick={handleVerificationConfirm}
                   >
                     확인
@@ -218,7 +218,7 @@ export default function Register() {
               <input
                 type="text"
                 placeholder="이름을 입력하세요"
-                className="input input-bordered focus:input-primary"
+                className="input input-bordered rounded-lg focus:input-primary"
                 {...register('name', { 
                   required: '이름을 입력해주세요',
                   minLength: {
@@ -242,7 +242,7 @@ export default function Register() {
               <input
                 type="password"
                 placeholder="비밀번호를 입력하세요"
-                className="input input-bordered focus:input-primary"
+                className="input input-bordered rounded-lg focus:input-primary"
                 {...register('password', { 
                   required: '비밀번호를 입력해주세요',
                   minLength: {
@@ -278,7 +278,7 @@ export default function Register() {
                 <input
                   type="password"
                   placeholder="비밀번호를 한 번 더 입력하세요"
-                  className="input input-bordered focus:input-primary"
+                  className="input input-bordered rounded-lg focus:input-primary"
                   {...register('confirmPassword', { 
                     required: '비밀번호를 한 번 더 입력해주세요',
                     validate: (value) => value === watchedPassword || '비밀번호가 일치하지 않습니다'
@@ -320,7 +320,7 @@ export default function Register() {
                     <span className="label-text flex-1">이용약관 동의 <span className="text-error">(필수)</span></span>
                     <button
                       type="button"
-                      className="btn btn-link btn-xs text-primary hover:text-primary-focus"
+                      className="btn btn-ghost btn-xs rounded-lg"
                       onClick={() => openModal('terms')}
                     >
                       전문보기
@@ -339,7 +339,7 @@ export default function Register() {
                     <span className="label-text flex-1">개인정보 수집·이용 동의 <span className="text-error">(필수)</span></span>
                     <button
                       type="button"
-                      className="btn btn-link btn-xs text-primary hover:text-primary-focus"
+                      className="btn btn-ghost btn-xs rounded-lg"
                       onClick={() => openModal('privacy')}
                     >
                       전문보기
@@ -358,7 +358,7 @@ export default function Register() {
                     <span className="label-text flex-1">마케팅 정보 수신 동의 <span className="text-info">(선택)</span></span>
                     <button
                       type="button"
-                      className="btn btn-link btn-xs text-primary hover:text-primary-focus"
+                      className="btn btn-ghost btn-xs rounded-lg"
                       onClick={() => openModal('marketing')}
                     >
                       전문보기
@@ -370,7 +370,7 @@ export default function Register() {
 
             {/* 회원가입 버튼 */}
             <div className="form-control mt-8">
-              <button type="submit" className="btn btn-primary h-12">
+              <button type="submit" className="btn btn-neutral h-12 rounded-lg">
                 회원가입
               </button>
             </div>
@@ -381,7 +381,7 @@ export default function Register() {
       {/* 약관 모달들 */}
       {(showTermsModal || showPrivacyModal || showMarketingModal) && (
         <div className="modal modal-open">
-          <div className="modal-box max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="modal-box rounded-lg max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <h3 className="font-bold text-xl">
                 {modalType === 'terms' && '이용약관'}
@@ -389,14 +389,14 @@ export default function Register() {
                 {modalType === 'marketing' && '마케팅 정보 수신 동의'}
               </h3>
               <button 
-                className="btn btn-sm btn-circle btn-ghost"
+                className="btn btn-sm btn-circle btn-ghost rounded-lg"
                 onClick={closeModal}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="prose max-w-none">
+            <div className="prose max-w-none text-sm">
               {modalType === 'terms' && (
                 <div className="space-y-4">
                   <h4>제1조 (목적)</h4>
@@ -456,7 +456,7 @@ export default function Register() {
             </div>
 
             <div className="modal-action">
-              <button className="btn btn-primary" onClick={closeModal}>
+              <button className="btn btn-neutral btn-sm rounded-lg" onClick={closeModal}>
                 확인
               </button>
             </div>

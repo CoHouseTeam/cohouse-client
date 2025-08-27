@@ -26,11 +26,11 @@ const pendingData: Group[] = [
 
 const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({ onClose }) => {
   return (
-    <dialog open className="modal">
-      <div className="modal-box max-w-xs max-h-[90vh] overflow-y-auto relative">
+    <div className="modal modal-open">
+      <div className="modal-box rounded-lg max-w-xs max-h-[90vh] overflow-y-auto relative">
         <button
-          className="btn btn-xs btn-circle btn-ghost absolute right-4 top-4 z-50"
           onClick={onClose}
+          className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 rounded-lg"
           aria-label="닫기"
           type="button"
         >
@@ -40,19 +40,17 @@ const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({ onClose }
         <h3 className="font-bold text-[24px] text-center mb-6">미이행 내역</h3>
 
         {pendingData.map((group) => (
-          <div key={group.date} className="mb-6">
-            <div className="text-[15px] font-bold mb-2 text-gray-800">{group.date}</div>
-            <div className="bg-white border border-[#5C5C5C] rounded-lg px-4 py-3">
-              {group.members.map((m) => (
-                <div key={m.task + m.name} className="flex items-center mb-3 last:mb-0">
-                  <img
-                    src={m.profileUrl}
-                    alt={m.task}
-                    className="w-8 h-8 rounded-full border mr-3 bg-gray-100 object-cover"
-                  />
-                  <div>
-                    <div className="text-[14px]">{m.task}</div>
-                    <div className="text-xs text-gray-500">{m.name}</div>
+          <div key={group.date} className="mb-4">
+            <div className="text-sm font-semibold text-gray-800 mb-2">{group.date}</div>
+            <div className="card bg-base-200 shadow-sm rounded-lg">
+              <div className="card-body p-4">
+                {group.members.map((m) => (
+                  <div key={m.name} className="flex items-center mb-3 last:mb-0">
+                    <img src={m.avatar} alt={m.name} className="w-8 h-8 rounded-full border mr-3" />
+                    <div>
+                      <div className="font-semibold">{m.name}</div>
+                      <div className="text-xs text-gray-500">{m.role}</div>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -28,7 +28,7 @@ export default function RecentSettlements() {
         className={`${isEmpty ? 'card-body p-4' : 'card-body p-4 bg-base-200 shadow rounded-xl'}`}
       >
         <div className="flex items-baseline gap-1 text-center">
-          <h2 className="card-title text-success">정산 내역</h2>
+          <h2 className="card-title">정산 내역</h2>
           <div className="flex flex-1 justify-between">
             <span className="text-[0.7rem] text-neutral-400">(최근 내역 2개)</span>
             <Link to="/settlements/history" className="text-[0.7rem] pr-1 text-neutral-400">
