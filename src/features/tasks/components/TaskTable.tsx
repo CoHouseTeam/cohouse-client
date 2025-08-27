@@ -134,7 +134,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
                 <div className="relative flex items-center">
                   <button
                     type="button"
-                    className="text-gray-400 focus:text-black z-20 -ml-3"
+                    className="bbt text-gray-400 focus:text-black z-20 -ml-3"
                     onClick={() => toggleModal(rowIdx)}
                   >
                     <ChevronRight

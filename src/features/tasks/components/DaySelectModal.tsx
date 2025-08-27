@@ -22,7 +22,7 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
     fetchRepeatDays()
   }, [templateId])
 
-  const checkedDays = repeatDays.map((d) => d.dayOfWeek)
+  const checkedDays = Array.isArray(repeatDays) ? repeatDays.map((d) => d.dayOfWeek) : []
 
   const toggleDay = async (dayKr: KorDay) => {
     const dayEng = toEngDay(dayKr)
@@ -43,9 +43,9 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
   const handleToggleAll = async () => {
     if (allSelected) {
       await Promise.all(
-        repeatDays.map((d) =>
+        Array.isArray(repeatDays) ? repeatDays.map((d) =>
           axios.delete(`/api/tasks/templates/${templateId}/repeat-days/${d.repeatDayId}`)
-        )
+        ) : []
       )
       setRepeatDays([])
     } else {

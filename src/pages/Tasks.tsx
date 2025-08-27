@@ -57,7 +57,7 @@ const TasksPage: React.FC = () => {
       const repeatInfo = repeatDays.filter((rd) => rd.templateId === tpl.templateId)
 
       // 템플릿별 반복일에 동시 배정 Promise 생성
-      const assignmentPromises = repeatInfo.map(async (repeatDay) => {
+      const assignmentPromises = Array.isArray(repeatInfo) ? repeatInfo.map(async (repeatDay) => {
         const randomMemberId = memberIds[Math.floor(Math.random() * memberIds.length)]
         return axios.post('/api/tasks/assignments', {
           groupId: tpl.groupId,
@@ -66,7 +66,7 @@ const TasksPage: React.FC = () => {
           dayOfWeek: repeatDay.dayOfWeek,
           repeatType: 'WEEKLY',
         })
-      })
+      }) : []
 
       await Promise.all(assignmentPromises)
     }
