@@ -5,6 +5,7 @@ import axios from 'axios'
 import { Assignment, TaskTableProps, Template } from '../../../types/tasks'
 import { members } from '../../../mocks/db/tasks'
 import { daysKr, toEngDay } from '../../../libs/utils/dayMapping'
+import { safeMap } from '../../../libs/utils/safeArray'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -105,7 +106,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
         </thead>
 
         <tbody>
-          {Array.isArray(templates) && templates.map((template, rowIdx) => (
+          {safeMap(templates, (template, rowIdx) => (
             <tr key={template.templateId}>
               <td
                 className={
