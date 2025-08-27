@@ -1,33 +1,28 @@
 import React from 'react'
-
-type Member = {
-  name: string
-  role: string
-  avatar: string
-}
-
-type Group = {
-  date: string
-  members: Member[]
-}
+import { Group, UncompletedTasksModalProps } from '../../../types/main.ts'
+import { XCircleFill } from 'react-bootstrap-icons'
 
 const pendingData: Group[] = [
   {
     date: '2025.08.03(일)',
     members: [
-      { name: '분리수거', role: '그룹원1', avatar: '/' },
-      { name: '빨래', role: '그룹원2', avatar: '/' },
+      { task: '분리수거', name: '그룹원1', profileUrl: '/' },
+      { task: '빨래', name: '그룹원2', profileUrl: '/' },
     ],
   },
   {
     date: '2025.08.05(월)',
-    members: [{ name: '치킨 배달 정산', role: '그룹원3', avatar: '/' }],
+    members: [{ task: '치킨 배달 정산', name: '그룹원3', profileUrl: '/' }],
+  },
+  {
+    date: '2025.08.08(금)',
+    members: [
+      { task: '치킨 배달 정산', name: '그룹원3', profileUrl: '/' },
+      { task: '분리수거', name: '그룹원1', profileUrl: '/' },
+      { task: '설거지', name: '그룹원2', profileUrl: '/' },
+    ],
   },
 ]
-
-interface UncompletedTasksModalProps {
-  onClose: () => void
-}
 
 const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({ onClose }) => {
   return (
@@ -37,11 +32,12 @@ const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({ onClose }
           onClick={onClose}
           className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 rounded-lg"
           aria-label="닫기"
+          type="button"
         >
-          ✕
+          <XCircleFill className="text-2xl text-gray-400" />
         </button>
 
-        <h3 className="font-bold text-lg text-center mb-4">미이행 내역</h3>
+        <h3 className="font-bold text-[24px] text-center mb-6">미이행 내역</h3>
 
         {pendingData.map((group) => (
           <div key={group.date} className="mb-4">
@@ -56,15 +52,19 @@ const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({ onClose }
                       <div className="text-xs text-gray-500">{m.role}</div>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="modal-backdrop" onClick={onClose}></div>
-    </div>
+      <form
+        method="dialog"
+        className="modal-backdrop fixed inset-0 bg-black/40"
+        onClick={onClose}
+      ></form>
+    </dialog>
   )
 }
 
