@@ -29,6 +29,6 @@ export interface CalendarBoxProps {
   value?: Date
 }
 
-export interface UncompletedTasksModalProps {
+export interface ModalProps {
   onClose: () => void
 }
