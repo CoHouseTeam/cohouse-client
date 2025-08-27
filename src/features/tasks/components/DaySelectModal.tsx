@@ -104,7 +104,7 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
           <div className="flex justify-center space-x-2 mt-1 px-1 pt-2 pb-1 border-t border-gray-200">
             <button
               type="button"
-              className="btn btn-sm min-w-[60px] btn-primary"
+              className="btn btn-sm min-w-[60px] btn-primary rounded-lg"
               onClick={onClose}
               disabled={loading}
             >
@@ -112,7 +112,7 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
             </button>
             <button
               type="button"
-              className="btn btn-sm min-w-[60px] btn-outline"
+              className="btn btn-sm min-w-[60px] btn-outline rounded-lg"
               onClick={onClose}
               disabled={loading}
             >
