@@ -77,7 +77,7 @@ export default function ForgotPassword() {
         <div className="card-body p-6 sm:p-8">
           {/* 뒤로가기 버튼 */}
           <div className="mb-4">
-            <Link to="/login" className="btn btn-ghost btn-sm gap-2">
+            <Link to="/login" className="btn btn-ghost btn-sm gap-2 rounded-lg">
               <ArrowLeft className="w-4 h-4" />
               로그인으로 돌아가기
             </Link>
@@ -94,7 +94,7 @@ export default function ForgotPassword() {
               <input
                 type="text"
                 placeholder="이름을 입력하세요"
-                className="input input-bordered focus:input-primary"
+                className="input input-bordered focus:input-primary rounded-lg"
                 {...register('name', { 
                   required: '이름을 입력해주세요',
                   minLength: {
@@ -119,7 +119,7 @@ export default function ForgotPassword() {
                 <input
                   type="email"
                   placeholder="이메일을 입력하세요"
-                  className="input input-bordered flex-1 focus:input-primary"
+                  className="input input-bordered flex-1 focus:input-primary rounded-lg"
                   {...register('email', { 
                     required: '이메일을 입력해주세요',
                     pattern: {
@@ -130,7 +130,7 @@ export default function ForgotPassword() {
                 />
                 <button
                   type="button"
-                  className="btn btn-primary whitespace-nowrap h-12"
+                  className="btn btn-primary btn-sm whitespace-nowrap h-12 rounded-lg text-sm"
                   onClick={handleEmailVerification}
                 >
                   인증
@@ -153,14 +153,14 @@ export default function ForgotPassword() {
                   <input
                     type="text"
                     placeholder="인증번호를 입력하세요"
-                    className="input input-bordered flex-1 focus:input-primary"
+                    className="input input-bordered flex-1 focus:input-primary rounded-lg"
                     {...register('verificationCode', { 
                       required: '인증번호를 입력해주세요'
                     })}
                   />
                   <button
                     type="button"
-                    className="btn btn-secondary whitespace-nowrap h-12"
+                    className="btn btn-secondary btn-sm whitespace-nowrap h-12 rounded-lg text-sm"
                     onClick={handleVerificationConfirm}
                   >
                     확인
@@ -188,7 +188,7 @@ export default function ForgotPassword() {
             <div className="form-control mt-8">
               <button 
                 type="submit" 
-                className="btn btn-primary h-12"
+                className="btn btn-primary h-12 rounded-lg"
                 disabled={!isVerified}
               >
                 임시 비밀번호 발송

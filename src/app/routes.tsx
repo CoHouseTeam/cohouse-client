@@ -18,7 +18,8 @@ const MainPage = lazy(() => import('../pages/MainPage'))
 export function Routes() {
   return (
     <RouterRoutes>
-      <Route path="/" element={<Dashboard />} />
+      <Route path="/" element={<MainPage />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -29,7 +30,6 @@ export function Routes() {
       <Route path="/board" element={<Board />} />
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/mypage/edit" element={<MyPgeEdit />} />
-      <Route path="/main" element={<MainPage />} />
       <Route path="*" element={<NotFound />} />
     </RouterRoutes>
   )
@@ -40,7 +40,7 @@ function NotFound() {
     <div className="flex flex-col items-center justify-center min-h-[50vh]">
       <h1 className="text-4xl font-bold text-error mb-4">404</h1>
       <p className="text-lg text-base-content">페이지를 찾을 수 없습니다.</p>
-      <a href="/" className="btn btn-primary mt-4">
+      <a href="/" className="btn btn-primary mt-4 rounded-lg">
         홈으로 돌아가기
       </a>
     </div>

@@ -2,6 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
+/* 게시판 탭 커스텀 스타일 */
+.tabs-boxed {
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+.tabs-boxed .tab {
+  border-radius: 0.5rem !important;
+  margin: 0.25rem !important;
+  background-color: #f8f9fa !important;
+  color: #6b7280 !important;
+  border: 1px solid #e5e7eb !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.tabs-boxed .tab:hover {
+  background-color: #e5e7eb !important;
+  color: #374151 !important;
+}
+
+.tabs-boxed .tab.tab-active {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+  border-color: #1f2937 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.tabs-boxed .tab:first-child {
+  border-top-left-radius: 0.5rem !important;
+  border-bottom-left-radius: 0.5rem !important;
+}
+
+.tabs-boxed .tab:last-child {
+  border-top-right-radius: 0.5rem !important;
+  border-bottom-right-radius: 0.5rem !important;
+}
+
+.btn-custom {
+  border-radius: 0.5rem !important;
+  margin: 0.25rem !important;
+  background-color: black !important;
+  color: white !important;
+}
+
 /* input type:number 화살표 제거 */
 /* Chrome / Safari / Edge */
 .no-spinner::-webkit-outer-spin-button,
