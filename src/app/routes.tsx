@@ -1,15 +1,19 @@
 import { Routes as RouterRoutes, Route } from 'react-router-dom'
-import { lazy, Suspense } from 'react'
+import { lazy } from 'react'
 
 // Lazy load pages
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Login = lazy(() => import('../pages/Login'))
+const Register = lazy(() => import('../pages/Register'))
+const ForgotPassword = lazy(() => import('../pages/ForgotPassword'))
 const Settlements = lazy(() => import('../pages/Settlements'))
+const SettlementHistory = lazy(() => import('../pages/SettlementHistory'))
+const PaymentHistory = lazy(() => import('../pages/PaymentHistory'))
 const Tasks = lazy(() => import('../pages/Tasks'))
 const Board = lazy(() => import('../pages/Board'))
 const MyPage = lazy(() => import('../pages/MyPage'))
+const MyPgeEdit = lazy(() => import('../pages/MyPageEdit'))
 const MainPage = lazy(() => import('../pages/MainPage'))
-const Complete = lazy(() => import('../pages/GroupComplete'))
 
 export function Routes() {
   return (
@@ -26,7 +30,6 @@ export function Routes() {
       <Route path="/board" element={<Board />} />
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/mypage/edit" element={<MyPgeEdit />} />
-      <Route path="/complete" element={<Complete />} />
       <Route path="*" element={<NotFound />} />
     </RouterRoutes>
   )
