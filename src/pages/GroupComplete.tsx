@@ -16,7 +16,7 @@ const GroupComplete = () => {
       </div>
       <button
         className="mt-14 bg-[#242424] text-white text-base font-medium rounded-lg px-8 py-3"
-        onClick={() => navigate('/main')}
+        onClick={() => navigate('/')}
       >
         메인페이지
       </button>
