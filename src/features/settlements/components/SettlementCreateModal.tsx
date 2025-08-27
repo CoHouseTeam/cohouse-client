@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { ChangeEventHandler, useEffect, useState } from 'react'
 import { XCircle, Images, CaretDown } from 'react-bootstrap-icons'
 import ParticipantsSelectModal from './ParticipantsSelectModal'
 import { useSettlementDetail } from '../../../libs/hooks/settlements/useMySettlements'
@@ -51,9 +51,9 @@ export default function SettlementCreateModal(props: Props) {
   // 영수증 사진 보관
   const [receiptFile, setReceiptFile] = useState<File | null>(null)
   // 사진 미리보기
-  const [receiptPreview, setReceiptPreview] = useState<String | null>(null)
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
   // 이미지 아닌 파일 선택 시 에러메시지
-  const [receiptError, setReceiptError] = useState<String | null>(null)
+  const [receiptError, setReceiptError] = useState<string | null>(null)
 
   // 미리보기 URL 정리하는 함수
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function SettlementCreateModal(props: Props) {
   }, [receiptPreview])
 
   // 사진 파일 선택 핸들러
-  const onPickReceipt: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+  const onPickReceipt: ChangeEventHandler<HTMLInputElement> = (e) => {
     if (!e.target.files || readOnly) return
     setReceiptError(null)
 
@@ -85,7 +85,7 @@ export default function SettlementCreateModal(props: Props) {
     e.currentTarget.value = ''
   }
 
-  // 🔹 선택 취소(로컬 초기화)
+  // 선택 취소(로컬 초기화)
   const clearReceipt = () => {
     setReceiptFile(null)
     if (receiptPreview) {
@@ -272,6 +272,7 @@ export default function SettlementCreateModal(props: Props) {
                     disabled={readOnly}
                   />
                 </div>
+                {receiptError && <span className="text-xs text-error">{receiptError}</span>}
               </div>
 
               {/* 참여자 선택 */}
