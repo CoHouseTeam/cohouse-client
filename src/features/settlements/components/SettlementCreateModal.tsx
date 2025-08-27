@@ -4,7 +4,6 @@ import ParticipantsSelectModal from './ParticipantsSelectModal'
 import { useSettlementDetail } from '../../../libs/hooks/settlements/useMySettlements'
 import { fromCategory } from '../../../libs/utils/categoryMapping'
 import LoadingSpinner from '../../common/LoadingSpinner'
-
 import Toggle from '../../common/Toggle'
 import ErrorCard from '../../common/ErrorCard'
 import { applyEvenSplit, fromServerList, UIParticipant } from '../utils/participants'
@@ -47,6 +46,53 @@ export default function SettlementCreateModal(props: Props) {
 
   // 균등 분배 on/off
   const [evenSplitOn, setEvenSplitOn] = useState(false)
+
+  /*{ 영수증 사진 업로드 }*/
+  // 영수증 사진 보관
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+  // 사진 미리보기
+  const [receiptPreview, setReceiptPreview] = useState<String | null>(null)
+  // 이미지 아닌 파일 선택 시 에러메시지
+  const [receiptError, setReceiptError] = useState<String | null>(null)
+
+  // 미리보기 URL 정리하는 함수
+  useEffect(() => {
+    return () => {
+      if (receiptPreview) URL.revokeObjectURL(receiptPreview)
+    }
+  }, [receiptPreview])
+
+  // 사진 파일 선택 핸들러
+  const onPickReceipt: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    if (!e.target.files || readOnly) return
+    setReceiptError(null)
+
+    const f = e.target.files[0]
+    if (!f) return
+
+    if (!f.type.startsWith('image/')) {
+      setReceiptError('이미지 파일만 업로드할 수 있어요.')
+      e.currentTarget.value = ''
+      return
+    }
+
+    // 기존 미리보기 URL 해제 후 교체
+    if (receiptPreview) URL.revokeObjectURL(receiptPreview)
+    setReceiptFile(f)
+    setReceiptPreview(URL.createObjectURL(f))
+
+    // 같은 파일 다시 선택 가능하도록 초기화
+    e.currentTarget.value = ''
+  }
+
+  // 🔹 선택 취소(로컬 초기화)
+  const clearReceipt = () => {
+    setReceiptFile(null)
+    if (receiptPreview) {
+      URL.revokeObjectURL(receiptPreview)
+      setReceiptPreview(null)
+    }
+  }
 
   const { data, isLoading, error } = useSettlementDetail(detailId)
 
@@ -177,9 +223,46 @@ export default function SettlementCreateModal(props: Props) {
                   총 정산 금액
                 </span>
                 <div className="flex w-full items-center gap-2 mb-2">
-                  <div className="flex border border-dashed rounded-xl h-10 w-16 justify-center items-center no-spinner">
-                    <Images size={27} className="text-base-300" />
-                  </div>
+                  <label
+                    className="relative flex border border-dashed rounded-xl h-10 w-16 justify-center items-center no-spinner"
+                    title={readOnly ? '' : '영수증 이미지 선택'}
+                  >
+                    {!readOnly && (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={onPickReceipt}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        aria-label="영수증 이미지 선택"
+                      />
+                    )}
+                    {receiptPreview ? (
+                      <>
+                        <img
+                          src={receiptPreview}
+                          alt="영수증 미리보기"
+                          className="w-full h-full object-cover rounded-xl"
+                        />
+                        {!readOnly && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              clearReceipt()
+                            }}
+                            className="absolute -top-2 -right-2 btn btn-xs rounded-full"
+                            aria-label="영수증 선택 취소"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <Images size={22} className="text-base-300" />
+                    )}
+                  </label>
+
                   <input
                     type="number"
                     placeholder="정산 금액을 입력해주세요"
@@ -198,7 +281,7 @@ export default function SettlementCreateModal(props: Props) {
                   {!readOnly && (
                     <button
                       onClick={() => setIsModalOpen(true)}
-                      className="btn btn-sm border rounded-xl border-black text-xs px-2"
+                      className="border rounded-lg border-black text-xs px-2 h-6"
                     >
                       참여자 선택
                     </button>
