@@ -16,7 +16,7 @@ const CalendarBox = () => {
   }
 
   return (
-    <div className="calendar-wrapper">
+    <div className="calendar-wrapper rounded-lg">
       <Calendar
         value={value}
         onChange={(date) => setValue(date as Date)}

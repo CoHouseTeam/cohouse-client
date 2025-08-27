@@ -1,5 +1,6 @@
 import { Heart, X, ChevronDown, ChevronUp } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import ConfirmModal from '../features/common/ConfirmModal'
 
 // 게시글 타입 정의
 interface Post {
@@ -26,11 +27,31 @@ export default function Board() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [activeTab, setActiveTab] = useState<'notice' | 'free'>('notice')
-  const [postsPerPage] = useState(4)
+  const [postsPerPage, setPostsPerPage] = useState(4)
+  // 반응형 페이지네이션: 모바일 4개, 웹(>=lg) 16개
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)')
+    const updatePostsPerPage = () => setPostsPerPage(mql.matches ? 16 : 4)
+    updatePostsPerPage()
+    if (mql.addEventListener) {
+      mql.addEventListener('change', updatePostsPerPage)
+      return () => mql.removeEventListener('change', updatePostsPerPage)
+    } else {
+      // Safari
+      // @ts-ignore
+      mql.addListener(updatePostsPerPage)
+      return () => {
+        // @ts-ignore
+        mql.removeListener(updatePostsPerPage)
+      }
+    }
+  }, [])
   const [showLikeUsers, setShowLikeUsers] = useState(false)
   const [showNewPostModal, setShowNewPostModal] = useState(false)
   const [newPostTitle, setNewPostTitle] = useState('')
   const [newPostContent, setNewPostContent] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
   // 게시글 데이터 (실제로는 API에서 가져올 데이터)
   const [posts, setPosts] = useState<Post[]>([
@@ -217,7 +238,9 @@ export default function Board() {
   ])
 
   // 현재 사용자 (실제로는 로그인된 사용자 정보)
-  const currentUser = 'user1'
+  // 좋아요는 사용자 ID로, 작성자 비교는 사용자 이름으로 처리
+  const currentUserId = 'user1'
+  const currentUserName = '김철수'
 
   // 현재 탭에 해당하는 게시글만 필터링
   const filteredPosts = posts.filter(post => post.category === activeTab)
@@ -257,15 +280,15 @@ export default function Board() {
     setPosts(prevPosts => 
       prevPosts.map(post => {
         if (post.id === postId) {
-          const isLiked = post.likedBy.includes(currentUser)
-          console.log(`Post ${postId}: isLiked = ${isLiked}, currentUser = ${currentUser}, likedBy = ${post.likedBy}`)
+          const isLiked = post.likedBy.includes(currentUserId)
+          console.log(`Post ${postId}: isLiked = ${isLiked}, currentUser = ${currentUserId}, likedBy = ${post.likedBy}`)
           
           if (isLiked) {
             // 좋아요 취소
             const updatedPost = {
               ...post,
               likes: post.likes - 1,
-              likedBy: post.likedBy.filter(userId => userId !== currentUser)
+              likedBy: post.likedBy.filter(userId => userId !== currentUserId)
             }
             console.log('좋아요 취소:', updatedPost)
             
@@ -280,7 +303,7 @@ export default function Board() {
             const updatedPost = {
               ...post,
               likes: post.likes + 1,
-              likedBy: [...post.likedBy, currentUser]
+              likedBy: [...post.likedBy, currentUserId]
             }
             console.log('좋아요 추가:', updatedPost)
             
@@ -295,6 +318,27 @@ export default function Board() {
         return post
       })
     )
+  }
+
+  // 삭제 확인 모달 열기
+  const requestDeletePost = (postId: number) => {
+    setPendingDeleteId(postId)
+    setShowConfirm(true)
+  }
+
+  // 삭제 확정 처리
+  const confirmDeletePost = () => {
+    if (pendingDeleteId == null) return
+    setPosts(prev => prev.filter(p => p.id !== pendingDeleteId))
+    setShowConfirm(false)
+    setPendingDeleteId(null)
+    closeModal()
+  }
+
+  // 삭제 취소 처리
+  const cancelDeletePost = () => {
+    setShowConfirm(false)
+    setPendingDeleteId(null)
   }
 
   // 좋아요 사용자 목록 토글
@@ -325,7 +369,7 @@ export default function Board() {
       id: Math.max(...posts.map(p => p.id)) + 1,
       title: newPostTitle,
       content: newPostContent,
-      author: '현재 사용자',
+      author: currentUserName,
       date: new Date().toISOString().split('T')[0],
       likes: 0,
       isPinned: false,
@@ -373,10 +417,10 @@ export default function Board() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-neutral">게시판</h1>
+          <h1 className="text-3xl font-bold">게시판</h1>
         </div>
         <button 
-          className="btn btn-primary btn-sm sm:btn-md"
+          className="btn btn-custom btn-primary btn-sm sm:btn-md rounded-lg"
           onClick={openNewPostModal}
         >
           <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -387,15 +431,15 @@ export default function Board() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="tabs tabs-boxed">
+      <div className="tabs tabs-boxed rounded-lg">
         <button
-          className={`tab ${activeTab === 'notice' ? 'tab-active' : ''}`}
+          className={`tab rounded-lg ${activeTab === 'notice' ? 'tab-active' : ''}`}
           onClick={() => handleTabChange('notice')}
         >
           공지사항
         </button>
         <button
-          className={`tab ${activeTab === 'free' ? 'tab-active' : ''}`}
+          className={`tab rounded-lg ${activeTab === 'free' ? 'tab-active' : ''}`}
           onClick={() => handleTabChange('free')}
         >
           자유게시판
@@ -405,7 +449,7 @@ export default function Board() {
       {/* Board Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
         {currentPosts.map((post) => {
-          const isLiked = post.likedBy.includes(currentUser)
+          const isLiked = post.likedBy.includes(currentUserId)
           return (
             <div
               key={post.id}
@@ -459,7 +503,7 @@ export default function Board() {
         <div className="flex justify-center mt-8">
           <div className="join">
             <button
-              className="join-item btn btn-sm"
+              className="join-item btn btn-sm rounded-tl-lg rounded-bl-lg"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
             >
@@ -475,7 +519,7 @@ export default function Board() {
               </button>
             ))}
             <button
-              className="join-item btn btn-sm"
+              className="join-item btn btn-sm rounded-tr-lg rounded-br-lg"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
@@ -488,7 +532,7 @@ export default function Board() {
       {/* Post Detail Modal */}
       {selectedPost && (
         <div className="modal modal-open">
-          <div className="modal-box max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="modal-box rounded-lg max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-4">
               <h3 className="font-bold text-xl">{selectedPost.title}</h3>
               <button
@@ -525,7 +569,7 @@ export default function Board() {
                     className="btn btn-ghost btn-sm p-2"
                   >
                     <Heart 
-                      className={`w-5 h-5 ${selectedPost.likedBy.includes(currentUser) ? 'fill-red-500 text-red-500' : ''}`} 
+                      className={`w-5 h-5 ${selectedPost.likedBy.includes(currentUserId) ? 'fill-red-500 text-red-500' : ''}`} 
                     />
                   </button>
                   <button
@@ -562,7 +606,23 @@ export default function Board() {
             </div>
 
             <div className="modal-action">
-              <button className="btn btn-primary" onClick={closeModal}>
+              {selectedPost.author === currentUserName && (
+                <button
+                  className="btn btn-sm rounded-lg"
+                  style={{ backgroundColor: '#dc2626', color: 'white', border: 'none' }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    requestDeletePost(selectedPost.id)
+                  }}
+                >
+                  삭제
+                </button>
+              )}
+              <button 
+                className="btn btn-sm rounded-lg"
+                style={{ backgroundColor: '#000000', color: 'white', border: 'none' }}
+                onClick={closeModal}
+              >
                 닫기
               </button>
             </div>
@@ -574,7 +634,7 @@ export default function Board() {
       {/* New Post Modal */}
       {showNewPostModal && (
         <div className="modal modal-open">
-          <div className="modal-box max-w-2xl">
+          <div className="modal-box rounded-lg max-w-2xl">
             <div className="flex justify-between items-start mb-6">
               <h3 className="font-bold text-xl">새 글 작성</h3>
               <button
@@ -594,7 +654,7 @@ export default function Board() {
                 <input
                   type="text"
                   placeholder="제목을 입력하세요"
-                  className="input input-bordered focus:input-primary"
+                  className="input input-bordered rounded-lg focus:input-primary"
                   value={newPostTitle}
                   onChange={(e) => setNewPostTitle(e.target.value)}
                 />
@@ -607,7 +667,7 @@ export default function Board() {
                 </label>
                 <textarea
                   placeholder="내용을 입력하세요"
-                  className="textarea textarea-bordered focus:textarea-primary h-32"
+                  className="textarea textarea-bordered rounded-lg focus:textarea-primary h-32"
                   value={newPostContent}
                   onChange={(e) => setNewPostContent(e.target.value)}
                 />
@@ -615,10 +675,10 @@ export default function Board() {
             </div>
 
             <div className="modal-action">
-              <button className="btn btn-ghost" onClick={closeNewPostModal}>
+              <button className="btn btn-ghost btn-sm rounded-lg" onClick={closeNewPostModal}>
                 취소
               </button>
-              <button className="btn btn-primary" onClick={handleNewPostSubmit}>
+              <button className="btn btn-primary btn-sm rounded-lg" onClick={handleNewPostSubmit}>
                 완료
               </button>
             </div>
@@ -626,6 +686,16 @@ export default function Board() {
           <div className="modal-backdrop" onClick={closeNewPostModal}></div>
         </div>
       )}
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        open={showConfirm}
+        title="삭제 확인"
+        message="정말 이 게시글을 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={confirmDeletePost}
+        onCancel={cancelDeletePost}
+      />
     </div>
   )
 }

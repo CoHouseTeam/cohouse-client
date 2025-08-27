@@ -32,10 +32,10 @@ interface UncompletedTasksModalProps {
 const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({ onClose }) => {
   return (
     <div className="modal modal-open">
-      <div className="modal-box max-w-xs max-h-[90vh] overflow-y-auto relative">
+      <div className="modal-box rounded-lg max-w-xs max-h-[90vh] overflow-y-auto relative">
         <button
           onClick={onClose}
-          className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 rounded-lg"
           aria-label="닫기"
         >
           ✕
@@ -46,7 +46,7 @@ const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({ onClose }
         {pendingData.map((group) => (
           <div key={group.date} className="mb-4">
             <div className="text-sm font-semibold text-gray-800 mb-2">{group.date}</div>
-            <div className="card bg-base-200 shadow-sm">
+            <div className="card bg-base-200 shadow-sm rounded-lg">
               <div className="card-body p-4">
                 {group.members.map((m) => (
                   <div key={m.name} className="flex items-center mb-3 last:mb-0">

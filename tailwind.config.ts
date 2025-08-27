@@ -9,6 +9,6 @@ export default {
     require('daisyui')
   ],
   daisyui: {
-    themes: ['pastel'],
+    themes: ['lofi'],
   },
 } satisfies Config
