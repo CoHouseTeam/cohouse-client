@@ -10,23 +10,34 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { path, ...query } = req.query;
-  const apiUrl = `http://52.79.237.86:8080/${Array.isArray(path) ? path.join('/') : path || ''}`;
+  // URL에서 /api/proxy 부분 제거하고 나머지 경로 추출
+  const fullPath = req.url.replace('/api/proxy', '') || '/';
+  const apiUrl = `http://52.79.237.86:8080${fullPath}`;
+  
+  console.log('Proxy request:', req.method, apiUrl);
   
   try {
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Authorization 헤더가 있으면 추가
+    if (req.headers.authorization) {
+      headers.Authorization = req.headers.authorization;
+    }
+
     const response = await fetch(apiUrl, {
       method: req.method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(req.headers.authorization && { Authorization: req.headers.authorization }),
-      },
-      body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
+      headers,
+      body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
     });
 
     const data = await response.json();
+    console.log('Proxy response:', response.status, data);
+    
     res.status(response.status).json(data);
   } catch (error) {
     console.error('Proxy error:', error);
-    res.status(500).json({ error: 'Proxy request failed' });
+    res.status(500).json({ error: 'Proxy request failed', details: error.message });
   }
 }
