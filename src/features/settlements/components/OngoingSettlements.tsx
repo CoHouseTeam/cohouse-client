@@ -1,7 +1,6 @@
 import LoadingSpinner from '../../common/LoadingSpinner'
 import SettlementListItem from './SettlementListItem'
 import { useMySettlements } from '../../../libs/hooks/settlements/useMySettlements'
-import { safeFilter } from '../../../libs/utils/safeArray'
 
 export default function OngoingSettlements() {
   const { data, isLoading, error } = useMySettlements()
@@ -9,7 +8,7 @@ export default function OngoingSettlements() {
   if (isLoading) return <LoadingSpinner />
   if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
 
-  const ongoing = safeFilter(data, (s) => s.status === 'PENDING')
+  const ongoing = Array.isArray(data) ? data.filter((s: any) => s.status === 'PENDING') : []
   const isEmpty = ongoing.length === 0
 
   return (

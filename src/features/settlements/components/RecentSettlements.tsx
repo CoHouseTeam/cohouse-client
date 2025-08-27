@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import SettlementListItem from './SettlementListItem'
 import { useMySettlements } from '../../../libs/hooks/settlements/useMySettlements'
 import LoadingSpinner from '../../common/LoadingSpinner'
-import { safeFilter } from '../../../libs/utils/safeArray'
 
 export default function RecentSettlements() {
   const { data, isLoading, error } = useMySettlements()
@@ -11,11 +10,11 @@ export default function RecentSettlements() {
   if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
 
   // 완료된 정산
-  const completed = safeFilter(data, (s) => s.status === 'COMPLETED')
+  const completed = Array.isArray(data) ? data.filter((s: any) => s.status === 'COMPLETED') : []
 
   // 최신순 정렬
   const sorted = completed.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
 
   // 최근 2개

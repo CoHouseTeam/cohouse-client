@@ -25,3 +25,9 @@ export function safeFilter<T>(data: any, callback: (item: T, index: number, arra
   const arr = safeArray<T>(data);
   return arr.filter(callback);
 }
+
+// 타입 안전한 필터 함수 (타입 단언 포함)
+export function safeFilterTyped<T>(data: any, callback: (item: T, index: number, array: T[]) => boolean): T[] {
+  const arr = safeArray(data) as T[];
+  return arr.filter(callback);
+}
