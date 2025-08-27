@@ -5,15 +5,15 @@ import TaskRandomButton from '../features/tasks/components/TaskRandomButton'
 import TaskExchangeButton from '../features/tasks/components/TaskExchangeButton'
 import CheckRepeat from '../features/tasks/components/CheckRepeat'
 import GroupMemberList from '../features/tasks/components/GroupMemberList'
-import HistoryModal, { TaskHistory } from '../features/tasks/components/HistoryModal'
+import HistoryModal from '../features/tasks/components/HistoryModal'
 import ExchangeModal from '../features/tasks/components/ExchangeModal'
 import { members as membersObj, repeatDays, templates } from '../mocks/db/tasks'
 import axios from 'axios'
-import { Assignment } from '../types/tasks'
+import { Assignment, TaskHistory } from '../types/tasks'
 
 const members = Object.entries(membersObj).map(([, data]) => ({
   name: data.name,
-  avatarUrl: data.profileUrl,
+  profileUrl: data.profileUrl,
 }))
 
 const historyItems: TaskHistory[] = [
@@ -57,16 +57,18 @@ const TasksPage: React.FC = () => {
       const repeatInfo = repeatDays.filter((rd) => rd.templateId === tpl.templateId)
 
       // 템플릿별 반복일에 동시 배정 Promise 생성
-      const assignmentPromises = Array.isArray(repeatInfo) ? repeatInfo.map(async (repeatDay) => {
-        const randomMemberId = memberIds[Math.floor(Math.random() * memberIds.length)]
-        return axios.post('/api/tasks/assignments', {
-          groupId: tpl.groupId,
-          groupMemberId: randomMemberId,
-          templateId: tpl.templateId,
-          dayOfWeek: repeatDay.dayOfWeek,
-          repeatType: 'WEEKLY',
-        })
-      }) : []
+      const assignmentPromises = Array.isArray(repeatInfo)
+        ? repeatInfo.map(async (repeatDay) => {
+            const randomMemberId = memberIds[Math.floor(Math.random() * memberIds.length)]
+            return axios.post('/api/tasks/assignments', {
+              groupId: tpl.groupId,
+              groupMemberId: randomMemberId,
+              templateId: tpl.templateId,
+              dayOfWeek: repeatDay.dayOfWeek,
+              repeatType: 'WEEKLY',
+            })
+          })
+        : []
 
       await Promise.all(assignmentPromises)
     }
