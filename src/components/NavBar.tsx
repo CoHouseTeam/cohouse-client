@@ -85,12 +85,12 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
           <div className="navbar-start">
             <label
               htmlFor="app-drawer"
-              className="btn btn-ghost btn-square lg:hidden"
+              className="btn btn-ghost btn-square lg:hidden rounded-lg"
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5" />
             </label>
-            <Link to="/" className="btn btn-ghost text-xl">CoHouse</Link>
+            <Link to="/" className="btn btn-ghost text-xl rounded-lg">CoHouse</Link>
           </div>
 
           {/* center: desktop horizontal menu */}
@@ -98,23 +98,23 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
             <ul className="menu menu-horizontal px-1">
               {commonLinks.map(({ to, label }) => (
                 <li key={to}>
-                  <NavLink to={to} className={({ isActive }) => (isActive ? 'font-semibold' : '')}>
+                  <NavLink to={to} className={({ isActive }) => `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`}>
                     {label}
                   </NavLink>
                 </li>
               ))}
 
-              <li className="mx-2 opacity-60">|</li>
+              <li className="mx-2 opacity-60 pt-2">|</li>
 
               {!isAuthenticated ? (
                 <li>
-                  <NavLink to="/login" className={({ isActive }) => (isActive ? 'font-semibold' : '')}>
+                  <NavLink to="/login" className={({ isActive }) => `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`}>
                     로그인
                   </NavLink>
                 </li>
               ) : (
                 <li>
-                  <NavLink to="/mypage" className={({ isActive }) => (isActive ? 'font-semibold' : '')}>
+                  <NavLink to="/mypage" className={({ isActive }) => `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`}>
                     마이페이지
                   </NavLink>
                 </li>
@@ -127,7 +127,7 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
             {/* 개발용 토글 버튼 */}
             {onToggleAuth && (
               <button
-                className="btn btn-sm btn-outline"
+                className="btn btn-sm btn-outline rounded-lg"
                 onClick={onToggleAuth}
                 title="개발용: 로그인/로그아웃 토글"
               >
@@ -137,18 +137,20 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
             
             {isAuthenticated ? (
               <>
-                <button className="btn btn-ghost btn-square" aria-label="Notifications">
+                <button className="btn btn-ghost btn-square rounded-lg" aria-label="Notifications">
                   <div className="indicator">
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
-                      <span className="indicator-item badge badge-primary badge-xs" aria-label={`${unreadCount} unread`} />
+                      <span className="indicator-item badge bg-red-500 text-white badge-xs rounded-lg text-xs" aria-label={`${unreadCount} unread`}>
+                        {unreadCount}
+                      </span>
                     )}
                   </div>
                 </button>
 
                 <div className="dropdown dropdown-end">
                   <button
-                    className="btn btn-ghost btn-square"
+                    className="btn btn-ghost btn-square rounded-lg"
                     aria-label="Share"
                     onClick={() => setShowShareDropdown(!showShareDropdown)}
                   >
@@ -172,7 +174,7 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
 
                 {onLogout && (
                   <button
-                    className="btn btn-ghost btn-sm"
+                    className="btn btn-ghost btn-sm rounded-lg"
                     onClick={onLogout}
                     aria-label="Logout"
                   >
@@ -181,7 +183,7 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
                 )}
               </>
             ) : (
-              <Link to="/login" className="btn btn-primary">로그인</Link>
+              <Link to="/login" className="btn btn-custom btn-sm rounded-lg">로그인</Link>
             )}
           </div>
         </div>
@@ -198,7 +200,7 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
           <ul className="menu p-2">
             {commonLinks.map(({ to, label }) => (
               <li key={to}>
-                <NavLink to={to} onClick={closeDrawer}>{label}</NavLink>
+                <NavLink to={to} onClick={closeDrawer} className="rounded-lg">{label}</NavLink>
               </li>
             ))}
 
@@ -206,11 +208,11 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
 
             {!isAuthenticated ? (
               <li>
-                <NavLink to="/login" onClick={closeDrawer}>로그인/회원가입</NavLink>
+                <NavLink to="/login" onClick={closeDrawer} className="rounded-lg">로그인/회원가입</NavLink>
               </li>
             ) : (
               <li>
-                <NavLink to="/mypage" onClick={closeDrawer}>마이페이지</NavLink>
+                <NavLink to="/mypage" onClick={closeDrawer} className="rounded-lg">마이페이지</NavLink>
               </li>
             )}
           </ul>
