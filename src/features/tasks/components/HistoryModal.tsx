@@ -26,7 +26,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ open, onClose, items }) => 
         >
           <XCircleFill className="text-xl text-gray-400" />
         </button>
-        <h2 className="text-center text-2xl font-bold mb-5">업무 내역</h2>
+        <h2 className="text-center text-xl font-bold mb-5">업무 내역</h2>
 
         {/* 필터 드롭다운 */}
         <div className="flex justify-end mb-2 relative" ref={dropdownRef}>
