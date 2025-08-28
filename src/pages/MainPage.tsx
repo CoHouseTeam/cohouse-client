@@ -6,6 +6,7 @@ import GroupBox from '../features/mainpage/components/GroupBox'
 import { useCalendarStore } from '../app/store'
 import { useGroupStore } from '../app/store'
 import { fetchMyGroups } from '../libs/api/groups'
+import { isAuthenticated } from '../libs/utils/auth'
 
 const eventData: { [date: string]: string[] } = {
   '2025-08-04': ['빨래', '설거지', '치킨 배달 정산'],
@@ -28,7 +29,6 @@ const MainPage = () => {
       setError('')
       try {
         const groups = await fetchMyGroups()
-        // 그룹 응답이 배열인지 단일 객체인지 판단 후 설정
         const hasGroup = Array.isArray(groups) ? groups.length > 0 : groups != null
         setHasGroups(hasGroup)
       } catch (e) {
@@ -39,8 +39,13 @@ const MainPage = () => {
       }
     }
 
-    loadGroups()
-  }, [setHasGroups])
+    if (isAuthenticated()) {
+      loadGroups()
+    } else {
+      setHasGroups(false)
+      setLoading(false)
+    }
+  }, [setHasGroups, isAuthenticated])
 
   return (
     <div className="space-y-6">
