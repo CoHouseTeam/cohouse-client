@@ -45,12 +45,11 @@ export type SettlementListItem = Pick<
 export type CreateSettlementRequest = {
   title: string
   description?: string | null
-  category: string | SettlementCategory
+  category: SettlementCategory // 'FOOD' | 'DAILY_SUPPLIES' | 'CULTURE' | 'ETC'
   settlementAmount: number
   equalDistribution: boolean
-  participantIds: number[]
-  // equalDistribution=false일 때만 사용
-  manualShares?: Record<string, number> // key: memberId(string), value: 배분 금액
+  participantIds: number[] // 선택된 멤버들의 memberId 목록(보통 payer 제외)
+  manualShares?: Record<number, number> // equalDistribution=false일 때만: { [memberId]: shareAmount }
 }
 
 export interface MessageResponse {

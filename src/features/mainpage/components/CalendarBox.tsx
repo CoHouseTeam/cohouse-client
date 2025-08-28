@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import React from 'react'
 import Calendar from 'react-calendar'
-import '../../../styles/Calendar.css'
+import { useCalendarStore } from '../../../app/store'
 import CalendarDateDots from './CalendarDateDots'
+import '../../../styles/Calendar.css'
+import { Value } from 'react-calendar/dist/shared/types.js'
+import { CalendarBoxProps } from '../../../types/main'
 
-const CalendarBox = () => {
-  const [value, setValue] = useState<Date | null>(new Date())
+const CalendarBox: React.FC<CalendarBoxProps> = ({ onDateSelect, value }) => {
+  const { selectedDate, setSelectedDate } = useCalendarStore()
 
   const isDay = (date: Date) => {
     const day = new Date()
@@ -15,11 +18,24 @@ const CalendarBox = () => {
     )
   }
 
+  const onChangeHandler = (value: Value) => {
+    if (!value) return
+    if (value instanceof Date) {
+      setSelectedDate(value)
+      if (onDateSelect) onDateSelect(value)
+    } else if (Array.isArray(value)) {
+      if (value[0] instanceof Date) {
+        setSelectedDate(value[0])
+        if (onDateSelect) onDateSelect(value[0])
+      }
+    }
+  }
+
   return (
     <div className="calendar-wrapper rounded-lg">
       <Calendar
-        value={value}
-        onChange={(date) => setValue(date as Date)}
+        value={value || selectedDate}
+        onChange={onChangeHandler}
         calendarType="gregory"
         locale="ko-KR"
         showNeighboringMonth={true}

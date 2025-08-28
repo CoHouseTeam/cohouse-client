@@ -9,12 +9,12 @@ export default function MyPage() {
   return (
     <>
       <div className="space-y-6 w-full md:max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold text-neutral">마이페이지</h1>
+        <h1 className="text-3xl font-bold text-neutral">마이페이지</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {/* Profile Card */}
           <section>
-            <div className="card bg-base-200 shadow-md md:h-40">
+            <div className="card border border-neutral-200 shadow rounded-lg md:h-40">
               <div className="card-body relative flex justify-center px-10">
                 {/* 프로필 편집 버튼 */}
                 <div className="flex justify-end absolute right-5 top-5">
@@ -56,7 +56,7 @@ export default function MyPage() {
                 <Link
                   key={label}
                   to={to}
-                  className="h-14 md:h-24 flex items-center justify-center rounded-xl border bg-base-200 hover:bg-base-300 transition"
+                  className="h-14 md:h-24 flex items-center justify-center rounded-lg border border-neutral-200 shadow hover:bg-base-300 transition"
                 >
                   {label}
                 </Link>
@@ -65,22 +65,22 @@ export default function MyPage() {
 
             {/* 설정 & 로그아웃 */}
             <section>
-              <div className="card bg-base-200 border p-2 md:p-0">
+              <div className="card border border-neutral-200 shadow rounded-lg p-2 md:p-0">
                 <div className="card-body px-3 py-1 md:py-4">
                   <button
                     onClick={() => setAlarmSettingModalOpen(true)}
-                    className="text-start py-1 md:pb-2 md:px-5 hover:bg-base-300 transition rounded-xl"
+                    className="text-start py-1 md:pb-2 md:px-5 transition rounded-lg"
                   >
                     알림 설정
                   </button>
 
-                  <button className="text-start py-1 md:pb-2 md:px-5 hover:bg-base-300 transition rounded-xl">
+                  <button className="text-start py-1 md:pb-2 md:px-5 transition rounded-lg">
                     로그아웃
                   </button>
-                  <button className="text-start py-1 md:pb-2 md:px-5 hover:bg-base-300 transition rounded-xl">
+                  <button className="text-start py-1 md:pb-2 md:px-5  transition rounded-lg">
                     그룹 탈퇴
                   </button>
-                  <button className="text-start py-1 md:pb-2 md:px-5 hover:bg-base-300 transition rounded-xl">
+                  <button className="text-start py-1 md:pb-2 md:px-5  transition rounded-lg">
                     회원 탈퇴
                   </button>
                 </div>
