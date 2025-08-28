@@ -1,24 +1,25 @@
 import LoadingSpinner from '../../common/LoadingSpinner'
 import SettlementListItem from './SettlementListItem'
 import { useMySettlements } from '../../../libs/hooks/settlements/useMySettlements'
+import ErrorCard from '../../common/ErrorCard'
 
 export default function OngoingSettlements() {
   const { data, isLoading, error } = useMySettlements()
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
+  if (error) return <ErrorCard />
 
-  const ongoing = (data ?? []).filter((s) => s.status === 'PENDING')
+  const ongoing = Array.isArray(data) ? data.filter((s) => s.status === 'PENDING') : []
   const isEmpty = ongoing.length === 0
 
   return (
-    <section className={`card ${isEmpty ? 'border-2 border-dashed bg-base-200 shadow-sm' : ''}`}>
+    <section className={`card ${isEmpty ? 'shadow-sm' : ''}`}>
+      <div className="flex justify-between items-center mb-1">
+        <h2 className="card-title text-xl">진행 중인 정산</h2>
+      </div>
       <div
-        className={`${isEmpty ? 'card-body p-4' : 'card-body p-4 bg-base-200 shadow rounded-xl'}`}
+        className={`rounded-lg ${isEmpty ? 'card-body border-2 border-dashed' : 'card-body p-1'}`}
       >
-        <div className="flex justify-between items-center">
-          <h2 className="card-title text-xl">진행 중인 정산</h2>
-        </div>
         {isEmpty ? (
           <div className="flex flex-col justify-center text-center mt-4">
             <img

@@ -81,13 +81,13 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
 
   let pill: { text: string; bg: string }
   if (settlement.status === 'COMPLETED') {
-    pill = { text: '정산 완료', bg: '#B3B3B3' }
+    pill = { text: '정산 완료', bg: '#757575' }
   } else if (isPayer && isPendingSettlement) {
-    pill = { text: '진행 중', bg: '#ffd877' }
+    pill = { text: '진행 중', bg: '#E6A65D' }
   } else if (settlement.status === 'CANCELED') {
     pill = { text: '정산 취소', bg: '#C6ADD5' }
   } else if (isMyPaymentDone) {
-    pill = { text: '송금 완료', bg: '#B3B3B3' }
+    pill = { text: '송금 완료', bg: '#757575' }
   } else {
     pill = { text: '송금하기', bg: '#d26c6c' }
   }
@@ -95,12 +95,12 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
   return (
     <>
       <div
-        className={`flex flex-col border-2 border-gray-100 bg-gray-50 rounded-xl pl-4 pr-1 py-3 shadow-md
+        className={`flex flex-col border-2 border-gray-100 bg-base-100 rounded-lg pl-4 pr-1 py-3 shadow-md
                           overflow-hidden transition-[max-height] duration-500 ease-in-out 
                           ${cardOpen ? 'max-h-screen' : isPayer ? 'max-h-40' : 'max-h-44'}`}
       >
         {/* 요약 카드 */}
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center mb-2 ">
           <span className="text-sm">{formatDateWithWeekday(settlement.createdAt)}</span>
           <div className="relative ">
             <button
@@ -166,7 +166,7 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
           </div>
 
           <div
-            className={`flex justify-center items-center transition-[opacity, max-height] duration-200 ${cardOpen ? 'max-h-0 max-w-0 opacity-0 overflow-hidden' : 'h-8 w-20 opacity-100'} rounded-badge text-sm text-white font-bold mr-3`}
+            className={`flex justify-center rounded-full items-center transition-[opacity, max-height] duration-200 ${cardOpen ? 'max-h-0 max-w-0 opacity-0 overflow-hidden' : 'h-8 w-20 opacity-100'} rounded-badge text-sm text-white font-bold mr-3`}
             style={{ backgroundColor: pill.bg }}
             onClick={handlePayClick}
             aria-disabled={isPayer || isMyPaymentDone || !isPendingSettlement || payMut.isPending}
@@ -180,7 +180,7 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
           className={`transition-opacity duration-500 overflow-hidden ${cardOpen ? 'opacity-100' : 'opacity-0'}`}
         >
           <div className="flex flex-col gap-2">
-            <div className="text-sm ml-1 w-fit bg-[linear-gradient(transparent_65%,#fde68a_0)]">
+            <div className="text-sm ml-1 w-fit bg-[linear-gradient(transparent_65%,#E6A65D)]">
               결제자: {settlement.payerName}
             </div>
             {settlement.participants
@@ -188,8 +188,8 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
               .map((p) => {
                 const badge =
                   p.status === 'PAID'
-                    ? { text: '송금 완료', bg: '#B3B3B3' }
-                    : { text: '송금 대기', bg: '#ffd15e' }
+                    ? { text: '송금 완료', bg: '#757575' }
+                    : { text: '송금 대기', bg: '#E6A65D' }
 
                 return (
                   <div key={p.id} className="flex pl-1 gap-2 justify-center items-center">
@@ -200,7 +200,7 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
                       {p.status === 'PAID' && <span></span>}
                     </div>
                     <div
-                      className="flex justify-center items-center h-8 w-20 rounded-badge text-sm text-white font-bold mr-3"
+                      className="flex justify-center items-center h-8 w-20 rounded-full text-sm text-white font-bold mr-3"
                       style={{ backgroundColor: badge.bg }}
                     >
                       {badge.text}
@@ -215,7 +215,7 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
         <button onClick={() => SetCardOpen(!cardOpen)} className="flex items-center justify-center">
           <ChevronCompactDown
             size={15}
-            className={`transition-transform ${cardOpen ? 'rotate-180' : ''} text-base-300`}
+            className={`transition-transform ${cardOpen ? 'rotate-180' : ''} text-gray-400`}
           />
         </button>
       </div>

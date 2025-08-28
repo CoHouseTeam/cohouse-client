@@ -2,15 +2,16 @@ import { Link } from 'react-router-dom'
 import SettlementListItem from './SettlementListItem'
 import { useMySettlements } from '../../../libs/hooks/settlements/useMySettlements'
 import LoadingSpinner from '../../common/LoadingSpinner'
+import ErrorCard from '../../common/ErrorCard'
 
 export default function RecentSettlements() {
   const { data, isLoading, error } = useMySettlements()
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
+  if (error) return <ErrorCard />
 
   // 완료된 정산
-  const completed = (data ?? []).filter((s) => s.status === 'COMPLETED')
+  const completed = Array.isArray(data) ? data.filter((s) => s.status === 'COMPLETED') : []
 
   // 최신순 정렬
   const sorted = completed.sort(
@@ -24,19 +25,19 @@ export default function RecentSettlements() {
 
   return (
     <section className={`card ${isEmpty ? 'border-2 border-dashed bg-base-200 shadow-sm' : ''}`}>
-      <div
-        className={`${isEmpty ? 'card-body p-4' : 'card-body p-4 bg-base-200 shadow rounded-xl'}`}
-      >
-        <div className="flex items-baseline gap-1 text-center">
-          <h2 className="card-title">정산 내역</h2>
-          <div className="flex flex-1 justify-between">
-            <span className="text-[0.7rem] text-neutral-400">(최근 내역 2개)</span>
-            <Link to="/settlements/history" className="text-[0.7rem] pr-1 text-neutral-400">
-              전체보기
-            </Link>
-          </div>
+      <div className="flex items-baseline gap-1 text-center">
+        <h2 className="card-title">정산 내역</h2>
+        <div className="flex flex-1 justify-between">
+          <span className="text-[0.7rem] text-neutral-400">(최근 내역 2개)</span>
+          <Link to="/settlements/history" className="text-[0.7rem] pr-1 text-neutral-400">
+            전체보기
+          </Link>
         </div>
+      </div>
 
+      <div
+        className={`rounded-lg ${isEmpty ? 'card-body border-2 border-dashed' : 'card-body p-1'}`}
+      >
         {isEmpty ? (
           <div className="flex flex-col justify-center text-center mt-4">
             <img
