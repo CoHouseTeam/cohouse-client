@@ -22,16 +22,16 @@ export default function Settlements() {
     <>
       <div className="space-y-6 w-full md:max-w-5xl mx-auto">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-secondary">정산하기</h1>
+          <h1 className="text-3xl font-bold text-secondary">정산하기</h1>
         </div>
 
-        <section className="card bg-base-200 shadow">
+        <section className="card border border-neutral-200 shadow rounded-lg">
           <div className="card-body flex flex-col items-center justify-center px-3 py-4 gap-3 ">
-            <p className="text-base font-semibold h-fit text-[#835e5e]">
+            <p className="text-base font-semibold h-fit text-secondary">
               그룹원과 투명하게 정산해요
             </p>
             <button
-              className="btn bg-secondary btn-sm mt-2 text-white"
+              className="flex items-center gap-2 bg-secondary btn-sm mt-2 text-white rounded-lg font-bold"
               onClick={() => setIsModalOpen(true)}
             >
               <PlusCircle />

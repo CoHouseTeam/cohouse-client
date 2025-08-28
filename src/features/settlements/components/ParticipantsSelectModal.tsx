@@ -69,7 +69,7 @@ export default function ParticipantsSelectModal({ onClose, onSelect, groupId }: 
           <XCircle size={15} />
         </button>
 
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col mx-auto md:max-w-[420px]">
           {/* 헤더 */}
           <div className="h-12 px-4 flex items-center justify-center mb-3">
             <h3 className="font-bold text-xl text-center">참여자 선택</h3>
@@ -80,7 +80,7 @@ export default function ParticipantsSelectModal({ onClose, onSelect, groupId }: 
             <label className="flex gap-2 items-center">
               <input
                 type="checkbox"
-                className="checkbox checkbox-primary mr-2 w-4 h-4"
+                className="checkbox checkbox-primary mr-2 w-4 h-4 rounded-full"
                 checked={allChecked}
                 onChange={(e) => toggleAll(e.target.checked)}
               />
@@ -92,18 +92,18 @@ export default function ParticipantsSelectModal({ onClose, onSelect, groupId }: 
               {list.map((m) => {
                 const isChecked = !!checked[m.memberId]
                 return (
-                  <label key={m.memberId} className="flex items-center cursor-pointer">
+                  <label key={m.memberId} className="flex items-center cursor-pointer gap-2">
                     <input
                       type="checkbox"
-                      className="checkbox checkbox-primary mr-2 w-4 h-4"
+                      className="checkbox checkbox-primary mr-2 w-4 h-4 rounded-full"
                       checked={isChecked}
                       onChange={() => toggleOne(m.memberId)}
                     />
-                    <div className="flex gap-4 items-center bg-base-200 rounded-xl shadow-sm w-full h-14 pl-3">
+                    <div className="flex gap-4 items-center border rounded-lg shadow-sm w-full h-14 pl-3">
                       <img
                         src={m.avatar ?? settlementIcon}
                         alt={`${m.memberName}의 프로필`}
-                        className="w-9 h-9"
+                        className="w-9 h-9 rounded-full"
                       />
                       <span className="text-lg font-semibold text-gray-600">{m.memberName}</span>
                     </div>
@@ -117,7 +117,7 @@ export default function ParticipantsSelectModal({ onClose, onSelect, groupId }: 
           <div className="h-16 flex justify-center items-center">
             <button
               type="button"
-              className="btn bg-[oklch(44%_0.043_257.281)] text-white btn-sm w-32"
+              className="bg-secondary font-bold rounded-lg text-white btn-sm w-32"
               onClick={handleDone}
             >
               선택 완료

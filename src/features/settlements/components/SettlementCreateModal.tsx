@@ -122,7 +122,7 @@ export default function SettlementCreateModal(props: Props) {
   return (
     <>
       <div className="modal modal-open">
-        <div className="modal-box max-h-[90vh] overflow-y-auto">
+        <div className="modal-box max-h-[90vh] overflow-y-auto rounded-lg">
           <button
             onClick={props.onClose}
             className="absolute right-2 top-2 bg-transparent border-none mt-2 mr-2"
@@ -145,12 +145,12 @@ export default function SettlementCreateModal(props: Props) {
                 <input
                   type="text"
                   placeholder="정산 제목을 입력해주세요."
-                  className="input input-bordered text-sm rounded-xl h-10"
+                  className="input input-bordered text-sm rounded-lg h-10"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   disabled={readOnly}
                 />
-                <span className="label-text-alt text-end mr-2 text-base-300 pt-1">
+                <span className="label-text-alt text-end mr-2 text-gray-400 pt-1">
                   {title.length}/30
                 </span>
               </label>
@@ -161,12 +161,12 @@ export default function SettlementCreateModal(props: Props) {
                 <input
                   type="text"
                   placeholder="정산에 대한 설명을 입력해주세요."
-                  className="input input-bordered text-sm rounded-xl h-10"
+                  className="input input-bordered text-sm rounded-lg h-10"
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
                   disabled={readOnly}
                 />
-                <span className="label-text-alt text-end mr-2 text-base-300 pt-1">
+                <span className="label-text-alt text-end mr-2 text-gray-400 pt-1">
                   {desc.length}/100
                 </span>
               </label>
@@ -179,14 +179,20 @@ export default function SettlementCreateModal(props: Props) {
                   <div
                     onClick={() => !readOnly && setOpen(!open)}
                     role="button"
-                    className={`w-full border border-gray-300 rounded-xl px-4 py-2 bg-white overflow-hidden ${open ? 'max-h-64 absolute z-50' : 'max-h-10'}`}
+                    className={`w-full border border-gray-300 rounded-lg px-4 py-2 bg-white ${
+                      open
+                        ? 'max-h-64 absolute z-[1000] overflow-visible'
+                        : 'max-h-10 overflow-hidden'
+                    }`}
                   >
                     {/* 타이틀 */}
                     <div className="flex justify-between items-center">
-                      <span className={`${!selectedCategory ? 'text-gray-400' : ''} text-sm`}>
+                      <span className={`${!selectedCategory ? 'text-gray-400' : ''} text-sm `}>
                         {selectedCategory ?? '카테고리 선택'}
                       </span>
-                      <CaretDown className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+                      <CaretDown
+                        className={`transition-transform ${open ? 'rotate-180' : ''} text-gray-400`}
+                      />
                     </div>
 
                     {/* 옵션 목록 */}
@@ -218,13 +224,13 @@ export default function SettlementCreateModal(props: Props) {
               {/* 총 정산 금액 */}
               <div className="form-control">
                 <span
-                  className={`${open ? 'mt-[3.25rem] pt-14' : ''} label-text text-base mt-3 mb-2 font-semibold`}
+                  className={`${open ? 'mt-[2rem] pt-5' : ''} label-text text-base mt-3 mb-2 font-semibold`}
                 >
                   총 정산 금액
                 </span>
                 <div className="flex w-full items-center gap-2 mb-2">
                   <label
-                    className="relative flex border border-dashed rounded-xl h-10 w-16 justify-center items-center no-spinner"
+                    className="relative flex border border-dashed rounded-lg h-10 w-16 justify-center items-center no-spinner"
                     title={readOnly ? '' : '영수증 이미지 선택'}
                   >
                     {!readOnly && (
@@ -232,7 +238,7 @@ export default function SettlementCreateModal(props: Props) {
                         type="file"
                         accept="image/*"
                         onChange={onPickReceipt}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        className="absolute inset-0 opacity-0 cursor-pointer rounded-lg"
                         aria-label="영수증 이미지 선택"
                       />
                     )}
@@ -241,7 +247,7 @@ export default function SettlementCreateModal(props: Props) {
                         <img
                           src={receiptPreview}
                           alt="영수증 미리보기"
-                          className="w-full h-full object-cover rounded-xl"
+                          className="w-full h-full object-cover rounded-lg"
                         />
                         {!readOnly && (
                           <button
@@ -266,7 +272,7 @@ export default function SettlementCreateModal(props: Props) {
                   <input
                     type="number"
                     placeholder="정산 금액을 입력해주세요"
-                    className="input input-bordered text-sm rounded-xl flex-1 min-w-0 h-10 no-spinner"
+                    className="input input-bordered text-sm rounded-lg flex-1 min-w-0 h-10 no-spinner"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
                     disabled={readOnly}
@@ -330,7 +336,7 @@ export default function SettlementCreateModal(props: Props) {
                     </div>
                   </>
                 ) : (
-                  <div className="flex border border-dashed h-[7rem] w-full justify-center items-center">
+                  <div className="flex border border-dashed h-[7rem] w-full justify-center items-center rounded-lg">
                     <span className="text-sm text-gray-400">참여자를 선택해주세요</span>
                   </div>
                 )}
@@ -341,13 +347,13 @@ export default function SettlementCreateModal(props: Props) {
             <div className="flex justify-center items-center h-16">
               {readOnly ? (
                 <button
-                  className="btn bg-[oklch(44%_0.043_257.281)] text-white btn-sm w-32 mt-4"
+                  className="font-bold bg-secondary rounded-lg text-white btn-sm w-32 mt-4"
                   onClick={props.onClose}
                 >
                   닫기
                 </button>
               ) : (
-                <button className="btn bg-[oklch(44%_0.043_257.281)] text-white btn-sm w-32 mt-4">
+                <button className="font-bold bg-secondary rounded-lg text-white btn-sm w-32 mt-4">
                   등록
                 </button>
               )}
