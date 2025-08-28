@@ -78,15 +78,17 @@ export const SETTLEMENT_ENDPOINTS = {
   MY_LIST: 'api/settlements/my',
   MY_HISTORY: 'api/settlements/my/history',
   GROUP_LIST: (groupId: number) => `api/settlements/group/${groupId}`,
+  PAYMENT_HISTORIES: 'api/settlements/payment-histories',
   
   // 정산별 상세
   DETAIL: (settlementId: number) => `api/settlements/${settlementId}`,
   DELETE: (settlementId: number) => `api/settlements/${settlementId}`,
   PARTICIPANTS: (settlementId: number) => `api/settlements/${settlementId}/participants`,
   PAYMENT: (settlementId: number) => `api/settlements/${settlementId}/payment`,
+  PAYMENT_DONE: (settlementId: number) => `api/settlements/${settlementId}/payment-done`,
   
   // 영수증 관리
-    RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
+  RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
   UPDATE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
   DELETE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
 } as const
