@@ -15,7 +15,7 @@ export default function RecentSettlements() {
 
   // 최신순 정렬
   const sorted = completed.sort(
-    (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
 
   // 최근 2개

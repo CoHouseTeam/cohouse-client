@@ -34,7 +34,6 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
             />
             <span className="text-sm">전체선택</span>
           </label>
-
           {Array.isArray(members) &&
             members.map((member, idx) => (
               <label
