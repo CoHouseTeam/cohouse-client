@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import CalendarBox from '../features/mainpage/components/CalendarBox'
 import CalendarDateDetails from '../features/mainpage/components/CalendarDateDetail'
 import TodoListBox from '../features/mainpage/components/TodoListBox'
@@ -13,11 +14,13 @@ const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
   const dateKey = selectedDate.toISOString().slice(0, 10)
 
+  // 나중에 API 연결 후 대체
+  const [hasGroups] = useState(false)
+
   return (
     <div className="space-y-6">
       <p>Name님 반가워요!</p>
-      <GroupBox />
-      <TodoListBox />
+      {hasGroups ? <TodoListBox /> : <GroupBox />}
       <CalendarBox onDateSelect={setSelectedDate} value={selectedDate} />
       <CalendarDateDetails selectedDate={selectedDate} events={eventData[dateKey] || []} />
     </div>

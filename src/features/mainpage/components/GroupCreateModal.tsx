@@ -14,7 +14,7 @@ const GroupCreateModal: React.FC<ModalProps> = ({ onClose }) => {
       return
     }
     setError('')
-    navigate('/complete')
+    navigate('/create-complete')
   }
 
   return (
