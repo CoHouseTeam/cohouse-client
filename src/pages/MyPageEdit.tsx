@@ -10,6 +10,9 @@ registerLocale('ko', ko)
 export default function MyPageEdit() {
   const [pwOpen, setPwOpen] = useState(false)
 
+  // 프로필 이미지
+
+  // 생년월일
   const [selectedBtdDate, setSelectedBtdDate] = useState<Date | null>(null)
 
   return (
@@ -19,7 +22,7 @@ export default function MyPageEdit() {
         <Link to="/mypage" className="absolute left-4" aria-label="뒤로가기">
           <ChevronLeft size={14} />
         </Link>
-        <h1 className="text-base font-bold">내 정보 수정</h1>
+        <h1 className="text-lg font-bold">내 정보 수정</h1>
       </header>
 
       {/* 본문 */}
@@ -51,7 +54,7 @@ export default function MyPageEdit() {
               <span className="text-sm">이름</span>
               <input
                 value={'홍길동'}
-                className="input input-bordered bg-base-200 h-10 w-full md:max-w-md text-sm"
+                className="input input-bordered bg-base-200 h-10 w-full md:max-w-md text-sm rounded-lg"
                 readOnly
               />
             </div>
@@ -60,7 +63,7 @@ export default function MyPageEdit() {
               <span className="text-sm">이메일</span>
               <input
                 value={'asdfesd@gmail.com'}
-                className="input input-bordered bg-base-200 h-10 md:max-w-md text-sm"
+                className="input input-bordered bg-base-200 h-10 md:max-w-md text-sm rounded-lg"
                 readOnly
               />
             </div>
@@ -81,7 +84,7 @@ export default function MyPageEdit() {
                 dropdownMode="scroll"
                 scrollableYearDropdown // ← 스크롤 가능
                 yearDropdownItemNumber={85} // 보이는 연도 개수
-                className="input input-bordered h-10 w-full md:max-w-md text-sm"
+                className="input input-bordered h-10 w-full md:max-w-md text-sm rounded-lg"
               />
             </div>
           </section>
@@ -107,7 +110,7 @@ export default function MyPageEdit() {
                   <span className="text-sm">현재 비밀번호</span>
                   <input
                     type="password"
-                    className="input input-bordered h-10 md:max-w-md text-sm"
+                    className="input input-bordered h-10 md:max-w-md text-sm rounded-lg"
                     placeholder="비밀번호를 입력해 주세요"
                   />
                 </div>
@@ -115,7 +118,7 @@ export default function MyPageEdit() {
                   <span className="text-sm p-1">새 비밀번호</span>
                   <input
                     type="password"
-                    className="input input-bordered h-10 md:max-w-md text-sm"
+                    className="input input-bordered h-10 md:max-w-md text-sm rounded-lg"
                     placeholder="새 비밀번호를 입력해 주세요"
                   />
                 </div>
@@ -123,7 +126,7 @@ export default function MyPageEdit() {
                   <span className="text-sm">새 비밀번호 확인</span>
                   <input
                     type="password"
-                    className="input input-bordered h-10 md:max-w-md text-sm "
+                    className="input input-bordered h-10 md:max-w-md text-sm rounded-lg"
                     placeholder="새 비밀번호를 다시 입력해 주세요"
                   />
                 </div>
@@ -136,10 +139,7 @@ export default function MyPageEdit() {
       {/* 푸터 */}
       <footer className="sticky bottom-0 bg-white px-5 pb-[env(safe-area-inset-bottom)]">
         <div className="h-16 flex items-center justify-center">
-          <button
-            type="button"
-            className="btn bg-[oklch(44%_0.043_257.281)] text-white btn-sm w-32"
-          >
+          <button type="button" className="btn bg-secondary text-white btn-sm w-32 rounded-lg">
             저장
           </button>
         </div>
