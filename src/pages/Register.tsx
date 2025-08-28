@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { X, ArrowLeft } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../libs/api/axios'
+import { AUTH_ENDPOINTS } from '../libs/api/endpoints'
 
 interface RegisterForm {
   email: string
@@ -24,7 +25,7 @@ export default function Register() {
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
-  const [showMarketingModal, setShowMarketingModal] = useState(false)
+  const [showMarketingModal, setShowMarketingModal] = useState(false) // 마케팅 모달 상태
   const [modalType, setModalType] = useState<'terms' | 'privacy' | 'marketing'>('terms')
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<RegisterForm>({
@@ -67,6 +68,14 @@ export default function Register() {
   const handleEmailCheck = async () => {
     const email = watch('email')
     
+    // 디버깅: 환경 변수 확인
+    console.log('Environment Debug:', {
+      DEV: import.meta.env.DEV,
+      PROD: import.meta.env.PROD,
+      VITE_USE_MSW: import.meta.env.VITE_USE_MSW,
+      VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL
+    })
+    
     if (!email) {
       toast.error('이메일을 먼저 입력해주세요.')
       return
@@ -82,7 +91,8 @@ export default function Register() {
     setIsCheckingEmail(true)
     
     try {
-      const response = await api.post('/members/check/email', {
+      // 환경변수 기반 API 호출
+      const response = await api.post(AUTH_ENDPOINTS.CHECK_EMAIL, {
         email: email
       })
       
@@ -120,11 +130,12 @@ export default function Register() {
       toast.error('필수 약관에 동의해주세요.')
       return
     }
-
+    
     setIsRegistering(true)
 
     try {
-      await api.post('/members/signup', {
+      // 환경변수 기반 API 호출
+      await api.post(AUTH_ENDPOINTS.SIGNUP, {
         email: data.email,
         name: data.name,
         password: data.password
@@ -132,12 +143,13 @@ export default function Register() {
 
       toast.success('회원가입이 완료되었습니다!')
       navigate('/login')
-    } catch (error: any) {
-      if (error.response?.status === 400) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number; data?: { message?: string } } }
+      if (axiosError.response?.status === 400) {
         toast.error('입력 정보를 다시 확인해주세요.')
-      } else if (error.response?.status === 409) {
+      } else if (axiosError.response?.status === 409) {
         toast.error('이미 존재하는 이메일입니다.')
-      } else {
+    } else {
         toast.error('회원가입에 실패했습니다.')
       }
     } finally {
@@ -222,9 +234,9 @@ export default function Register() {
               {emailChecked && (
                 <label className="label">
                   <span className="label-text-alt text-success">✓ 사용 가능한 이메일입니다</span>
-                </label>
-              )}
-            </div>
+                  </label>
+                )}
+              </div>
 
             {/* 이름 입력 */}
             <div className="form-control">

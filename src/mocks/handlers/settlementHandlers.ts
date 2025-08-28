@@ -126,7 +126,7 @@ export const createSettlement = http.post(`${BASE}/settlements`, async ({ reques
     const shares = body.manualShares ?? {}
     perPerson = participantIds.map((gmId) => ({
       memberId: gmId,
-      amount: Number(shares[String(gmId)] ?? 0),
+      amount: Number((shares as Record<string, number>)[gmId.toString()] ?? 0),
     }))
     const sum = perPerson.reduce((a, b) => a + b.amount, 0)
     if (sum !== settlementAmount) {

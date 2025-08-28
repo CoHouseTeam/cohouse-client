@@ -5,7 +5,6 @@ import { useSettlementDetail } from '../../../libs/hooks/settlements/useMySettle
 import { fromCategory } from '../../../libs/utils/categoryMapping'
 import LoadingSpinner from '../../common/LoadingSpinner'
 import Toggle from '../../common/Toggle'
-import ErrorCard from '../../common/ErrorCard'
 import { applyEvenSplit, fromServerList, UIParticipant } from '../utils/participants'
 
 type CreateProps = {
@@ -48,8 +47,8 @@ export default function SettlementCreateModal(props: Props) {
   const [evenSplitOn, setEvenSplitOn] = useState(false)
 
   /*{ 영수증 사진 업로드 }*/
-  // 영수증 사진 보관
-  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+  // 영수증 사진 보관 (파일 자체는 사용하지 않고 미리보기만 사용)
+  const [, setReceiptFile] = useState<File | null>(null)
   // 사진 미리보기
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
   // 이미지 아닌 파일 선택 시 에러메시지
@@ -118,7 +117,8 @@ export default function SettlementCreateModal(props: Props) {
   }, [evenSplitOn, amount, participants.length, readOnly])
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorCard />
+  if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
+
   return (
     <>
       <div className="modal modal-open">
