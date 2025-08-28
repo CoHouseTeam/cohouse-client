@@ -58,17 +58,8 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
     
-    // 프로덕션에서 API 오류 시 임시 Mock 데이터 제공
-    if (import.meta.env.PROD && error.config?.url) {
-      console.warn('API Error, providing fallback data:', error.config.url)
-      
-      // 모든 API 오류에 대해 빈 배열 반환
-      return Promise.resolve({
-        data: [],
-        status: 200,
-        statusText: 'OK (Mock Data)'
-      })
-    }
+    // API 오류 로깅
+    console.error('API Error:', error.config?.url, error.response?.status, error.message)
     
     return Promise.reject(error)
   }
