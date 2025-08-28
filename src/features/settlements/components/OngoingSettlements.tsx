@@ -9,6 +9,7 @@ export default function OngoingSettlements() {
   if (isLoading) return <LoadingSpinner />
   if (error) return <ErrorCard />
 
+  const ongoing = Array.isArray(data) ? data.filter((s: any) => s.status === 'PENDING') : []
   const ongoing = Array.isArray(data) ? data.filter((s) => s.status === 'PENDING') : []
   const isEmpty = ongoing.length === 0
 
