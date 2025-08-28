@@ -15,3 +15,13 @@ export const useAppStore = create<AppState>((set) => ({
   user: null,
   setUser: (user) => set({ user }),
 }))
+
+interface CalendarState {
+  selectedDate: Date
+  setSelectedDate: (date: Date) => void
+}
+
+export const useCalendarStore = create<CalendarState>((set) => ({
+  selectedDate: new Date(),
+  setSelectedDate: (date) => set({ selectedDate: date }),
+}))

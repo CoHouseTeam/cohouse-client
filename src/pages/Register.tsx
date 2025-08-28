@@ -2,11 +2,12 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
 import { useState } from 'react'
 import { X, ArrowLeft } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import api from '../libs/api/axios'
+import { AUTH_ENDPOINTS } from '../libs/api/endpoints'
 
 interface RegisterForm {
   email: string
-  verificationCode: string
   name: string
   password: string
   confirmPassword: string
@@ -17,18 +18,19 @@ interface RegisterForm {
 }
 
 export default function Register() {
-  const [showVerification, setShowVerification] = useState(false)
+  const navigate = useNavigate()
+  const [emailChecked, setEmailChecked] = useState(false)
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false)
+  const [isRegistering, setIsRegistering] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
-  const [verificationSent, setVerificationSent] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
-  const [showMarketingModal, setShowMarketingModal] = useState(false)
+  const [showMarketingModal, setShowMarketingModal] = useState(false) // 마케팅 모달 상태
   const [modalType, setModalType] = useState<'terms' | 'privacy' | 'marketing'>('terms')
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<RegisterForm>({
     defaultValues: {
       email: '',
-      verificationCode: '',
       name: '',
       password: '',
       confirmPassword: '',
@@ -62,9 +64,18 @@ export default function Register() {
     setValue('allAgreement', termsChecked && privacyChecked && marketingChecked)
   }
 
-  // 이메일 인증 요청
-  const handleEmailVerification = () => {
+  // 이메일 중복 확인
+  const handleEmailCheck = async () => {
     const email = watch('email')
+    
+    // 디버깅: 환경 변수 확인
+    console.log('Environment Debug:', {
+      DEV: import.meta.env.DEV,
+      PROD: import.meta.env.PROD,
+      VITE_USE_MSW: import.meta.env.VITE_USE_MSW,
+      VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL
+    })
+    
     if (!email) {
       toast.error('이메일을 먼저 입력해주세요.')
       return
@@ -77,24 +88,72 @@ export default function Register() {
       return
     }
 
-    setShowVerification(true)
-    setVerificationSent(true)
-    toast.success('인증번호가 이메일로 전송되었습니다.')
+    setIsCheckingEmail(true)
+    
+    try {
+      // 환경변수 기반 API 호출
+      const response = await api.post(AUTH_ENDPOINTS.CHECK_EMAIL, {
+        email: email
+      })
+      
+      if (response.data.isDuplicate) {
+        toast.error('이미 사용 중인 이메일입니다.')
+        setEmailChecked(false)
+      } else {
+        toast.success('사용 가능한 이메일입니다.')
+        setEmailChecked(true)
+      }
+    } catch (error) {
+      toast.error('이메일 확인에 실패했습니다.')
+      setEmailChecked(false)
+    } finally {
+      setIsCheckingEmail(false)
+    }
   }
 
-  // 인증번호 확인
-  const handleVerificationConfirm = () => {
-    const code = watch('verificationCode')
-    if (!code) {
-      toast.error('인증번호를 입력해주세요.')
+  // 회원가입 처리
+  const handleRegister = async (data: RegisterForm) => {
+    // 이메일 중복 확인 여부 체크
+    if (!emailChecked) {
+      toast.error('이메일 중복 확인을 먼저 해주세요.')
+      return
+    }
+
+    // 비밀번호 확인
+    if (data.password !== data.confirmPassword) {
+      toast.error('비밀번호가 일치하지 않습니다.')
+      return
+    }
+
+    // 필수 약관 동의 확인
+    if (!data.termsAgreement || !data.privacyAgreement) {
+      toast.error('필수 약관에 동의해주세요.')
       return
     }
     
-    // 실제로는 서버에서 인증번호를 확인해야 함
-    if (code === '123456') { // 테스트용 인증번호
-      toast.success('이메일 인증이 완료되었습니다.')
+    setIsRegistering(true)
+
+    try {
+      // 환경변수 기반 API 호출
+      await api.post(AUTH_ENDPOINTS.SIGNUP, {
+        email: data.email,
+        name: data.name,
+        password: data.password
+      })
+
+      toast.success('회원가입이 완료되었습니다!')
+      navigate('/login')
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number; data?: { message?: string } } }
+      if (axiosError.response?.status === 400) {
+        toast.error('입력 정보를 다시 확인해주세요.')
+      } else if (axiosError.response?.status === 409) {
+        toast.error('이미 존재하는 이메일입니다.')
     } else {
-      toast.error('인증번호가 올바르지 않습니다.')
+        toast.error('회원가입에 실패했습니다.')
+      }
+    } finally {
+      setIsRegistering(false)
     }
   }
 
@@ -122,8 +181,7 @@ export default function Register() {
   }
 
   const onSubmit = (data: RegisterForm) => {
-    console.log('Register data:', data)
-    toast.success('회원가입이 완료되었습니다.')
+    handleRegister(data)
   }
 
   return (
@@ -162,9 +220,10 @@ export default function Register() {
                 <button
                   type="button"
                   className="btn btn-neutral whitespace-nowrap h-12 rounded-lg"
-                  onClick={handleEmailVerification}
+                  onClick={handleEmailCheck}
+                  disabled={isCheckingEmail}
                 >
-                  인증
+                  {isCheckingEmail ? '확인 중...' : '중복 확인'}
                 </button>
               </div>
               {errors.email && (
@@ -172,43 +231,12 @@ export default function Register() {
                   <span className="label-text-alt text-error">{errors.email.message}</span>
                 </label>
               )}
-            </div>
-
-            {/* 인증번호 입력 */}
-            {showVerification && (
-              <div className="form-control">
+              {emailChecked && (
                 <label className="label">
-                  <span className="label-text font-medium">인증번호</span>
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="인증번호를 입력하세요"
-                    className="input input-bordered rounded-lg flex-1 focus:input-primary"
-                    {...register('verificationCode', { 
-                      required: '인증번호를 입력해주세요'
-                    })}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-neutral whitespace-nowrap h-12 rounded-lg"
-                    onClick={handleVerificationConfirm}
-                  >
-                    확인
-                  </button>
-                </div>
-                {errors.verificationCode && (
-                  <label className="label">
-                    <span className="label-text-alt text-error">{errors.verificationCode.message}</span>
-                  </label>
-                )}
-                {verificationSent && (
-                  <label className="label">
-                    <span className="label-text-alt text-info">인증번호: 123456 (테스트용)</span>
+                  <span className="label-text-alt text-success">✓ 사용 가능한 이메일입니다</span>
                   </label>
                 )}
               </div>
-            )}
 
             {/* 이름 입력 */}
             <div className="form-control">
@@ -370,8 +398,19 @@ export default function Register() {
 
             {/* 회원가입 버튼 */}
             <div className="form-control mt-8">
-              <button type="submit" className="btn btn-neutral h-12 rounded-lg">
-                회원가입
+              <button 
+                type="submit" 
+                className="btn btn-neutral h-12 rounded-lg"
+                disabled={isRegistering || !emailChecked}
+              >
+                {isRegistering ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    회원가입 중...
+                  </>
+                ) : (
+                  '회원가입'
+                )}
               </button>
             </div>
           </form>

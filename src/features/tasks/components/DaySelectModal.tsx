@@ -26,7 +26,9 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
 
   const toggleDay = async (dayKr: KorDay) => {
     const dayEng = toEngDay(dayKr)
-    const exist = repeatDays.find((d) => d.dayOfWeek === dayEng)
+    const exist = Array.isArray(repeatDays)
+      ? repeatDays.find((d) => d.dayOfWeek === dayEng)
+      : undefined
     if (!exist) {
       const res = await axios.post<RepeatDay>(`/api/tasks/templates/${templateId}/repeat-days`, {
         dayOfWeek: dayEng,
@@ -43,9 +45,11 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
   const handleToggleAll = async () => {
     if (allSelected) {
       await Promise.all(
-        Array.isArray(repeatDays) ? repeatDays.map((d) =>
-          axios.delete(`/api/tasks/templates/${templateId}/repeat-days/${d.repeatDayId}`)
-        ) : []
+        Array.isArray(repeatDays)
+          ? repeatDays.map((d) =>
+              axios.delete(`/api/tasks/templates/${templateId}/repeat-days/${d.repeatDayId}`)
+            )
+          : []
       )
       setRepeatDays([])
     } else {
@@ -65,7 +69,7 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
     <>
       <div className="fixed inset-0 z-40 bg-black/10" onClick={onClose} />
       <div
-        className={`z-50 bg-white shadow-lg rounded-xl border border-gray-200 w-40 absolute ${
+        className={`z-50 bg-white shadow-lg rounded-lg border border-gray-200 w-40 absolute ${
           positionClass ?? ''
         }`}
       >
@@ -100,7 +104,7 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
           <div className="flex justify-center space-x-2 mt-1 px-1 pt-2 pb-1 border-t border-gray-200">
             <button
               type="button"
-              className="btn btn-sm min-w-[60px] btn-primary"
+              className="btn btn-sm min-w-[60px] btn-primary rounded-lg"
               onClick={onClose}
               disabled={loading}
             >
@@ -108,7 +112,7 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
             </button>
             <button
               type="button"
-              className="btn btn-sm min-w-[60px] btn-outline"
+              className="btn btn-sm min-w-[60px] btn-outline rounded-lg"
               onClick={onClose}
               disabled={loading}
             >

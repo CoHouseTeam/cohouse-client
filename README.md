@@ -48,7 +48,7 @@
    ```
    Edit `.env` file with your API base URL:
    ```env
-   VITE_API_BASE_URL=http://localhost:4000
+   VITE_API_BASE_URL=http://52.79.237.86:8080
    ```
 
 4. **Start development server**

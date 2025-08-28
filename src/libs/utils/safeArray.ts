@@ -1,6 +1,6 @@
 // 안전한 배열 처리 유틸리티
 
-export function safeArray<T>(data: any): T[] {
+export function safeArray<T>(data: unknown): T[] {
   if (Array.isArray(data)) {
     return data;
   }
@@ -16,18 +16,18 @@ export function safeArray<T>(data: any): T[] {
   return [];
 }
 
-export function safeMap<T, U>(data: any, callback: (item: T, index: number, array: T[]) => U): U[] {
+export function safeMap<T, U>(data: unknown, callback: (item: T, index: number, array: T[]) => U): U[] {
   const arr = safeArray<T>(data);
   return arr.map(callback);
 }
 
-export function safeFilter<T>(data: any, callback: (item: T, index: number, array: T[]) => boolean): T[] {
+export function safeFilter<T>(data: unknown, callback: (item: T, index: number, array: T[]) => boolean): T[] {
   const arr = safeArray<T>(data);
   return arr.filter(callback);
 }
 
 // 타입 안전한 필터 함수 (타입 단언 포함)
-export function safeFilterTyped<T>(data: any, callback: (item: T, index: number, array: T[]) => boolean): T[] {
+export function safeFilterTyped<T>(data: unknown, callback: (item: T, index: number, array: T[]) => boolean): T[] {
   const arr = safeArray(data) as T[];
   return arr.filter(callback);
 }
