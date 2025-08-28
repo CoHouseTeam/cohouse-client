@@ -69,7 +69,7 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
     <>
       <div className="fixed inset-0 z-40 bg-black/10" onClick={onClose} />
       <div
-        className={`z-50 bg-white shadow-lg rounded-xl border border-gray-200 w-40 absolute ${
+        className={`z-50 bg-white shadow-lg rounded-lg border border-gray-200 w-40 absolute ${
           positionClass ?? ''
         }`}
       >
