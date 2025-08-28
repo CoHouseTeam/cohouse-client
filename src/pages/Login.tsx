@@ -1,5 +1,10 @@
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
+import api from '../libs/api/axios'
+import { setTokens } from '../libs/utils/auth'
+import { useAuth } from '../contexts/AuthContext'
+import { AUTH_ENDPOINTS } from '../libs/api/endpoints'
 
 interface LoginForm {
   email: string
@@ -7,12 +12,43 @@ interface LoginForm {
 }
 
 export default function Login() {
+  const navigate = useNavigate()
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>()
+  const { refreshAuthState } = useAuth()
 
-  const onSubmit = (data: LoginForm) => {
-    // TODO: Implement login logic
+  const onSubmit = async (data: LoginForm) => {
     console.log('Login data:', data)
-    toast.success('로그인 요청이 전송되었습니다.')
+    try {
+      const response = await api.post(AUTH_ENDPOINTS.LOGIN, {
+        email: data.email,
+        password: data.password
+      })
+
+      // 토큰 저장
+      const { accessToken, refreshToken } = response.data
+      
+      if (accessToken) {
+        setTokens(accessToken, refreshToken)
+        refreshAuthState() // 🔄 인증 상태 즉시 업데이트
+      } else {
+        console.error('응답에 accessToken이 없습니다:', response.data)
+        toast.error('로그인 응답이 올바르지 않습니다.')
+        return
+      }
+
+      toast.success('로그인이 완료되었습니다!')
+      navigate('/')
+    } catch (error: any) {
+      console.error('로그인 오류:', error)
+      
+      if (error.response?.status === 401) {
+        toast.error('이메일 또는 비밀번호가 잘못되었습니다.')
+      } else if (error.response?.status === 400) {
+        toast.error('입력 정보를 확인해주세요.')
+      } else {
+        toast.error('로그인에 실패했습니다. 다시 시도해주세요.')
+      }
+    }
   }
 
   return (
