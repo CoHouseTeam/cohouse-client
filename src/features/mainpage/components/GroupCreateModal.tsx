@@ -3,9 +3,8 @@ import { XCircleFill } from 'react-bootstrap-icons'
 import { ModalProps } from '../../../types/main'
 import { useNavigate } from 'react-router-dom'
 import { AxiosError } from 'axios'
-import api from '../../../libs/api/axios'
-import { GROUP_ENDPOINTS } from '../../../libs/api/endpoints'
 import { useGroupStore } from '../../../app/store'
+import { createGroup } from '../../../libs/api/groups'
 
 const SUCCESS_REDIRECT_ROUTE = '/create-complete'
 
@@ -24,9 +23,7 @@ const GroupCreateModal: React.FC<ModalProps> = ({ onClose }) => {
     setError('')
     setLoading(true)
     try {
-      await api.post(GROUP_ENDPOINTS.CREATE, {
-        groupName: groupName.trim(),
-      })
+      await createGroup(groupName.trim())
       setHasGroups(true)
       navigate(SUCCESS_REDIRECT_ROUTE)
     } catch (e: unknown) {
