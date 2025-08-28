@@ -1,20 +1,27 @@
 import React from 'react'
 import { useRef, useState, useEffect } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Menu, Bell, Share2, Copy, Check } from 'lucide-react'
+import { Menu, Bell, Share2, Copy, Check, LogOut } from 'lucide-react'
+import { logout } from '../libs/utils/auth'
+import { useAuth } from '../contexts/AuthContext'
 
 type NavBarProps = {
-  isAuthenticated: boolean
-  onLogout?: () => void
   unreadCount?: number // optional for the bell dot
   children?: React.ReactNode
-  onToggleAuth?: () => void // 개발용 토글 기능
 }
 
-export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, children, onToggleAuth }: NavBarProps) {
+export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
   const drawerToggleRef = useRef<HTMLInputElement>(null)
   const [showShareDropdown, setShowShareDropdown] = useState(false)
   const [showCopiedToast, setShowCopiedToast] = useState(false)
+  
+  // Context에서 인증 상태 가져오기
+  const { isAuthenticated: isLoggedIn, refreshAuthState } = useAuth()
+  
+  const handleLogout = async () => {
+    await logout() // 백엔드 API 호출 후 토큰 제거 및 리다이렉트
+    refreshAuthState() // 인증 상태 새로고침
+  }
 
   const closeDrawer = () => {
     if (drawerToggleRef.current) drawerToggleRef.current.checked = false
@@ -106,7 +113,7 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
 
               <li className="mx-2 opacity-60 pt-2">|</li>
 
-              {!isAuthenticated ? (
+              {!isLoggedIn ? (
                 <li>
                   <NavLink to="/login" className={({ isActive }) => `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`}>
                     로그인
@@ -124,18 +131,8 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
 
           {/* right: icons / login button */}
           <div className="navbar-end gap-1">
-            {/* 개발용 토글 버튼 */}
-            {onToggleAuth && (
-              <button
-                className="btn btn-sm btn-outline rounded-lg"
-                onClick={onToggleAuth}
-                title="개발용: 로그인/로그아웃 토글"
-              >
-                {isAuthenticated ? '로그아웃' : '로그인'}
-              </button>
-            )}
             
-            {isAuthenticated ? (
+            {isLoggedIn ? (
               <>
                 <button className="btn btn-ghost btn-square rounded-lg" aria-label="Notifications">
                   <div className="indicator">
@@ -172,15 +169,14 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
                   )}
                 </div>
 
-                {onLogout && (
                   <button
                     className="btn btn-ghost btn-sm rounded-lg"
-                    onClick={onLogout}
+                  onClick={handleLogout}
                     aria-label="Logout"
                   >
+                  <LogOut size={16} />
                     로그아웃
                   </button>
-                )}
               </>
             ) : (
               <Link to="/login" className="btn btn-custom btn-sm rounded-lg">로그인</Link>
@@ -206,14 +202,25 @@ export default function NavBar({ isAuthenticated, onLogout, unreadCount = 0, chi
 
             <li><div className="divider my-3"></div></li>
 
-            {!isAuthenticated ? (
+            {!isLoggedIn ? (
               <li>
                 <NavLink to="/login" onClick={closeDrawer} className="rounded-lg">로그인/회원가입</NavLink>
               </li>
             ) : (
-              <li>
-                <NavLink to="/mypage" onClick={closeDrawer} className="rounded-lg">마이페이지</NavLink>
+              <>
+                <li>
+                  <NavLink to="/mypage" onClick={closeDrawer} className="rounded-lg">마이페이지</NavLink>
+                </li>
+                <li>
+                                  <button 
+                  onClick={async () => { closeDrawer(); await handleLogout(); }} 
+                  className="rounded-lg w-full text-left flex items-center gap-2"
+                >
+                    <LogOut size={16} />
+                    로그아웃
+                  </button>
               </li>
+              </>
             )}
           </ul>
         </aside>

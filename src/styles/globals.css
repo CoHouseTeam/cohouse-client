@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 /* 게시판 탭 커스텀 스타일 */
 .tabs-boxed {
   border-radius: 0.5rem !important;
