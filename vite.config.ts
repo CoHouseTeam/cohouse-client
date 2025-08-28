@@ -16,14 +16,14 @@ export default defineConfig({
           console.log(`[VITE PROXY] ${path} -> ${newPath}`)
           return newPath
         },
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
             console.log('❌ [VITE PROXY ERROR]', err.message)
           })
-          proxy.on('proxyReq', (_proxyReq, req, _res) => {
+          proxy.on('proxyReq', (_proxyReq, req) => {
             console.log('➡️ [VITE PROXY REQ]', req.method, req.url)
           })
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
+          proxy.on('proxyRes', (proxyRes, req) => {
             console.log('⬅️ [VITE PROXY RES]', proxyRes.statusCode, req.url)
           })
         },

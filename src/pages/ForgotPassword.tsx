@@ -21,9 +21,12 @@ export default function ForgotPassword() {
       })
       
       toast.success(response.data.message || '임시 비밀번호가 이메일로 전송되었습니다.')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('비밀번호 찾기 실패:', error)
-      toast.error(error.response?.data?.message || '비밀번호 찾기에 실패했습니다.')
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
+        : '비밀번호 찾기에 실패했습니다.'
+      toast.error(errorMessage || '비밀번호 찾기에 실패했습니다.')
     }
   }
 

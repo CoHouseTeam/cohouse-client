@@ -143,10 +143,11 @@ export default function Register() {
 
       toast.success('회원가입이 완료되었습니다!')
       navigate('/login')
-    } catch (error: any) {
-      if (error.response?.status === 400) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number; data?: { message?: string } } }
+      if (axiosError.response?.status === 400) {
         toast.error('입력 정보를 다시 확인해주세요.')
-      } else if (error.response?.status === 409) {
+      } else if (axiosError.response?.status === 409) {
         toast.error('이미 존재하는 이메일입니다.')
       } else {
         toast.error('회원가입에 실패했습니다.')

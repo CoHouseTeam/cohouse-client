@@ -38,12 +38,13 @@ export default function Login() {
 
       toast.success('로그인이 완료되었습니다!')
       navigate('/')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('로그인 오류:', error)
       
-      if (error.response?.status === 401) {
+      const axiosError = error as { response?: { status?: number; data?: { message?: string } } }
+      if (axiosError.response?.status === 401) {
         toast.error('이메일 또는 비밀번호가 잘못되었습니다.')
-      } else if (error.response?.status === 400) {
+      } else if (axiosError.response?.status === 400) {
         toast.error('입력 정보를 확인해주세요.')
       } else {
         toast.error('로그인에 실패했습니다. 다시 시도해주세요.')
