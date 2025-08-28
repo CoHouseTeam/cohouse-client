@@ -5,7 +5,6 @@ import { useSettlementDetail } from '../../../libs/hooks/settlements/useMySettle
 import { fromCategory } from '../../../libs/utils/categoryMapping'
 import LoadingSpinner from '../../common/LoadingSpinner'
 import Toggle from '../../common/Toggle'
-import ErrorCard from '../../common/ErrorCard'
 import { applyEvenSplit, fromServerList, UIParticipant } from '../utils/participants'
 
 type CreateProps = {
@@ -49,7 +48,7 @@ export default function SettlementCreateModal(props: Props) {
 
   /*{ 영수증 사진 업로드 }*/
   // 영수증 사진 보관
-  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+  const [_receiptFile, setReceiptFile] = useState<File | null>(null)
   // 사진 미리보기
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
   // 이미지 아닌 파일 선택 시 에러메시지
@@ -119,10 +118,6 @@ export default function SettlementCreateModal(props: Props) {
 
   if (isLoading) return <LoadingSpinner />
   if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
-  
-  // receiptFile 변수가 원격에서 에러를 발생시키는 경우를 대비한 임시 코드
-  const receiptFile = null
-  console.log('receiptFile:', receiptFile) // 사용하여 에러 방지
 
   return (
     <>
