@@ -169,14 +169,14 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
                   )}
                 </div>
 
-                <button
-                  className="btn btn-ghost btn-sm rounded-lg"
+                  <button
+                    className="btn btn-ghost btn-sm rounded-lg"
                   onClick={handleLogout}
-                  aria-label="Logout"
-                >
+                    aria-label="Logout"
+                  >
                   <LogOut size={16} />
-                  로그아웃
-                </button>
+                    로그아웃
+                  </button>
               </>
             ) : (
               <Link to="/login" className="btn btn-custom btn-sm rounded-lg">로그인</Link>
@@ -219,7 +219,7 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
                     <LogOut size={16} />
                     로그아웃
                   </button>
-                </li>
+              </li>
               </>
             )}
           </ul>

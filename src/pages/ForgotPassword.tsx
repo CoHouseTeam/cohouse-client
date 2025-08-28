@@ -74,18 +74,18 @@ export default function ForgotPassword() {
               <label className="label">
                 <span className="label-text font-medium">이메일</span>
               </label>
-              <input
-                type="email"
-                placeholder="이메일을 입력하세요"
+                <input
+                  type="email"
+                  placeholder="이메일을 입력하세요"
                 className="input input-bordered focus:input-primary rounded-lg"
-                {...register('email', { 
-                  required: '이메일을 입력해주세요',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: '유효한 이메일을 입력해주세요'
-                  }
-                })}
-              />
+                  {...register('email', { 
+                    required: '이메일을 입력해주세요',
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: '유효한 이메일을 입력해주세요'
+                    }
+                  })}
+                />
               {errors.email && (
                 <label className="label">
                   <span className="label-text-alt text-error">{errors.email.message}</span>

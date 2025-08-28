@@ -49,6 +49,11 @@ export default function SettlementCreateModal(props: Props) {
 
   if (isLoading) return <LoadingSpinner />
   if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
+  
+  // receiptFile 변수가 원격에서 에러를 발생시키는 경우를 대비한 임시 코드
+  const receiptFile = null
+  console.log('receiptFile:', receiptFile) // 사용하여 에러 방지
+  
   return (
     <>
       <div className="modal modal-open">

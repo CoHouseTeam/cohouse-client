@@ -130,7 +130,7 @@ export default function Register() {
       toast.error('필수 약관에 동의해주세요.')
       return
     }
-
+    
     setIsRegistering(true)
 
     try {
@@ -149,7 +149,7 @@ export default function Register() {
         toast.error('입력 정보를 다시 확인해주세요.')
       } else if (axiosError.response?.status === 409) {
         toast.error('이미 존재하는 이메일입니다.')
-      } else {
+    } else {
         toast.error('회원가입에 실패했습니다.')
       }
     } finally {
@@ -234,9 +234,9 @@ export default function Register() {
               {emailChecked && (
                 <label className="label">
                   <span className="label-text-alt text-success">✓ 사용 가능한 이메일입니다</span>
-                </label>
-              )}
-            </div>
+                  </label>
+                )}
+              </div>
 
             {/* 이름 입력 */}
             <div className="form-control">
