@@ -14,6 +14,7 @@ const Board = lazy(() => import('../pages/Board'))
 const MyPage = lazy(() => import('../pages/MyPage'))
 const MyPgeEdit = lazy(() => import('../pages/MyPageEdit'))
 const MainPage = lazy(() => import('../pages/MainPage'))
+const Complete = lazy(() => import('../pages/GroupComplete'))
 
 export function Routes() {
   return (
@@ -30,6 +31,7 @@ export function Routes() {
       <Route path="/board" element={<Board />} />
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/mypage/edit" element={<MyPgeEdit />} />
+      <Route path="/complete" element={<Complete />} />
       <Route path="*" element={<NotFound />} />
     </RouterRoutes>
   )

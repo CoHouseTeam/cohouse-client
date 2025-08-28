@@ -1,27 +1,32 @@
-import { useEffect, useState } from 'react'
+import { ChangeEventHandler, useEffect, useState } from 'react'
 import { XCircle, Images, CaretDown } from 'react-bootstrap-icons'
 import ParticipantsSelectModal from './ParticipantsSelectModal'
 import { useSettlementDetail } from '../../../libs/hooks/settlements/useMySettlements'
 import { fromCategory } from '../../../libs/utils/categoryMapping'
 import LoadingSpinner from '../../common/LoadingSpinner'
+import Toggle from '../../common/Toggle'
+import ErrorCard from '../../common/ErrorCard'
+import { applyEvenSplit, fromServerList, UIParticipant } from '../utils/participants'
 
 type CreateProps = {
   mode?: 'create'
   onClose: () => void
+  groupId: number
 }
 
 type DetailProps = {
   mode: 'detail'
   detailId: number
   onClose: () => void
+  groupId: number
 }
 
 type Props = CreateProps | DetailProps
 
 const categoryList = ['식비', '생활용품', '문화생활', '기타']
-type categoryLabel = (typeof categoryList)[number]
 
 export default function SettlementCreateModal(props: Props) {
+  const { groupId } = props
   const readOnly = props.mode === 'detail'
   const detailId = readOnly ? (props as DetailProps).detailId : undefined
 
@@ -29,23 +34,88 @@ export default function SettlementCreateModal(props: Props) {
   const [title, setTitle] = useState('')
   const [desc, setDesc] = useState('')
   const [amount, setAmount] = useState<number | ''>('')
-  const [participants, setParticipants] = useState<{ id: number; name: string }[]>([])
 
+  const [participants, setParticipants] = useState<UIParticipant[]>([])
+
+  // 카테고리
   const [open, setOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<categoryLabel | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
+  // 참여자 선택 모달
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // 균등 분배 on/off
+  const [evenSplitOn, setEvenSplitOn] = useState(false)
+
+  /*{ 영수증 사진 업로드 }*/
+  // 영수증 사진 보관
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+  // 사진 미리보기
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
+  // 이미지 아닌 파일 선택 시 에러메시지
+  const [receiptError, setReceiptError] = useState<string | null>(null)
+
+  // 미리보기 URL 정리하는 함수
+  useEffect(() => {
+    return () => {
+      if (receiptPreview) URL.revokeObjectURL(receiptPreview)
+    }
+  }, [receiptPreview])
+
+  // 사진 파일 선택 핸들러
+  const onPickReceipt: ChangeEventHandler<HTMLInputElement> = (e) => {
+    if (!e.target.files || readOnly) return
+    setReceiptError(null)
+
+    const f = e.target.files[0]
+    if (!f) return
+
+    if (!f.type.startsWith('image/')) {
+      setReceiptError('이미지 파일만 업로드할 수 있어요.')
+      e.currentTarget.value = ''
+      return
+    }
+
+    // 기존 미리보기 URL 해제 후 교체
+    if (receiptPreview) URL.revokeObjectURL(receiptPreview)
+    setReceiptFile(f)
+    setReceiptPreview(URL.createObjectURL(f))
+
+    // 같은 파일 다시 선택 가능하도록 초기화
+    e.currentTarget.value = ''
+  }
+
+  // 선택 취소(로컬 초기화)
+  const clearReceipt = () => {
+    setReceiptFile(null)
+    if (receiptPreview) {
+      URL.revokeObjectURL(receiptPreview)
+      setReceiptPreview(null)
+    }
+  }
 
   const { data, isLoading, error } = useSettlementDetail(detailId)
 
+  // 상세조회 화면 데이터 매핑
   useEffect(() => {
     if (!data) return
     setTitle(data.title ?? '')
     setDesc(data.description ?? '')
     setAmount(data.settlementAmount ?? '')
-    setSelectedCategory(fromCategory(data.category) as categoryLabel)
-    setParticipants(data.participants.map((p) => ({ id: p.memberId, name: p.memberName })))
+    setSelectedCategory(fromCategory(data.category))
+    setEvenSplitOn(!!data.equalDistribution)
+    setParticipants(fromServerList(data.participants))
   }, [data])
+
+  // 균등분배 재계산
+  useEffect(() => {
+    if (readOnly) return
+    if (!evenSplitOn) return
+    if (!participants.length) return
+    const total = typeof amount === 'number' ? amount : Number(amount || 0)
+    if (total <= 0) return
+    setParticipants((prev) => applyEvenSplit(prev, total))
+  }, [evenSplitOn, amount, participants.length, readOnly])
 
   if (isLoading) return <LoadingSpinner />
   if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
@@ -53,14 +123,14 @@ export default function SettlementCreateModal(props: Props) {
   // receiptFile 변수가 원격에서 에러를 발생시키는 경우를 대비한 임시 코드
   const receiptFile = null
   console.log('receiptFile:', receiptFile) // 사용하여 에러 방지
-  
+
   return (
     <>
       <div className="modal modal-open">
-        <div className="modal-box max-h-[90vh] overflow-y-auto">
+        <div className="modal-box max-h-[90vh] overflow-y-auto rounded-lg">
           <button
             onClick={props.onClose}
-            className="btn btn-sm btn-circle absolute right-2 top-2 bg-transparent border-none"
+            className="absolute right-2 top-2 bg-transparent border-none mt-2 mr-2"
             aria-label="닫기"
           >
             <XCircle size={15} />
@@ -80,12 +150,12 @@ export default function SettlementCreateModal(props: Props) {
                 <input
                   type="text"
                   placeholder="정산 제목을 입력해주세요."
-                  className="input input-bordered text-sm rounded-xl h-10"
+                  className="input input-bordered text-sm rounded-lg h-10"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   disabled={readOnly}
                 />
-                <span className="label-text-alt text-end mr-2 text-base-300 pt-1">
+                <span className="label-text-alt text-end mr-2 text-gray-400 pt-1">
                   {title.length}/30
                 </span>
               </label>
@@ -96,12 +166,12 @@ export default function SettlementCreateModal(props: Props) {
                 <input
                   type="text"
                   placeholder="정산에 대한 설명을 입력해주세요."
-                  className="input input-bordered text-sm rounded-xl h-10"
+                  className="input input-bordered text-sm rounded-lg h-10"
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
                   disabled={readOnly}
                 />
-                <span className="label-text-alt text-end mr-2 text-base-300 pt-1">
+                <span className="label-text-alt text-end mr-2 text-gray-400 pt-1">
                   {desc.length}/100
                 </span>
               </label>
@@ -114,14 +184,20 @@ export default function SettlementCreateModal(props: Props) {
                   <div
                     onClick={() => !readOnly && setOpen(!open)}
                     role="button"
-                    className={`w-full border border-gray-300 rounded-xl px-4 py-2 bg-white overflow-hidden ${open ? 'max-h-64 absolute z-50' : 'max-h-10'}`}
+                    className={`w-full border border-gray-300 rounded-lg px-4 py-2 bg-white ${
+                      open
+                        ? 'max-h-64 absolute z-[1000] overflow-visible'
+                        : 'max-h-10 overflow-hidden'
+                    }`}
                   >
                     {/* 타이틀 */}
                     <div className="flex justify-between items-center">
-                      <span className={`${!selectedCategory ? 'text-gray-400' : ''} text-sm`}>
+                      <span className={`${!selectedCategory ? 'text-gray-400' : ''} text-sm `}>
                         {selectedCategory ?? '카테고리 선택'}
                       </span>
-                      <CaretDown className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+                      <CaretDown
+                        className={`transition-transform ${open ? 'rotate-180' : ''} text-gray-400`}
+                      />
                     </div>
 
                     {/* 옵션 목록 */}
@@ -153,23 +229,61 @@ export default function SettlementCreateModal(props: Props) {
               {/* 총 정산 금액 */}
               <div className="form-control">
                 <span
-                  className={`${open ? 'mt-[3.25rem] pt-14' : ''} label-text text-base mt-3 mb-2 font-semibold`}
+                  className={`${open ? 'mt-[2rem] pt-5' : ''} label-text text-base mt-3 mb-2 font-semibold`}
                 >
                   총 정산 금액
                 </span>
                 <div className="flex w-full items-center gap-2 mb-2">
-                  <div className="flex border border-dashed rounded-xl h-10 w-16 justify-center items-center no-spinner">
-                    <Images size={27} className="text-base-300" />
-                  </div>
+                  <label
+                    className="relative flex border border-dashed rounded-lg h-10 w-16 justify-center items-center no-spinner"
+                    title={readOnly ? '' : '영수증 이미지 선택'}
+                  >
+                    {!readOnly && (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={onPickReceipt}
+                        className="absolute inset-0 opacity-0 cursor-pointer rounded-lg"
+                        aria-label="영수증 이미지 선택"
+                      />
+                    )}
+                    {receiptPreview ? (
+                      <>
+                        <img
+                          src={receiptPreview}
+                          alt="영수증 미리보기"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        {!readOnly && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              clearReceipt()
+                            }}
+                            className="absolute -top-2 -right-2 btn btn-xs rounded-full"
+                            aria-label="영수증 선택 취소"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <Images size={22} className="text-base-300" />
+                    )}
+                  </label>
+
                   <input
                     type="number"
                     placeholder="정산 금액을 입력해주세요"
-                    className="input input-bordered text-sm rounded-xl flex-1 min-w-0 h-10 no-spinner"
+                    className="input input-bordered text-sm rounded-lg flex-1 min-w-0 h-10 no-spinner"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
                     disabled={readOnly}
                   />
                 </div>
+                {receiptError && <span className="text-xs text-error">{receiptError}</span>}
               </div>
 
               {/* 참여자 선택 */}
@@ -179,7 +293,7 @@ export default function SettlementCreateModal(props: Props) {
                   {!readOnly && (
                     <button
                       onClick={() => setIsModalOpen(true)}
-                      className="btn btn-sm border rounded-xl border-black text-xs px-2"
+                      className="border rounded-lg border-black text-xs px-2 h-6"
                     >
                       참여자 선택
                     </button>
@@ -187,17 +301,47 @@ export default function SettlementCreateModal(props: Props) {
                 </div>
 
                 {participants.length > 0 ? (
-                  <ul
-                    className={`border rounded-xl p-3 grid grid-cols-2 gap-2 ${readOnly ? 'bg-base-200' : 'border-dashed'}`}
-                  >
-                    {participants.map((p) => (
-                      <li key={p.id} className="text-sm">
-                        {p.name}
-                      </li>
-                    ))}
-                  </ul>
+                  <>
+                    <div className="flex items-center justify-end gap-2 mb-2">
+                      <span>균등 분배</span>
+                      <Toggle
+                        checked={evenSplitOn}
+                        onChange={(v) => {
+                          if (readOnly) return
+                          setEvenSplitOn(v)
+                        }}
+                        disabled={readOnly}
+                      />
+                    </div>
+                    <div
+                      className={`border rounded-xl p-3 flex flex-col gap-2 ${readOnly ? 'bg-white' : ''}`}
+                    >
+                      {participants.map((p) => (
+                        <div
+                          key={p.memberId}
+                          className="text-sm flex items-center justify-between gap-6"
+                        >
+                          <div className="flex items-center gap-3 ml-2">
+                            <img
+                              src={p.avatar ?? '/placeholder-avatar.png'}
+                              alt="avatar"
+                              className="rounded-full w-6 h-6"
+                            />
+                            <span>{p.memberName}</span>
+                          </div>
+                          <input
+                            type="number"
+                            placeholder="금액 입력"
+                            value={p.shareAmount ?? ''}
+                            className="input input-bordered text-sm rounded-lg w-28 h-8 no-spinner mr-2"
+                            disabled={readOnly}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 ) : (
-                  <div className="flex border border-dashed h-[7rem] w-full justify-center items-center">
+                  <div className="flex border border-dashed h-[7rem] w-full justify-center items-center rounded-lg">
                     <span className="text-sm text-gray-400">참여자를 선택해주세요</span>
                   </div>
                 )}
@@ -208,13 +352,13 @@ export default function SettlementCreateModal(props: Props) {
             <div className="flex justify-center items-center h-16">
               {readOnly ? (
                 <button
-                  className="btn bg-[oklch(44%_0.043_257.281)] text-white btn-sm w-32 mt-4"
+                  className="font-bold bg-secondary rounded-lg text-white btn-sm w-32 mt-4"
                   onClick={props.onClose}
                 >
                   닫기
                 </button>
               ) : (
-                <button className="btn bg-[oklch(44%_0.043_257.281)] text-white btn-sm w-32 mt-4">
+                <button className="font-bold bg-secondary rounded-lg text-white btn-sm w-32 mt-4">
                   등록
                 </button>
               )}
@@ -223,7 +367,13 @@ export default function SettlementCreateModal(props: Props) {
         </div>
       </div>
       {!readOnly && isModalOpen && (
-        <ParticipantsSelectModal onClose={() => setIsModalOpen(false)} />
+        <ParticipantsSelectModal
+          onClose={() => setIsModalOpen(false)}
+          onSelect={(list) => {
+            setParticipants(list)
+          }}
+          groupId={groupId}
+        />
       )}
     </>
   )

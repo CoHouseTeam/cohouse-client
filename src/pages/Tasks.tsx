@@ -5,15 +5,15 @@ import TaskRandomButton from '../features/tasks/components/TaskRandomButton'
 import TaskExchangeButton from '../features/tasks/components/TaskExchangeButton'
 import CheckRepeat from '../features/tasks/components/CheckRepeat'
 import GroupMemberList from '../features/tasks/components/GroupMemberList'
-import HistoryModal, { TaskHistory } from '../features/tasks/components/HistoryModal'
+import HistoryModal from '../features/tasks/components/HistoryModal'
 import ExchangeModal from '../features/tasks/components/ExchangeModal'
 import { members as membersObj, repeatDays, templates } from '../mocks/db/tasks'
 import axios from 'axios'
-import { Assignment } from '../types/tasks'
+import { Assignment, TaskHistory } from '../types/tasks'
 
 const members = Object.entries(membersObj).map(([, data]) => ({
   name: data.name,
-  avatarUrl: data.profileUrl,
+  profileUrl: data.profileUrl,
 }))
 
 const historyItems: TaskHistory[] = [
@@ -57,16 +57,18 @@ const TasksPage: React.FC = () => {
       const repeatInfo = repeatDays.filter((rd) => rd.templateId === tpl.templateId)
 
       // 템플릿별 반복일에 동시 배정 Promise 생성
-      const assignmentPromises = Array.isArray(repeatInfo) ? repeatInfo.map(async (repeatDay) => {
-        const randomMemberId = memberIds[Math.floor(Math.random() * memberIds.length)]
-        return axios.post('/api/tasks/assignments', {
-          groupId: tpl.groupId,
-          groupMemberId: randomMemberId,
-          templateId: tpl.templateId,
-          dayOfWeek: repeatDay.dayOfWeek,
-          repeatType: 'WEEKLY',
-        })
-      }) : []
+      const assignmentPromises = Array.isArray(repeatInfo)
+        ? repeatInfo.map(async (repeatDay) => {
+            const randomMemberId = memberIds[Math.floor(Math.random() * memberIds.length)]
+            return axios.post('/api/tasks/assignments', {
+              groupId: tpl.groupId,
+              groupMemberId: randomMemberId,
+              templateId: tpl.templateId,
+              dayOfWeek: repeatDay.dayOfWeek,
+              repeatType: 'WEEKLY',
+            })
+          })
+        : []
 
       await Promise.all(assignmentPromises)
     }
@@ -86,24 +88,23 @@ const TasksPage: React.FC = () => {
       <div className="flex flex-col items-center space-y-4 mt-2">
         <div className="flex space-x-2">
           <TaskRandomButton onClick={handleRandomAssign} disabled={isAssigned} />
-          <TaskExchangeButton
-            onClick={() => {
-              setModalOpen(true)
-            }}
-          />
-          <ExchangeModal
-            open={modalOpen}
-            members={members}
-            selected={selected}
-            onSelect={setSelected}
-            onRequest={() => {
-              setModalOpen(false)
-            }}
-            onClose={() => setModalOpen(false)}
-          />
+          {isAssigned && (
+            <>
+              <TaskExchangeButton onClick={() => setModalOpen(true)} />
+              <ExchangeModal
+                open={modalOpen}
+                members={members}
+                selected={selected}
+                onSelect={setSelected}
+                onRequest={() => setModalOpen(false)}
+                onClose={() => setModalOpen(false)}
+              />
+            </>
+          )}
         </div>
         <CheckRepeat checked={repeat} onChange={(e) => setRepeat(e.target.checked)} />
       </div>
+
       <div className="font-bold text-md mt-4 text-primary">참여 그룹원</div>
       <GroupMemberList members={members} />
       <HistoryModal open={showHistory} onClose={() => setShowHistory(false)} items={historyItems} />

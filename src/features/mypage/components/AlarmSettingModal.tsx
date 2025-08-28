@@ -1,5 +1,5 @@
 import { XCircle } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Toggle from '../../common/Toggle'
 import AmPmTimePicker from './AmPmTimePicker'
 
@@ -8,32 +8,18 @@ interface OnCloseProps {
 }
 
 export default function AlarmSettingModal({ onClose }: OnCloseProps) {
-  const [allToggleOn, setAllToggleOn] = useState(false)
   const [settlementToggleOn, setSettlementToggleOn] = useState(false)
   const [taskToggleOn, setTaskToggleOn] = useState(false)
   const [boardToggleOn, setBoardToggleOn] = useState(false)
 
-  // 전체 알림 on/off -> 모든 알림 토클 on/off
-  useEffect(() => {
-    if (allToggleOn) {
-      setSettlementToggleOn(true)
-      setTaskToggleOn(true)
-      setBoardToggleOn(true)
-    } else {
-      setSettlementToggleOn(false)
-      setTaskToggleOn(false)
-      setBoardToggleOn(false)
-    }
-  }, [allToggleOn])
+  // 전체 토글 클릭 시 자식 3개를 일괄 변경
+  const allToggleOn = settlementToggleOn && taskToggleOn && boardToggleOn
 
-  // 개별 토큰들이 모두 켜져있을 때 전체도 true로 변경
-  useEffect(() => {
-    if (setAllToggleOn && taskToggleOn && boardToggleOn) {
-      setAllToggleOn(true)
-    } else if (!setAllToggleOn || !taskToggleOn || !boardToggleOn) {
-      setAllToggleOn(false)
-    }
-  }, [settlementToggleOn, taskToggleOn, boardToggleOn])
+  const handleAllToggleChange = (n: boolean) => {
+    setSettlementToggleOn(n)
+    setTaskToggleOn(n)
+    setBoardToggleOn(n)
+  }
 
   return (
     <div className="modal modal-open">
@@ -55,19 +41,19 @@ export default function AlarmSettingModal({ onClose }: OnCloseProps) {
             {/* 전체 알림 */}
             <div className="flex items-center justify-end px-4 py-3 gap-2 overflow-auto">
               <span className="text-sm">전체 알림 설정</span>
-              <Toggle checked={allToggleOn} onChange={setAllToggleOn} />
+              <Toggle checked={allToggleOn} onChange={handleAllToggleChange} />
             </div>
 
             {/* 개별 알림 */}
             <div className="flex flex-col gap-3">
               {/* 정산 알림 */}
-              <div className="flex justify-between items-center shadow-md px-4 py-3 rounded-xl bg-base-200 ">
+              <div className="flex justify-between items-center shadow-md border border-neutral-200 px-4 py-3 rounded-lg">
                 <span>정산 알림</span>
                 <Toggle checked={settlementToggleOn} onChange={setSettlementToggleOn} />
               </div>
               {/* 할 일 알림 */}
               <div
-                className={`shadow-md px-4 py-3 rounded-xl bg-base-200 transition-[height] duration-500 ease-in-out 
+                className={`shadow-md px-4 py-3 rounded-lg border border-neutral-200 transition-[height] duration-500 ease-in-out 
                             ${taskToggleOn ? 'h-40' : ''}`}
               >
                 <div className="flex justify-between mb-2">
@@ -84,7 +70,7 @@ export default function AlarmSettingModal({ onClose }: OnCloseProps) {
               </div>
 
               {/* 공지사항 알림 */}
-              <div className="flex justify-between items-center shadow-md px-4 py-3 rounded-xl bg-base-200">
+              <div className="flex justify-between items-center shadow-md px-4 py-3 rounded-lg border border-neutral-200">
                 <span>공지사항 알림</span>
                 <Toggle checked={boardToggleOn} onChange={setBoardToggleOn} />
               </div>
@@ -93,10 +79,7 @@ export default function AlarmSettingModal({ onClose }: OnCloseProps) {
 
           {/* 푸터 */}
           <div className="h-16 flex justify-center items-center">
-            <button
-              type="button"
-              className="btn bg-[oklch(44%_0.043_257.281)] text-white btn-sm w-32"
-            >
+            <button type="button" className="btn bg-secondary rounded-lg text-white btn-sm w-32">
               저장
             </button>
           </div>
