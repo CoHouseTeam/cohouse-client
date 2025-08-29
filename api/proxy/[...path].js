@@ -43,9 +43,31 @@ export default async function handler(req, res) {
   }
 
   // Construct the target URL for the backend
-  const targetUrl = `${BACKEND_URL}/${joinedPath}`;
-  const urlWithQuery = new URL(targetUrl);
+  // 백엔드 서버의 실제 경로가 /api로 시작하므로 경로 처리 로직 수정
+  let backendPath = joinedPath;
   
+  // 경로 변환 로직
+  if (joinedPath.startsWith('api/')) {
+    // /api/proxy/api/members/login → members/login으로 변환
+    backendPath = joinedPath.substring(4); // 'api/' 제거
+    console.log(`[PROXY] Path transformation: ${joinedPath} → ${backendPath}`);
+  } else if (joinedPath === '') {
+    // 루트 경로인 경우
+    backendPath = '';
+    console.log(`[PROXY] Root path detected`);
+  }
+  
+  // 백엔드 URL 구성
+  let targetUrl;
+  if (backendPath === '') {
+    targetUrl = `${BACKEND_URL}/api`;
+  } else {
+    targetUrl = `${BACKEND_URL}/api/${backendPath}`;
+  }
+  
+  const urlWithQuery = new URL(targetUrl);
+  console.log(`[PROXY] Final backend URL: ${targetUrl}`);
+
   // Add query parameters if they exist
   if (req.url) {
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
