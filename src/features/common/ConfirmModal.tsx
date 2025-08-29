@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { XCircle } from 'lucide-react'
 import { ReactNode } from 'react'
 
 type ConfirmModalProps = {
@@ -27,17 +27,20 @@ export default function ConfirmModal({
         <div className="flex justify-between items-start mb-4">
           <h3 className="font-bold text-lg">{title}</h3>
           <button className="btn btn-sm btn-circle btn-ghost" onClick={onCancel}>
-            <X className="w-5 h-5" />
+            <XCircle className="w-5 h-5" />
           </button>
         </div>
         <div className="py-2 text-base-content/80">
           {typeof message === 'string' ? <p>{message}</p> : message}
         </div>
-        <div className="modal-action">
-          <button className="btn btn-ghost" onClick={onCancel}>
+        <div className="modal-action flex items-center justify-center gap-3">
+          <button className="btn btn-sm rounded-lg w-20" onClick={onCancel}>
             {cancelText}
           </button>
-          <button className="btn btn-error" onClick={onConfirm}>
+          <button
+            className="btn btn-sm rounded-lg bg-secondary text-white w-20"
+            onClick={onConfirm}
+          >
             {confirmText}
           </button>
         </div>
@@ -46,5 +49,3 @@ export default function ConfirmModal({
     </div>
   )
 }
-
-
