@@ -1,21 +1,6 @@
 {
-  "functions": {
-    "api/proxy/[...path].js": {
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
-    {
-      "source": "/api/proxy/(.*)",
-      "destination": "/api/proxy/[...path]"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
+    { "source": "/api/:path*", "destination": "http://52.79.237.86:8080/api/:path*" },
+    { "source": "/(.*)", "destination": "/" }
   ]
 }
