@@ -14,7 +14,6 @@ export function fromCategory(category: SettlementCategory): string {
 export function toCategory(input: string): SettlementCategory {
   const map: Record<string, SettlementCategory> = {
     식비: 'FOOD',
-    식사: 'FOOD',
     생활용품: 'DAILY_SUPPLIES',
     문화생활: 'CULTURE',
     기타: 'ETC',

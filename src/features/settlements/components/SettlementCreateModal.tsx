@@ -2,10 +2,17 @@ import { ChangeEventHandler, useEffect, useState } from 'react'
 import { XCircle, Images, CaretDown } from 'react-bootstrap-icons'
 import ParticipantsSelectModal from './ParticipantsSelectModal'
 import { useSettlementDetail } from '../../../libs/hooks/settlements/useMySettlements'
-import { fromCategory } from '../../../libs/utils/categoryMapping'
+import { fromCategory, toCategory } from '../../../libs/utils/categoryMapping'
 import LoadingSpinner from '../../common/LoadingSpinner'
 import Toggle from '../../common/Toggle'
 import { applyEvenSplit, fromServerList, UIParticipant } from '../utils/participants'
+import {
+  useCreateSettlement,
+  useUploadSettlementReceipt,
+} from '../../../libs/hooks/settlements/useSettlementMutations'
+import { CreateSettlementBody } from '../../../types/settlement'
+import ConfirmModal from '../../common/ConfirmModal'
+import ImageViewer from '../../common/ImageViewer'
 
 type CreateProps = {
   mode?: 'create'
@@ -28,6 +35,10 @@ export default function SettlementCreateModal(props: Props) {
   const { groupId } = props
   const readOnly = props.mode === 'detail'
   const detailId = readOnly ? (props as DetailProps).detailId : undefined
+
+  // 알림 컴포넌트
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertMsg, setAlertMsg] = useState('')
 
   // 글자수 카운트
   const [title, setTitle] = useState('')
@@ -53,6 +64,21 @@ export default function SettlementCreateModal(props: Props) {
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
   // 이미지 아닌 파일 선택 시 에러메시지
   const [receiptError, setReceiptError] = useState<string | null>(null)
+
+  // 정산 생성(등록) API
+  const { mutateAsync: createSettlement, isPending: creating } = useCreateSettlement(groupId)
+  // 영수증  API
+  const { mutateAsync: uploadReceipt, isPending: uploadingReceipt } = useUploadSettlementReceipt()
+
+  const showAlert = (msg: string) => {
+    setAlertMsg(msg)
+    setAlertOpen(true)
+  }
+
+  const closeAlert = () => {
+    setAlertOpen(false)
+    setAlertMsg('')
+  }
 
   // 미리보기 URL 정리하는 함수
   useEffect(() => {
@@ -93,6 +119,16 @@ export default function SettlementCreateModal(props: Props) {
     }
   }
 
+  // 이미지 크게 보기
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerSrc, setViewerSrc] = useState<string>('')
+
+  const openViewer = (src: string) => {
+    setViewerSrc(src)
+    setViewerOpen(true)
+  }
+
+  // 상세조회 API
   const { data, isLoading, error } = useSettlementDetail(detailId)
 
   // 상세조회 화면 데이터 매핑
@@ -115,6 +151,68 @@ export default function SettlementCreateModal(props: Props) {
     if (total <= 0) return
     setParticipants((prev) => applyEvenSplit(prev, total))
   }, [evenSplitOn, amount, participants.length, readOnly])
+
+  const receiptImageSrc = receiptPreview ?? data?.imageUrl ?? null
+
+  // 정산 등록 제출
+  const onSubmit = async () => {
+    if (readOnly) return
+
+    // 내용 작성 검증
+    const total = typeof amount === 'number' ? amount : Number(amount || 0)
+    if (!title.trim() || total <= 0 || participants.length === 0) {
+      // TODO: 필요하면 안내 모달/토스트 붙이기
+      return
+    }
+
+    try {
+      let input: CreateSettlementBody
+
+      // 정산 생성 API에 보낼 내용
+      if (evenSplitOn) {
+        // equalDistribution === true
+        input = {
+          title: title.trim(),
+          description: (desc || '').trim(),
+          settlementAmount: total,
+          category: toCategory(selectedCategory ?? '기타'),
+          equalDistribution: true,
+          participantIds: participants.map((p) => p.memberId),
+        }
+      } else {
+        // equalDistribution === false
+        input = {
+          title: title.trim(),
+          description: (desc || '').trim(),
+          settlementAmount: total,
+          category: toCategory(selectedCategory ?? '기타'),
+          equalDistribution: false,
+          manualShares: participants.reduce<Record<number, number>>((acc, p) => {
+            acc[p.memberId] = Number(p.shareAmount ?? 0)
+            return acc
+          }, {}),
+        }
+      }
+
+      // 정산 생성 호출
+      const created = await createSettlement(input)
+
+      // 영수증 업로드
+      if (receiptFile) {
+        await uploadReceipt({
+          settlementId: created.id,
+          groupId,
+          file: receiptFile,
+          method: 'POST',
+        })
+      }
+
+      // 모달 닫기
+      props.onClose()
+    } catch (e) {
+      showAlert('정산 등록에 실패했어요. 다시 시도해 주세요.')
+    }
+  }
 
   if (isLoading) return <LoadingSpinner />
   if (error) return <p className="text-sm text-error">에러가 발생했어요</p>
@@ -229,11 +327,33 @@ export default function SettlementCreateModal(props: Props) {
                   총 정산 금액
                 </span>
                 <div className="flex w-full items-center gap-2 mb-2">
-                  <label
-                    className="relative flex border border-dashed rounded-lg h-10 w-16 justify-center items-center no-spinner"
-                    title={readOnly ? '' : '영수증 이미지 선택'}
-                  >
-                    {!readOnly && (
+                  {readOnly ? (
+                    // 읽기 전용
+                    <div className="relative flex border border-dashed rounded-lg h-10 w-16 justify-center items-center">
+                      {receiptImageSrc ? (
+                        <button
+                          type="button"
+                          onClick={() => openViewer(receiptImageSrc)}
+                          className="block focus:outline-none"
+                          aria-label="영수증 크게 보기"
+                          title="클릭하여 크게 보기"
+                        >
+                          <img
+                            src={receiptImageSrc}
+                            alt=""
+                            className="w-full h-full object-cover rounded-lg cursor-zoom-in hover:opacity-90 transition"
+                          />
+                        </button>
+                      ) : (
+                        <Images size={22} className="text-base-300" />
+                      )}
+                    </div>
+                  ) : (
+                    // 작성/등록 모드
+                    <label
+                      className="relative flex border border-dashed rounded-lg h-10 w-16 justify-center items-center no-spinner"
+                      title="영수증 이미지 선택"
+                    >
                       <input
                         type="file"
                         accept="image/*"
@@ -241,33 +361,33 @@ export default function SettlementCreateModal(props: Props) {
                         className="absolute inset-0 opacity-0 cursor-pointer rounded-lg"
                         aria-label="영수증 이미지 선택"
                       />
-                    )}
-                    {receiptPreview ? (
-                      <>
-                        <img
-                          src={receiptPreview}
-                          alt="영수증 미리보기"
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                        {!readOnly && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              clearReceipt()
-                            }}
-                            className="absolute -top-2 -right-2 btn btn-xs rounded-full"
-                            aria-label="영수증 선택 취소"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <Images size={22} className="text-base-300" />
-                    )}
-                  </label>
+                      {receiptImageSrc ? (
+                        <>
+                          <img
+                            src={receiptImageSrc}
+                            alt="영수증 미리보기"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                          {receiptPreview && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                clearReceipt()
+                              }}
+                              className="absolute -top-2 -right-2 btn btn-xs rounded-full"
+                              aria-label="영수증 선택 취소"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <Images size={22} className="text-base-300" />
+                      )}
+                    </label>
+                  )}
 
                   <input
                     type="number"
@@ -353,7 +473,11 @@ export default function SettlementCreateModal(props: Props) {
                   닫기
                 </button>
               ) : (
-                <button className="font-bold bg-secondary rounded-lg text-white btn-sm w-32 mt-4">
+                <button
+                  onClick={onSubmit}
+                  className="font-bold bg-secondary rounded-lg text-white btn-sm w-32 mt-4"
+                  disabled={creating || uploadingReceipt}
+                >
                   등록
                 </button>
               )}
@@ -370,6 +494,23 @@ export default function SettlementCreateModal(props: Props) {
           groupId={groupId}
         />
       )}
+
+      <ConfirmModal
+        open={alertOpen}
+        title="안내"
+        message={alertMsg}
+        confirmText="확인"
+        cancelText="취소"
+        onConfirm={closeAlert}
+        onCancel={closeAlert}
+      />
+
+      <ImageViewer
+        open={viewerOpen}
+        src={viewerSrc}
+        alt="프로필 이미지"
+        onClose={() => setViewerOpen(false)}
+      />
     </>
   )
 }

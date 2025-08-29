@@ -2,9 +2,12 @@ import { useState } from 'react'
 import { Cake2, Gear, PersonCircle } from 'react-bootstrap-icons'
 import { Link } from 'react-router-dom'
 import AlarmSettingModal from '../features/mypage/components/AlarmSettingModal'
+import { useProfile } from '../libs/hooks/mypage/useProfile'
 
 export default function MyPage() {
   const [alarmSettingModalOpen, setAlarmSettingModalOpen] = useState(false)
+
+  const { data: me, isLoading: profileLoading } = useProfile()
 
   return (
     <>
@@ -26,9 +29,17 @@ export default function MyPage() {
                 {/* 프로필 영역 */}
                 <div className="flex items-center gap-6">
                   <div className="pl-2">
-                    <Link to={'/'} className="rounded-full w-16">
+                    {profileLoading ? (
+                      <div className="skeleton w-16 h-16 rounded-full" />
+                    ) : me?.profileImageUrl ? (
+                      <img
+                        src={me.profileImageUrl}
+                        alt="프로필"
+                        className="w-16 h-16 rounded-full object-cover border"
+                      />
+                    ) : (
                       <PersonCircle size={60} />
-                    </Link>
+                    )}
                   </div>
 
                   <div className="flex flex-col">
