@@ -5,11 +5,11 @@
  */
 export const setTokens = (accessToken: string, refreshToken?: string) => {
   localStorage.setItem('accessToken', accessToken)
-  console.log('✅ Access Token 저장됨')
+  console.log('✅ Access Token 저장됨', accessToken)
   
   if (refreshToken) {
     localStorage.setItem('refreshToken', refreshToken)
-    console.log('✅ Refresh Token 저장됨')
+    console.log('✅ Refresh Token 저장됨', refreshToken)
   }
 }
 
