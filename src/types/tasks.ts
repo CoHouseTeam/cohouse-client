@@ -90,3 +90,14 @@ export interface HistoryModalProps {
   onClose: () => void
   items: TaskHistory[]
 }
+
+export interface GroupMember {
+  id: number
+  groupId: number
+  memberId: number
+  isLeader: boolean
+  nickname: string
+  status: string
+  joinedAt: string
+  leavedAt: string | null
+}
