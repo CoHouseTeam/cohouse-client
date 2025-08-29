@@ -80,16 +80,38 @@ export default async function handler(req, res) {
     };
 
     // Add body for non-GET requests
-    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
-      if (typeof req.body === 'string') {
-        requestConfig.body = req.body;
-      } else if (req.body && typeof req.body === 'object') {
-        requestConfig.body = JSON.stringify(req.body);
-        headers['Content-Type'] = 'application/json';
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      // Vercel 환경에서 req.body 처리
+      if (req.body !== undefined && req.body !== null) {
+        // 이미 객체인 경우 (Vercel이 자동으로 파싱한 경우)
+        if (typeof req.body === 'object') {
+          requestConfig.body = JSON.stringify(req.body);
+          headers['Content-Type'] = 'application/json';
+        } 
+        // 문자열인 경우 (raw body)
+        else if (typeof req.body === 'string') {
+          // JSON 문자열인지 확인
+          try {
+            const parsed = JSON.parse(req.body);
+            requestConfig.body = JSON.stringify(parsed);
+            headers['Content-Type'] = 'application/json';
+          } catch (e) {
+            // JSON이 아닌 경우 문자열 그대로 사용
+            requestConfig.body = req.body;
+          }
+        }
+        
+        console.log(`[PROXY] Request body:`, req.body);
+        console.log(`[PROXY] Final body:`, requestConfig.body);
       }
     }
 
     console.log(`[PROXY] Forwarding to: ${urlWithQuery.href}`);
+    console.log(`[PROXY] Request config:`, {
+      method: requestConfig.method,
+      headers: requestConfig.headers,
+      hasBody: !!requestConfig.body
+    });
 
     // Make the request to the backend
     const response = await fetch(urlWithQuery.href, requestConfig);
