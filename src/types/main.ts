@@ -32,3 +32,10 @@ export interface CalendarBoxProps {
 export interface ModalProps {
   onClose: () => void
 }
+
+export interface InviteModalProps {
+  groupName: string
+  onClose: () => void
+  onAccept: () => void
+  onDecline: () => void
+}

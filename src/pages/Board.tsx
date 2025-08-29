@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import ConfirmModal from '../features/common/ConfirmModal'
-import { Heart, X, ChevronDown, ChevronUp, User } from 'lucide-react'
+import { Heart, X, ChevronDown, ChevronUp } from 'lucide-react'
 
 // 게시글 타입 정의
 interface Post {
@@ -22,6 +22,7 @@ interface User {
   name: string
   profileImage: string
 }
+
 
 export default function Board() {
   const [currentPage, setCurrentPage] = useState(1)

@@ -1,38 +1,98 @@
-// Auth endpoints
+// 🔐 Auth endpoints (members)
 export const AUTH_ENDPOINTS = {
-  LOGIN: '/auth/login',
-  REGISTER: '/auth/register',
-  LOGOUT: '/auth/logout',
-  REFRESH: '/auth/refresh',
+  SIGNUP: 'api/members/signup',
+  LOGIN: 'api/members/login',
+  LOGOUT: 'api/members/logout',
+  REFRESH: 'api/members/login/refresh',
+  FORGOT_PASSWORD: 'api/members/forgot-password',
+  RESET_PASSWORD: 'api/members/reset-password',
+  CHECK_EMAIL: 'api/members/check/email',
+  OAUTH2: (provider: string) => `api/members/oauth2/${provider}`,
+  WITHDRAW: 'api/members/withdraw',
 } as const
 
-// Settlements endpoints
-export const SETTLEMENTS_ENDPOINTS = {
-  // 목록
-  MY_LIST: '/settlements/my', // 내가 속한 정산 목록
-  GROUP_LIST: (groupId: number) => `/settlements/group/${groupId}`, // 그룹 정산 목록(그룹장)
-
-  // 생성 & 기본 CRUD
-  CREATE: '/settlements', // POST 정산 생성
-  DETAIL: (id: number) => `/settlements/${id}`, // GET 정산 상세
-  DELETE: (id: number) => `/settlements/${id}`, // DELETE 정산 취소
-
-  // 참여자 / 상태 변경
-  PARTICIPANTS: (id: number) => `/settlements/${id}/participants`, // 참여자 목록
-  PAYMENT_DONE: (id: number) => `/settlements/${id}/payment`, // 송금 완료 처리
-
-  // 히스토리
-  MY_HISTORY: '/settlements/my/history', // 나의 정산 히스토리
-  PAYMENT_HISTORIES: '/payments/histories', // 나의 송금 히스토리
-
-  // 영수증
-  RECEIPT: (id: number) => `/settlements/${id}/receipt`, // POST/PUT/DELETE 영수증
+// 👤 Profile endpoints
+export const PROFILE_ENDPOINTS = {
+  GET: 'api/members/profile',
+  UPDATE: 'api/members/profile',
+  UPDATE_IMAGE: 'api/members/profile/profile-image',
+  DELETE_IMAGE: 'api/members/profile/profile-image',
+  UPDATE_ALERT_TIME: 'api/members/profile/alert-time',
 } as const
 
-// 멤버 (보조 API)
-export const MEMBERS_ENDPOINT = {
-  LIST: '/members',
+// 👥 Group endpoints
+export const GROUP_ENDPOINTS = {
+  CREATE: '/groups',
+  JOIN: '/groups/join',
+  MY_GROUPS: '/groups/me',
+  
+  // 그룹별 상세
+  DETAIL: (groupId: number) => `/groups/${groupId}`,
+  UPDATE: (groupId: number) => `/groups/${groupId}`,
+  DELETE: (groupId: number) => `/groups/${groupId}`,
+  
+  // 멤버 관리
+  MEMBERS: (groupId: number) => `/groups/${groupId}/members`,
+  MEMBER_DETAIL: (groupId: number, memberId: number) => `/groups/${groupId}/members/${memberId}`,
+  UPDATE_MY_INFO: (groupId: number) => `/groups/${groupId}/members/me`,
+  TRANSFER_LEADER: (groupId: number) => `/groups/${groupId}/leader-transfer`,
+  
+  // 탈퇴 요청
+  LEAVE_REQUESTS: (groupId: number) => `/groups/${groupId}/leave-requests`,
+  LEAVE_REQUEST: (groupId: number) => `/groups/${groupId}/leave-requests`,
+  APPROVE_LEAVE: (groupId: number, requestId: number) => `/groups/${groupId}/leave-requests/${requestId}`,
+  
+  // 초대
+  INVITATIONS: (groupId: number) => `/groups/${groupId}/invitations`,
 } as const
+
+// 📝 Task endpoints
+export const TASK_ENDPOINTS = {
+  // 템플릿 관리
+  TEMPLATES: 'api/tasks/templates',
+  CREATE_TEMPLATE: 'api/tasks/templates',
+  TEMPLATE_DETAIL: (templateId: number) => `api/tasks/templates/${templateId}`,
+  UPDATE_TEMPLATE: (templateId: number) => `api/tasks/templates/${templateId}`,
+  DELETE_TEMPLATE: (templateId: number) => `api/tasks/templates/${templateId}`,
+  
+  // 반복 요일 관리
+  REPEAT_DAYS: (templateId: number) => `api/tasks/templates/${templateId}/repeat-days`,
+  CREATE_REPEAT_DAY: (templateId: number) => `api/tasks/templates/${templateId}/repeat-days`,
+  DELETE_REPEAT_DAY: (templateId: number, repeatDayId: number) => `api/tasks/templates/${templateId}/repeat-days/${repeatDayId}`,
+  
+  // 할당 관리
+  ASSIGNMENTS: 'api/tasks/assignments',
+  CREATE_ASSIGNMENT: 'api/tasks/assignments',
+  UPDATE_ASSIGNMENT: (assignmentId: number) => `api/tasks/assignments/${assignmentId}`,
+  ASSIGNMENT_HISTORIES: (assignmentId: number) => `api/tasks/assignments/${assignmentId}/histories`,
+  
+  // 대신하기 요청
+  OVERRIDE_REQUEST: (assignmentId: number) => `api/tasks/assignments/${assignmentId}/override-request`,
+  UPDATE_OVERRIDE_REQUEST: (requestId: number) => `api/tasks/override-requests/${requestId}`,
+  OVERRIDE_HISTORIES: (requestId: number) => `api/tasks/override-requests/${requestId}/histories`,
+} as const
+
+// 💰 Settlement endpoints
+export const SETTLEMENT_ENDPOINTS = {
+  CREATE: 'api/settlements',
+  MY_LIST: 'api/settlements/my',
+  MY_HISTORY: 'api/settlements/my/history',
+  GROUP_LIST: (groupId: number) => `api/settlements/group/${groupId}`,
+  PAYMENT_HISTORIES: 'api/settlements/payment-histories',
+  
+  // 정산별 상세
+  DETAIL: (settlementId: number) => `api/settlements/${settlementId}`,
+  DELETE: (settlementId: number) => `api/settlements/${settlementId}`,
+  PARTICIPANTS: (settlementId: number) => `api/settlements/${settlementId}/participants`,
+  PAYMENT: (settlementId: number) => `api/settlements/${settlementId}/payment`,
+  PAYMENT_DONE: (settlementId: number) => `api/settlements/${settlementId}/payment-done`,
+  
+  // 영수증 관리
+  RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
+  UPDATE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
+  DELETE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
+} as const
+
 
 // Profile endpoints
 export const PROFILE_ENDPOINTS = {
@@ -51,22 +111,31 @@ export const TASKS_ENDPOINTS = {
   UPDATE: (id: string) => `/tasks/${id}`,
   DELETE: (id: string) => `/tasks/${id}`,
   COMPLETE: (id: string) => `/tasks/${id}/complete`,
+
+// 💳 Payment endpoints
+export const PAYMENT_ENDPOINTS = {
+  HISTORIES: 'api/payments/histories',
 } as const
 
-// Board endpoints
-export const BOARD_ENDPOINTS = {
-  POSTS: '/board/posts',
-  CREATE_POST: '/board/posts',
-  POST_DETAIL: (id: string) => `/board/posts/${id}`,
-  UPDATE_POST: (id: string) => `/board/posts/${id}`,
-  DELETE_POST: (id: string) => `/board/posts/${id}`,
-  ANNOUNCEMENTS: '/board/announcements',
-  SUGGESTIONS: '/board/suggestions',
+// 📰 Post endpoints
+export const POST_ENDPOINTS = {
+  CREATE: 'api/posts',
+  LIST: (groupId: number) => `api/posts/${groupId}`,
+  DETAIL: (postId: number) => `api/posts/${postId}`,
+  UPDATE: (postId: number) => `api/posts/${postId}`,
+  DELETE: (postId: number) => `api/posts/${postId}`,
+  
+  // 좋아요
+  LIKES: (postId: number) => `api/posts/${postId}/likes`,
+  LIKE: (postId: number) => `api/posts/${postId}/likes`,
+  LIKE_STATUS: (postId: number) => `api/posts/${postId}/likes/status`,
+  LIKE_COUNT: (postId: number) => `api/posts/${postId}/likes/count`,
 } as const
 
-// User endpoints
-export const USER_ENDPOINTS = {
-  PROFILE: '/user/profile',
-  UPDATE_PROFILE: '/user/profile',
-  CHANGE_PASSWORD: '/user/password',
+// 🔔 Notification endpoints
+export const NOTIFICATION_ENDPOINTS = {
+  LIST: '/notifications',
+  UNREAD_COUNT: '/notifications/unread-count',
+  MARK_READ: (notificationId: number) => `/notifications/${notificationId}/read`,
+  DELETE_ALL: '/notifications/all',
 } as const

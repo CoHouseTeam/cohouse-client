@@ -11,17 +11,27 @@ interface AppState {
   setUser: (user: User | null) => void
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  user: null,
-  setUser: (user) => set({ user }),
-}))
-
 interface CalendarState {
   selectedDate: Date
   setSelectedDate: (date: Date) => void
 }
 
+interface GroupState {
+  hasGroups: boolean
+  setHasGroups: (val: boolean) => void
+}
+
+export const useAppStore = create<AppState>((set) => ({
+  user: null,
+  setUser: (user) => set({ user }),
+}))
+
 export const useCalendarStore = create<CalendarState>((set) => ({
   selectedDate: new Date(),
   setSelectedDate: (date) => set({ selectedDate: date }),
+}))
+
+export const useGroupStore = create<GroupState>((set) => ({
+  hasGroups: false,
+  setHasGroups: (val) => set({ hasGroups: val }),
 }))

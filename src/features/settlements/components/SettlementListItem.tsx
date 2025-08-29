@@ -225,6 +225,7 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
           onClose={() => setDetailOpen(false)}
           mode="detail"
           detailId={settlement.id}
+          groupId={1}
         />
       )}
     </>

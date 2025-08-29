@@ -22,7 +22,8 @@ const queryClient = new QueryClient({
 
 // [추가] DEV에서만 렌더 전에 MSW 먼저 시작
 async function enableMocking() {
-  if (!import.meta.env.DEV || import.meta.env.MODE !== 'development') return
+  // MSW 완전히 비활성화 (실제 API 테스트를 위해)
+  if (!import.meta.env.DEV || import.meta.env.VITE_USE_MSW !== 'true') return
 
   const { worker } = await import('./mocks/browser')
   await worker.start({

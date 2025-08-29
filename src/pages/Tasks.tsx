@@ -88,24 +88,23 @@ const TasksPage: React.FC = () => {
       <div className="flex flex-col items-center space-y-4 mt-2">
         <div className="flex space-x-2">
           <TaskRandomButton onClick={handleRandomAssign} disabled={isAssigned} />
-          <TaskExchangeButton
-            onClick={() => {
-              setModalOpen(true)
-            }}
-          />
-          <ExchangeModal
-            open={modalOpen}
-            members={members}
-            selected={selected}
-            onSelect={setSelected}
-            onRequest={() => {
-              setModalOpen(false)
-            }}
-            onClose={() => setModalOpen(false)}
-          />
+          {isAssigned && (
+            <>
+              <TaskExchangeButton onClick={() => setModalOpen(true)} />
+              <ExchangeModal
+                open={modalOpen}
+                members={members}
+                selected={selected}
+                onSelect={setSelected}
+                onRequest={() => setModalOpen(false)}
+                onClose={() => setModalOpen(false)}
+              />
+            </>
+          )}
         </div>
         <CheckRepeat checked={repeat} onChange={(e) => setRepeat(e.target.checked)} />
       </div>
+
       <div className="font-bold text-md mt-4 text-primary">참여 그룹원</div>
       <GroupMemberList members={members} />
       <HistoryModal open={showHistory} onClose={() => setShowHistory(false)} items={historyItems} />

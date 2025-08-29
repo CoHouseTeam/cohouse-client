@@ -1,5 +1,11 @@
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
+import api from '../libs/api/axios'
+import { setTokens } from '../libs/utils/auth'
+import { useAuth } from '../contexts/AuthContext'
+import { AUTH_ENDPOINTS, GROUP_ENDPOINTS } from '../libs/api/endpoints'
+import { useGroupStore } from '../app/store'
 
 interface LoginForm {
   email: string
@@ -7,12 +13,59 @@ interface LoginForm {
 }
 
 export default function Login() {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>()
+  const navigate = useNavigate()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginForm>()
+  const { refreshAuthState } = useAuth()
+  const setHasGroups = useGroupStore((state) => state.setHasGroups)
 
-  const onSubmit = (data: LoginForm) => {
-    // TODO: Implement login logic
+  const onSubmit = async (data: LoginForm) => {
     console.log('Login data:', data)
-    toast.success('로그인 요청이 전송되었습니다.')
+    try {
+      const response = await api.post(AUTH_ENDPOINTS.LOGIN, {
+        email: data.email,
+        password: data.password,
+      })
+
+      // 토큰 저장
+      const { accessToken, refreshToken } = response.data
+
+      if (accessToken) {
+        setTokens(accessToken, refreshToken)
+        refreshAuthState() // 🔄 인증 상태 즉시 업데이트
+        //그룹 상태 확인
+        try {
+          const groupRes = await api.get(GROUP_ENDPOINTS.MY_GROUPS)
+          const data = groupRes.data
+          const hasGroups = Array.isArray(data) ? data.length > 0 : data != null
+          setHasGroups(hasGroups)
+        } catch (e) {
+          console.error('그룹 목록 조회 중 에러:', e)
+          setHasGroups(false)
+        }
+      } else {
+        console.error('응답에 accessToken이 없습니다:', response.data)
+        toast.error('로그인 응답이 올바르지 않습니다.')
+        return
+      }
+
+      toast.success('로그인이 완료되었습니다!')
+      navigate('/')
+    } catch (error: unknown) {
+      console.error('로그인 오류:', error)
+
+      const axiosError = error as { response?: { status?: number; data?: { message?: string } } }
+      if (axiosError.response?.status === 401) {
+        toast.error('이메일 또는 비밀번호가 잘못되었습니다.')
+      } else if (axiosError.response?.status === 400) {
+        toast.error('입력 정보를 확인해주세요.')
+      } else {
+        toast.error('로그인에 실패했습니다. 다시 시도해주세요.')
+      }
+    }
   }
 
   return (
@@ -20,7 +73,7 @@ export default function Login() {
       <div className="card w-full max-w-md bg-base-200 shadow-xl">
         <div className="card-body p-6 sm:p-8">
           <h2 className="card-title text-2xl font-bold text-center mb-8 justify-center">로그인</h2>
-          
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="form-control">
               <label className="label">
@@ -30,12 +83,12 @@ export default function Login() {
                 type="email"
                 placeholder="이메일을 입력하세요"
                 className="input input-bordered rounded-lg focus:input-primary"
-                {...register('email', { 
+                {...register('email', {
                   required: '이메일을 입력해주세요',
                   pattern: {
                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: '유효한 이메일을 입력해주세요'
-                  }
+                    message: '유효한 이메일을 입력해주세요',
+                  },
                 })}
               />
               {errors.email && (
@@ -53,12 +106,12 @@ export default function Login() {
                 type="password"
                 placeholder="비밀번호를 입력하세요"
                 className="input input-bordered rounded-lg focus:input-primary"
-                {...register('password', { 
+                {...register('password', {
                   required: '비밀번호를 입력해주세요',
                   minLength: {
                     value: 6,
-                    message: '비밀번호는 최소 6자 이상이어야 합니다'
-                  }
+                    message: '비밀번호는 최소 6자 이상이어야 합니다',
+                  },
                 })}
               />
               {errors.password && (
@@ -83,7 +136,7 @@ export default function Login() {
           </form>
 
           <div className="divider my-6">또는</div>
-          
+
           <div className="flex justify-between">
             <a href="/register" className="link link-primary font-medium">
               회원가입

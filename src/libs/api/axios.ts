@@ -1,13 +1,20 @@
 import axios from 'axios'
 
-const isMock = import.meta.env.DEV && import.meta.env.VITE_USE_MSW === 'true'
+// 🌐 API 요청은 무조건 환경변수 사용 (하드코딩 금지!)
+const getBaseURL = () => {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+  
+  if (!apiBaseUrl) {
+    console.error('❌ VITE_API_BASE_URL이 설정되지 않았습니다!')
+    return '/api' // 기본값: 프록시 경로
+  }
+  
+  console.log('🌐 API Base URL:', apiBaseUrl)
+  return apiBaseUrl
+}
 
 const api = axios.create({
-  baseURL: isMock
-    ? '/api' // DEV + MSW일 때는 /api (상대경로)로 통일 → MSW가 잡음
-    : import.meta.env.PROD 
-      ? '/api/proxy' // 프로덕션에서는 프록시 사용
-      : import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000',
+  baseURL: getBaseURL(),
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 })
@@ -21,9 +28,10 @@ api.interceptors.request.use((c) => {
 // Request interceptor - attach auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('accessToken')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      console.log('🔑 토큰 첨부됨:', token.substring(0, 20) + '...')
     }
     return config
   },
@@ -37,24 +45,21 @@ api.interceptors.response.use(
   (response) => {
     return response
   },
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      // TODO: Handle 401 unauthorized
-      localStorage.removeItem('token')
+      console.log('❌ 401 Unauthorized - 토큰 만료')
+      
+      // 토큰 제거
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      
+      // 로그인 페이지로 리다이렉트
       window.location.href = '/login'
+      return Promise.reject(error)
     }
     
-    // 프로덕션에서 API 오류 시 임시 Mock 데이터 제공
-    if (import.meta.env.PROD && error.config?.url) {
-      console.warn('API Error, providing fallback data:', error.config.url)
-      
-      // 모든 API 오류에 대해 빈 배열 반환
-      return Promise.resolve({
-        data: [],
-        status: 200,
-        statusText: 'OK (Mock Data)'
-      })
-    }
+    // API 오류 로깅
+    console.error('API Error:', error.config?.url, error.response?.status, error.message)
     
     return Promise.reject(error)
   }

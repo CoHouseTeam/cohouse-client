@@ -34,7 +34,7 @@ const UncompletedTasksModal: React.FC<ModalProps> = ({ onClose }) => {
           aria-label="닫기"
           type="button"
         >
-          <XCircleFill className="text-2xl text-gray-400" />
+          <XCircleFill className="text-xl text-gray-400" />
         </button>
 
         <h3 className="font-bold text-[24px] text-center mb-6">미이행 내역</h3>
