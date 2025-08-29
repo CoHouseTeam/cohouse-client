@@ -1,8 +1,9 @@
 {
-  "rewrites": [
-    { "source": "/api/proxy/:path*", "destination": "/api/proxy/:path*" },
-    { "source": "/api/:path*", "destination": "/api/:path*" },
-    { "source": "/(.*)", "destination": "/" }
+  "routes": [
+    { "src": "^/api/proxy/(.*)$", "dest": "/api/proxy/$1" },
+    { "src": "^/api/(.*)$", "dest": "/api/$1" },
+    { "handle": "filesystem" },
+    { "src": ".*", "dest": "/" }
   ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
