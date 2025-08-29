@@ -1,12 +1,14 @@
 // 토큰 관리 유틸리티 함수
 
+import { useGroupStore } from '../../app/store'
+
 /**
  * 토큰을 localStorage에 저장
  */
 export const setTokens = (accessToken: string, refreshToken?: string) => {
   localStorage.setItem('accessToken', accessToken)
   console.log('✅ Access Token 저장됨', accessToken)
-  
+
   if (refreshToken) {
     localStorage.setItem('refreshToken', refreshToken)
     console.log('✅ Refresh Token 저장됨', refreshToken)
@@ -66,7 +68,7 @@ export const logout = async () => {
     // 동적 import로 순환 참조 방지
     const { default: api } = await import('../api/axios')
     const { AUTH_ENDPOINTS } = await import('../api/endpoints')
-    
+
     console.log('로그아웃 API 호출...')
     await api.post(AUTH_ENDPOINTS.LOGOUT)
     console.log('로그아웃 API 호출 완료')
@@ -76,6 +78,8 @@ export const logout = async () => {
   } finally {
     // 항상 로컬 토큰 제거 및 리다이렉트
     clearTokens()
+    // 그룹 상태 초기화
+    useGroupStore.setState({ hasGroups: false })
     window.location.href = '/login'
   }
 }

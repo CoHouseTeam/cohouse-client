@@ -120,3 +120,10 @@ export interface LikeStatusResponse {
 export interface LikeCountResponse {
   count: number
 }
+
+export interface InviteModalProps {
+  groupName: string
+  onClose: () => void
+  onAccept: () => void
+  onDecline: () => void
+}
