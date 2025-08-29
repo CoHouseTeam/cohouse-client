@@ -25,6 +25,9 @@ export default async function handler(req, res) {
   const joinedPath = Array.isArray(path) ? path.join('/') : (path || '');
   
   console.log(`[PROXY] ${req.method} /${joinedPath}`);
+  console.log(`[PROXY] Original URL: ${req.url}`);
+  console.log(`[PROXY] Query params:`, req.query);
+  console.log(`[PROXY] Path array:`, path);
 
   // Health check endpoint
   if (joinedPath === '__health') {
@@ -33,7 +36,9 @@ export default async function handler(req, res) {
       method: req.method,
       ts: Date.now(),
       message: "Vercel proxy function is healthy and running",
-      path: joinedPath
+      path: joinedPath,
+      originalUrl: req.url,
+      queryParams: req.query
     });
   }
 
