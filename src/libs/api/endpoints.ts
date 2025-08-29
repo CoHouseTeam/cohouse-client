@@ -22,54 +22,59 @@ export const PROFILE_ENDPOINTS = {
 
 // 👥 Group endpoints
 export const GROUP_ENDPOINTS = {
-  CREATE: '/groups',
-  JOIN: '/groups/join',
-  MY_GROUPS: '/groups/me',
-  
+  CREATE: '/api/groups',
+  JOIN: '/api/groups/join',
+  MY_GROUPS: '/api/groups/me',
+
   // 그룹별 상세
-  DETAIL: (groupId: number) => `/groups/${groupId}`,
-  UPDATE: (groupId: number) => `/groups/${groupId}`,
-  DELETE: (groupId: number) => `/groups/${groupId}`,
-  
+  DETAIL: (groupId: number) => `/api/groups/${groupId}`,
+  UPDATE: (groupId: number) => `/api/groups/${groupId}`,
+  DELETE: (groupId: number) => `/api/groups/${groupId}`,
+
   // 멤버 관리
-  MEMBERS: (groupId: number) => `/groups/${groupId}/members`,
-  MEMBER_DETAIL: (groupId: number, memberId: number) => `/groups/${groupId}/members/${memberId}`,
-  UPDATE_MY_INFO: (groupId: number) => `/groups/${groupId}/members/me`,
-  TRANSFER_LEADER: (groupId: number) => `/groups/${groupId}/leader-transfer`,
-  
+  MEMBERS: (groupId: number) => `/api/groups/${groupId}/members`,
+  MEMBER_DETAIL: (groupId: number, memberId: number) =>
+    `/api/groups/${groupId}/members/${memberId}`,
+  UPDATE_MY_INFO: (groupId: number) => `/api/groups/${groupId}/members/me`,
+  TRANSFER_LEADER: (groupId: number) => `/api/groups/${groupId}/leader-transfer`,
+
   // 탈퇴 요청
-  LEAVE_REQUESTS: (groupId: number) => `/groups/${groupId}/leave-requests`,
-  LEAVE_REQUEST: (groupId: number) => `/groups/${groupId}/leave-requests`,
-  APPROVE_LEAVE: (groupId: number, requestId: number) => `/groups/${groupId}/leave-requests/${requestId}`,
-  
+  LEAVE_REQUESTS: (groupId: number) => `/api/groups/${groupId}/leave-requests`,
+  LEAVE_REQUEST: (groupId: number) => `/api/groups/${groupId}/leave-requests`,
+  APPROVE_LEAVE: (groupId: number, requestId: number) =>
+    `/api/groups/${groupId}/leave-requests/${requestId}`,
+
   // 초대
-  INVITATIONS: (groupId: number) => `/groups/${groupId}/invitations`,
+  INVITATIONS: (groupId: number) => `/api/groups/${groupId}/invitations`,
 } as const
 
 // 📝 Task endpoints
 export const TASK_ENDPOINTS = {
   // 템플릿 관리
-  TEMPLATES: 'api/tasks/templates',
-  CREATE_TEMPLATE: 'api/tasks/templates',
-  TEMPLATE_DETAIL: (templateId: number) => `api/tasks/templates/${templateId}`,
-  UPDATE_TEMPLATE: (templateId: number) => `api/tasks/templates/${templateId}`,
-  DELETE_TEMPLATE: (templateId: number) => `api/tasks/templates/${templateId}`,
-  
+  TEMPLATES: '/api/tasks/templates',
+  CREATE_TEMPLATE: '/api/tasks/templates',
+  TEMPLATE_DETAIL: (templateId: number) => `/api/tasks/templates/${templateId}`,
+  UPDATE_TEMPLATE: (templateId: number) => `/api/tasks/templates/${templateId}`,
+  DELETE_TEMPLATE: (templateId: number) => `/api/tasks/templates/${templateId}`,
+
   // 반복 요일 관리
-  REPEAT_DAYS: (templateId: number) => `api/tasks/templates/${templateId}/repeat-days`,
-  CREATE_REPEAT_DAY: (templateId: number) => `api/tasks/templates/${templateId}/repeat-days`,
-  DELETE_REPEAT_DAY: (templateId: number, repeatDayId: number) => `api/tasks/templates/${templateId}/repeat-days/${repeatDayId}`,
-  
+  REPEAT_DAYS: (templateId: number) => `/api/tasks/templates/${templateId}/repeat-days`,
+  CREATE_REPEAT_DAY: (templateId: number) => `/api/tasks/templates/${templateId}/repeat-days`,
+  DELETE_REPEAT_DAY: (templateId: number, repeatDayId: number) =>
+    `/api/tasks/templates/${templateId}/repeat-days/${repeatDayId}`,
+
   // 할당 관리
-  ASSIGNMENTS: 'api/tasks/assignments',
-  CREATE_ASSIGNMENT: 'api/tasks/assignments',
-  UPDATE_ASSIGNMENT: (assignmentId: number) => `api/tasks/assignments/${assignmentId}`,
-  ASSIGNMENT_HISTORIES: (assignmentId: number) => `api/tasks/assignments/${assignmentId}/histories`,
-  
+  ASSIGNMENTS: '/api/tasks/assignments',
+  CREATE_ASSIGNMENT: '/api/tasks/assignments',
+  UPDATE_ASSIGNMENT: (assignmentId: number) => `/api/tasks/assignments/${assignmentId}`,
+  ASSIGNMENT_HISTORIES: (assignmentId: number) =>
+    `/api/tasks/assignments/${assignmentId}/histories`,
+
   // 대신하기 요청
-  OVERRIDE_REQUEST: (assignmentId: number) => `api/tasks/assignments/${assignmentId}/override-request`,
-  UPDATE_OVERRIDE_REQUEST: (requestId: number) => `api/tasks/override-requests/${requestId}`,
-  OVERRIDE_HISTORIES: (requestId: number) => `api/tasks/override-requests/${requestId}/histories`,
+  OVERRIDE_REQUEST: (assignmentId: number) =>
+    `/api/tasks/assignments/${assignmentId}/override-request`,
+  UPDATE_OVERRIDE_REQUEST: (requestId: number) => `/api/tasks/override-requests/${requestId}`,
+  OVERRIDE_HISTORIES: (requestId: number) => `/api/tasks/override-requests/${requestId}/histories`,
 } as const
 
 // 💰 Settlement endpoints
@@ -79,14 +84,14 @@ export const SETTLEMENT_ENDPOINTS = {
   MY_HISTORY: 'api/settlements/my/history',
   GROUP_LIST: (groupId: number) => `api/settlements/group/${groupId}`,
   PAYMENT_HISTORIES: 'api/settlements/payment-histories',
-  
+
   // 정산별 상세
   DETAIL: (settlementId: number) => `api/settlements/${settlementId}`,
   DELETE: (settlementId: number) => `api/settlements/${settlementId}`,
   PARTICIPANTS: (settlementId: number) => `api/settlements/${settlementId}/participants`,
   PAYMENT: (settlementId: number) => `api/settlements/${settlementId}/payment`,
   PAYMENT_DONE: (settlementId: number) => `api/settlements/${settlementId}/payment-done`,
-  
+
   // 영수증 관리
   RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
   UPDATE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
@@ -105,7 +110,7 @@ export const POST_ENDPOINTS = {
   DETAIL: (postId: number) => `api/posts/${postId}`,
   UPDATE: (postId: number) => `api/posts/${postId}`,
   DELETE: (postId: number) => `api/posts/${postId}`,
-  
+
   // 좋아요
   LIKES: (postId: number) => `api/posts/${postId}/likes`,
   LIKE: (postId: number) => `api/posts/${postId}/likes`,
