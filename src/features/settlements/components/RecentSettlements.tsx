@@ -24,8 +24,8 @@ export default function RecentSettlements() {
   const isEmpty = completed.length === 0
 
   return (
-    <section className={`card ${isEmpty ? 'border-2 border-dashed bg-base-200 shadow-sm' : ''}`}>
-      <div className="flex items-baseline gap-1 text-center">
+    <section className={`card ${isEmpty ? 'shadow-sm' : ''}`}>
+      <div className="flex items-baseline gap-1 text-center mb-1">
         <h2 className="card-title">정산 내역</h2>
         <div className="flex flex-1 justify-between">
           <span className="text-[0.7rem] text-neutral-400">(최근 내역 2개)</span>

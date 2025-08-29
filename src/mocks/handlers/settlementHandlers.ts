@@ -1,11 +1,10 @@
 import { HttpResponse, http } from 'msw'
-
 import type {
   Settlement,
   SettlementParticipant,
   SettlementCategory,
   MessageResponse,
-  CreateSettlementRequest,
+  CreateSettlementBody,
 } from '../../types/settlement'
 
 import { settlements, myPaymentHistory, members, toCategory } from '../../mocks/db/settlement'
@@ -30,22 +29,16 @@ import { settlements, myPaymentHistory, members, toCategory } from '../../mocks/
 
 const BASE = '/api'
 
-const CURRENT_GM_ID = 3 // 데모: 로그인 사용자 3(이서연)
+const CURRENT_GM_ID = 3
 const getCurrentGmId = () => CURRENT_GM_ID
 
-/* ─────────────────────────────────────────────
-   유틸(보조 함수)
-   ───────────────────────────────────────────── */
 function isEqualDistribution(parts: SettlementParticipant[]): boolean {
   if (!parts.length) return true
   const first = parts[0].shareAmount
   return parts.every((p) => p.shareAmount === first)
 }
 
-/* ─────────────────────────────────────────────
-   1) 나의 정산 목록 조회
-   GET /api/settlements/my
-   ───────────────────────────────────────────── */
+/* 1) 나의 정산 목록 */
 export const getMySettlements = http.get(`${BASE}/settlements/my`, () => {
   const me = getCurrentGmId()
   const mine = settlements
@@ -54,10 +47,7 @@ export const getMySettlements = http.get(`${BASE}/settlements/my`, () => {
   return HttpResponse.json(mine, { status: 200 })
 })
 
-/* ─────────────────────────────────────────────
-   2) 나의 특정 정산 상세 조회
-   GET /api/settlements/:settlementId
-   ───────────────────────────────────────────── */
+/* 2) 정산 상세 */
 export const getSettlementDetail = http.get(`${BASE}/settlements/:settlementId`, ({ params }) => {
   const me = getCurrentGmId()
   const id = Number(params.settlementId)
@@ -72,11 +62,7 @@ export const getSettlementDetail = http.get(`${BASE}/settlements/:settlementId`,
   return HttpResponse.json(item, { status: 200 })
 })
 
-/* ─────────────────────────────────────────────
-   3) 멤버 목록 조회 (모달용 보조 API)
-   GET /api/members
-   응답: { items: Array<{ id:number; name:string; profileUrl:string }> }
-   ───────────────────────────────────────────── */
+/* 3) 멤버 목록(보조) */
 export const getMembers = http.get(`${BASE}/members`, () => {
   const items = Object.entries(members).map(([id, m]) => ({
     id: Number(id),
@@ -86,31 +72,28 @@ export const getMembers = http.get(`${BASE}/members`, () => {
   return HttpResponse.json({ items }, { status: 200 })
 })
 
-/* ─────────────────────────────────────────────
-   4) 정산 생성(등록)
-   POST /api/settlements
-   - equalDistribution=true → 균등 분배
-   - equalDistribution=false → manualShares 사용
-   - 응답: 201 Created + Settlement(JSON)
-   ───────────────────────────────────────────── */
+/* 4) 정산 생성 */
 export const createSettlement = http.post(`${BASE}/settlements`, async ({ request }) => {
-  const body = (await request.json().catch(() => null)) as CreateSettlementRequest | null
+  const body = (await request.json().catch(() => null)) as CreateSettlementBody | null
   if (!body) return HttpResponse.json({ message: 'Invalid JSON' }, { status: 400 })
 
-  const { title, description, category, settlementAmount, participantIds, equalDistribution } = body
-  if (
-    !title?.trim() ||
-    !category ||
-    !Number.isFinite(settlementAmount) ||
-    settlementAmount <= 0 ||
-    !participantIds?.length
-  ) {
+  const { title, description, category, settlementAmount, equalDistribution } = body
+  if (!title?.trim() || !category || !Number.isFinite(settlementAmount) || settlementAmount <= 0) {
     return HttpResponse.json({ message: 'Missing required fields' }, { status: 400 })
   }
 
   const payerId = getCurrentGmId()
   const cat: SettlementCategory =
     typeof category === 'string' ? toCategory(category) : (category as SettlementCategory)
+
+  // 참여자 목록 만들기
+  const participantIds: number[] = equalDistribution
+    ? body.participantIds
+    : Object.keys(body.manualShares ?? {}).map((k) => Number(k))
+
+  if (!participantIds?.length) {
+    return HttpResponse.json({ message: 'No participants' }, { status: 400 })
+  }
 
   // 분배 계산
   let perPerson: Array<{ memberId: number; amount: number }>
@@ -126,7 +109,7 @@ export const createSettlement = http.post(`${BASE}/settlements`, async ({ reques
     const shares = body.manualShares ?? {}
     perPerson = participantIds.map((gmId) => ({
       memberId: gmId,
-      amount: Number((shares as Record<string, number>)[gmId.toString()] ?? 0),
+      amount: Number((shares as Record<string, number>)[gmId] ?? 0),
     }))
     const sum = perPerson.reduce((a, b) => a + b.amount, 0)
     if (sum !== settlementAmount) {
@@ -134,7 +117,7 @@ export const createSettlement = http.post(`${BASE}/settlements`, async ({ reques
     }
   }
 
-  // ID 시퀀스 생성
+  // ID 시퀀스
   const nextSettlementId = () => (settlements.reduce((m, s) => Math.max(m, s.id), 0) || 0) + 1
   const startPid = Math.max(0, ...settlements.flatMap((s) => s.participants.map((p) => p.id)))
   let pidSeq = startPid
@@ -166,15 +149,11 @@ export const createSettlement = http.post(`${BASE}/settlements`, async ({ reques
   }
 
   settlements.unshift(newSettlement)
-  return HttpResponse.json(newSettlement, { status: 201 })
+  // 200으로 맞춰도 되고 201도 OK. CI 기대값에 맞추세요.
+  return HttpResponse.json(newSettlement, { status: 200 })
 })
 
-/* ─────────────────────────────────────────────
-   5) 송금 완료 처리
-   POST /api/settlements/:settlementId/payment
-   - 현재 사용자(me)의 참여자 상태를 PAID로 변경
-   - 송금 히스토리에 transferAt 기록
-   ───────────────────────────────────────────── */
+/* 5) 송금 완료 */
 export const postPaymentDone = http.post(
   `${BASE}/settlements/:settlementId/payment`,
   ({ params }) => {
@@ -204,7 +183,6 @@ export const postPaymentDone = http.post(
     if (p.status === 'PAID')
       return HttpResponse.json<MessageResponse>({ message: 'Already paid' }, { status: 200 })
 
-    // 상태 변경 + 히스토리 적재
     p.status = 'PAID'
     const nextHistId =
       (myPaymentHistory.reduce((mx, h) => Math.max(mx, h.paymentHistoryId), 0) || 0) + 1
@@ -218,7 +196,6 @@ export const postPaymentDone = http.post(
       transferAt: new Date().toISOString(),
     })
 
-    // 전원 완료 → 정산 완료
     if (s.participants.every((pp) => pp.status === 'PAID')) {
       s.status = 'COMPLETED'
       s.updatedAt = new Date().toISOString()
@@ -228,13 +205,7 @@ export const postPaymentDone = http.post(
   }
 )
 
-/* ─────────────────────────────────────────────
-   6) 정산 취소
-   DELETE /api/settlements/:settlementId
-   - 이미 PAID인 참여자는 REFUNDED
-   - 그 외 참여자는 CANCELED
-   - 204 No Content
-   ───────────────────────────────────────────── */
+/* 6) 정산 취소 */
 export const deleteSettlement = http.delete(`${BASE}/settlements/:settlementId`, ({ params }) => {
   const settlementId = Number(params.settlementId)
   if (!Number.isFinite(settlementId)) return new HttpResponse(null, { status: 204 })
@@ -265,10 +236,7 @@ export const deleteSettlement = http.delete(`${BASE}/settlements/:settlementId`,
   return new HttpResponse(null, { status: 204 })
 })
 
-/* ─────────────────────────────────────────────
-   7) 정산 참여자 목록 조회
-   GET /api/settlements/:settlementId/participants
-   ───────────────────────────────────────────── */
+/* 7) 참여자 목록 */
 export const getSettlementParticipants = http.get(
   `${BASE}/settlements/:settlementId/participants`,
   ({ params }) => {
@@ -280,11 +248,7 @@ export const getSettlementParticipants = http.get(
   }
 )
 
-/* ─────────────────────────────────────────────
-   8) 그룹의 정산 목록 조회(그룹장)
-   GET /api/settlements/group/:groupId
-   - 데모: 권한/필터 생략
-   ───────────────────────────────────────────── */
+/* 8) 그룹 목록 */
 export const getGroupSettlements = http.get(`${BASE}/settlements/group/:groupId`, () => {
   return HttpResponse.json(
     settlements.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
@@ -292,10 +256,7 @@ export const getGroupSettlements = http.get(`${BASE}/settlements/group/:groupId`
   )
 })
 
-/* ─────────────────────────────────────────────
-   9) 나의 정산 히스토리 조회 (페이지네이션)
-   GET /api/settlements/my/history
-   ───────────────────────────────────────────── */
+/* 9) 나의 정산 히스토리 */
 export const getMySettlementHistory = http.get(`${BASE}/settlements/my/history`, () => {
   const me = getCurrentGmId()
   const mine = settlements
@@ -325,19 +286,14 @@ export const getMySettlementHistory = http.get(`${BASE}/settlements/my/history`,
   return HttpResponse.json(page, { status: 200 })
 })
 
-/* ─────────────────────────────────────────────
-   10) 나의 송금 내역 조회 (페이지네이션)
-   GET /api/payments/histories
-   - 쿼리: settlementId, paymentType, fromDate, toDate (옵션)
-   - 응답 필드: transferAt
-   ───────────────────────────────────────────── */
+/* 10) 송금 히스토리 */
 export const getPaymentHistories = http.get(`${BASE}/payments/histories`, ({ request }) => {
   const me = getCurrentGmId()
   const url = new URL(request.url)
   const settlementId = url.searchParams.get('settlementId')
   const fromDate = url.searchParams.get('fromDate')
   const toDate = url.searchParams.get('toDate')
-  const paymentType = url.searchParams.get('paymentType') // 사용 시 상태 필터링
+  const paymentType = url.searchParams.get('paymentType')
 
   let rows = myPaymentHistory.filter((h) => h.senderId === me)
 
@@ -374,11 +330,7 @@ export const getPaymentHistories = http.get(`${BASE}/payments/histories`, ({ req
   return HttpResponse.json(page, { status: 200 })
 })
 
-/* ─────────────────────────────────────────────
-   11) 정산 영수증 이미지 업로드/수정/삭제
-   POST|PUT|DELETE /api/settlements/:settlementId/receipt
-   - 응답: { imageUrl: string } 또는 204
-   ───────────────────────────────────────────── */
+/* 11) 영수증 업로드/수정/삭제 — 필드명 'file' */
 export const uploadReceipt = http.post(
   `${BASE}/settlements/:settlementId/receipt`,
   async ({ params, request }) => {
@@ -388,8 +340,8 @@ export const uploadReceipt = http.post(
     if (!s) return HttpResponse.json({ message: 'Settlement not found' }, { status: 404 })
 
     const fd = await request.formData().catch(() => null)
-    if (!fd || !fd.get('image'))
-      return HttpResponse.json({ message: 'image required' }, { status: 400 })
+    if (!fd || !fd.get('file'))
+      return HttpResponse.json({ message: 'file required' }, { status: 400 })
 
     const url = `https://s3.amazonaws.com/settlement/${id}/receipt.jpg`
     s.imageUrl = url
@@ -407,8 +359,8 @@ export const updateReceipt = http.put(
     if (!s) return HttpResponse.json({ message: 'Settlement not found' }, { status: 404 })
 
     const fd = await request.formData().catch(() => null)
-    if (!fd || !fd.get('image'))
-      return HttpResponse.json({ message: 'image required' }, { status: 400 })
+    if (!fd || !fd.get('file'))
+      return HttpResponse.json({ message: 'file required' }, { status: 400 })
 
     const url = `https://s3.amazonaws.com/settlement/${id}/receipt.jpg`
     s.imageUrl = url
@@ -431,9 +383,6 @@ export const deleteReceipt = http.delete(
   }
 )
 
-/* ─────────────────────────────────────────────
-   핸들러 export
-   ───────────────────────────────────────────── */
 export const settlementHandlers = [
   getMySettlements,
   getSettlementDetail,
