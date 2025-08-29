@@ -9,7 +9,9 @@ import HistoryModal from '../features/tasks/components/HistoryModal'
 import ExchangeModal from '../features/tasks/components/ExchangeModal'
 import { members as membersObj, repeatDays, templates } from '../mocks/db/tasks'
 import axios from 'axios'
-import { Assignment, TaskHistory } from '../types/tasks'
+import { Assignment, GroupMember, TaskHistory } from '../types/tasks'
+import { fetchMyGroups } from '../libs/api/groups'
+import { isAuthenticated } from '../libs/utils/auth'
 
 const members = Object.entries(membersObj).map(([, data]) => ({
   name: data.name,
@@ -26,25 +28,56 @@ const historyItems: TaskHistory[] = [
 ]
 
 const TasksPage: React.FC = () => {
-  const [repeat, setRepeat] = React.useState(true)
+  const [repeat, setRepeat] = useState(true)
   const [showHistory, setShowHistory] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [selected, setSelected] = useState<number | null>(null)
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [isAssigned, setIsAssigned] = useState(false)
+  const [isLeader, setIsLeader] = useState<boolean | null>(null)
+  const [error, setError] = useState('')
 
   const fetchAssignments = useCallback(async () => {
-    const res = await axios.get('/api/tasks/assignments')
-    setAssignments(Array.isArray(res.data) ? res.data : [])
+    try {
+      const res = await axios.get('/api/tasks/assignments')
+      setAssignments(Array.isArray(res.data) ? res.data : [])
+    } catch {
+      setAssignments([])
+    }
   }, [])
 
   useEffect(() => {
     fetchAssignments()
   }, [fetchAssignments])
 
+  useEffect(() => {
+    async function loadGroupInfo() {
+      if (!isAuthenticated()) {
+        setIsLeader(false)
+        setError('')
+        return
+      }
+      setError('')
+      try {
+        const data = await fetchMyGroups()
+        const groupMembers: GroupMember[] = Array.isArray(data.groupMembers)
+          ? data.groupMembers
+          : []
+        // 로그인한 회원 id는 user 상태 또는 토큰 내 정보에서 가져오는 별도 방식으로 교체 필요
+        // 여기 예시는 groupMembers에서 내가 리더인지 체크만 하므로 임시 로직 사용
+        const loggedInUserId = groupMembers[0]?.memberId ?? null // 예시임: 실제는 로그인 유저 정보로 대체
+        const isMyLeader = groupMembers.some((m) => m.memberId === loggedInUserId && m.isLeader)
+        setIsLeader(isMyLeader)
+      } catch (e) {
+        setError('그룹 정보를 불러오는 중 오류가 발생했습니다.')
+        setIsLeader(false)
+      }
+    }
+    loadGroupInfo()
+  }, [])
+
   const handleRandomAssign = useCallback(async () => {
-    // 0 이상의 유효한 멤버 ID만 필터링
-    const memberIds = Object.keys(members)
+    const memberIds = Object.keys(membersObj)
       .map(Number)
       .filter((id) => id > 0)
 
@@ -55,8 +88,6 @@ const TasksPage: React.FC = () => {
 
     for (const tpl of templates) {
       const repeatInfo = repeatDays.filter((rd) => rd.templateId === tpl.templateId)
-
-      // 템플릿별 반복일에 동시 배정 Promise 생성
       const assignmentPromises = Array.isArray(repeatInfo)
         ? repeatInfo.map(async (repeatDay) => {
             const randomMemberId = memberIds[Math.floor(Math.random() * memberIds.length)]
@@ -73,10 +104,11 @@ const TasksPage: React.FC = () => {
       await Promise.all(assignmentPromises)
     }
 
-    // 모든 배정 완료 후 데이터 새로고침
     await fetchAssignments()
     setIsAssigned(true)
-  }, [fetchAssignments, templates, repeatDays, members])
+  }, [fetchAssignments])
+
+  if (isLeader === null) return <div>Loading...</div>
 
   return (
     <div className="space-y-6">
@@ -84,29 +116,36 @@ const TasksPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-primary">주간 업무표</h1>
         <TaskHistoryButton onClick={() => setShowHistory(true)} />
       </div>
+      {error && <div className="text-red-600">{error}</div>}
       <TaskTable assignments={assignments} />
       <div className="flex flex-col items-center space-y-4 mt-2">
         <div className="flex space-x-2">
-          <TaskRandomButton onClick={handleRandomAssign} disabled={isAssigned} />
-          {isAssigned && (
-            <>
-              <TaskExchangeButton onClick={() => setModalOpen(true)} />
-              <ExchangeModal
-                open={modalOpen}
-                members={members}
-                selected={selected}
-                onSelect={setSelected}
-                onRequest={() => setModalOpen(false)}
-                onClose={() => setModalOpen(false)}
-              />
-            </>
+          {isLeader && <TaskRandomButton onClick={handleRandomAssign} disabled={isAssigned} />}
+          {isLeader ? (
+            isAssigned && <TaskExchangeButton onClick={() => setModalOpen(true)} />
+          ) : (
+            <TaskExchangeButton onClick={() => setModalOpen(true)} />
+          )}
+          {isLeader && isAssigned && (
+            <ExchangeModal
+              open={modalOpen}
+              members={members}
+              selected={selected}
+              onSelect={setSelected}
+              onRequest={() => setModalOpen(false)}
+              onClose={() => setModalOpen(false)}
+            />
           )}
         </div>
-        <CheckRepeat checked={repeat} onChange={(e) => setRepeat(e.target.checked)} />
-      </div>
 
-      <div className="font-bold text-md mt-4 text-primary">참여 그룹원</div>
-      <GroupMemberList members={members} />
+        {isLeader && <CheckRepeat checked={repeat} onChange={(e) => setRepeat(e.target.checked)} />}
+      </div>
+      {isLeader && (
+        <>
+          <div className="font-bold text-md mt-4 text-primary">참여 그룹원</div>
+          <GroupMemberList members={members} />
+        </>
+      )}
       <HistoryModal open={showHistory} onClose={() => setShowHistory(false)} items={historyItems} />
     </div>
   )

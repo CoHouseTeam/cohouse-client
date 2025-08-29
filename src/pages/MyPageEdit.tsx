@@ -1,19 +1,129 @@
-import { useState } from 'react'
-import { CameraFill, ChevronLeft } from 'react-bootstrap-icons'
+import { ChangeEvent, useState } from 'react'
+import { CameraFill, ChevronLeft, PersonCircle } from 'react-bootstrap-icons'
 import { Link } from 'react-router-dom'
 import DatePicker, { registerLocale } from 'react-datepicker'
 import { ko } from 'date-fns/locale'
 import 'react-datepicker/dist/react-datepicker.css'
+import {
+  useDeleteProfileImage,
+  useProfile,
+  useUploadProfileImage,
+} from '../libs/hooks/mypage/useProfile'
+import LoadingSpinner from '../features/common/LoadingSpinner'
+import ConfirmModal from '../features/common/ConfirmModal'
+import ImageViewer from '../features/common/ImageViewer'
 
 registerLocale('ko', ko)
 
 export default function MyPageEdit() {
   const [pwOpen, setPwOpen] = useState(false)
 
-  // 프로필 이미지
+  // 알림 컴포넌트
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertMsg, setAlertMsg] = useState('')
 
   // 생년월일
   const [selectedBtdDate, setSelectedBtdDate] = useState<Date | null>(null)
+
+  // 프로필 미리보기
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  // 프로필 이미지 삭제
+  const [deleteOpen, setDeleteOpen] = useState(false)
+
+  const showAlert = (msg: string) => {
+    setAlertMsg(msg)
+    setAlertOpen(true)
+  }
+
+  const closeAlert = () => {
+    setAlertOpen(false)
+    setAlertMsg('')
+  }
+
+  // 프로필 사진
+  const { data: me, isLoading } = useProfile()
+
+  // 프로필 서버 업로드 API
+  const { mutateAsync: uploadImage, isPending: uploading } = useUploadProfileImage()
+  // 프로필 이미지 삭제 API
+  const { mutateAsync: deleteImage, isPending: deleting } = useDeleteProfileImage()
+
+  const askDelete = () => {
+    // 처리 중에는 열지 않기
+    if (uploading || deleting) return
+
+    // 삭제할 사진이 없으면 무시
+    if (!previewUrl && !me?.profileImageUrl) return
+
+    setDeleteOpen(true)
+  }
+
+  // 사진 파일 선택 핸들러
+  const onFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    // 업로드 중이면 바로 리턴해서 동시 업로드를 막기
+    if (uploading) {
+      e.currentTarget.value = ''
+      return
+    }
+
+    const input = e.currentTarget
+    const file = input.files?.[0]
+    try {
+      if (!file) return
+
+      // 이미지 타입만 허용
+      if (!file.type.startsWith('image/')) {
+        showAlert('이미지 파일만 업로드 할 수 있어요')
+        e.currentTarget.value = '' // 같은 파일 재선택 허용
+        return
+      }
+
+      // 이전 미리보기 URL 정리(있는 경우)
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+
+      // 새 미리보기 URL 생성
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+
+      // 서버 업로드
+      await uploadImage(file)
+    } catch (err) {
+      showAlert('업로드에 실패했어요. 잠시 후 다시 시도해 주세요.')
+      // 실패 시 미리보기 되돌리고 싶다면:
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+        setPreviewUrl(null)
+      }
+    } finally {
+      // 같은 파일 재선택 허용
+      input.value = ''
+    }
+  }
+
+  const confirmDelete = async () => {
+    try {
+      // 서버에서 프로필 이미지 삭제
+      await deleteImage()
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+        setPreviewUrl(null)
+      }
+    } catch (err) {
+      showAlert('사진 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      setDeleteOpen(false)
+    }
+  }
+
+  // 이미지 보기
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const currentImageSrc = previewUrl ?? me?.profileImageUrl ?? null
+  const openViewer = () => {
+    if (!currentImageSrc) return
+    if (uploading || deleting) return
+    setViewerOpen(true)
+  }
 
   return (
     <div className="min-h-screen flex flex-col w-full md:max-w-5xl mx-auto">
@@ -32,20 +142,80 @@ export default function MyPageEdit() {
           <section className="mb-8">
             <div className="flex items-center justify-center">
               <div className="relative">
-                <img
-                  src="/avatars/default.png"
-                  alt="프로필"
-                  className="w-20 h-20 rounded-full object-cover border"
+                {isLoading ? (
+                  // 로딩 중
+                  <LoadingSpinner />
+                ) : previewUrl ? (
+                  <button
+                    type="button"
+                    onClick={openViewer}
+                    className="block focus:outline-none"
+                    aria-label="프로필 큰 이미지 보기"
+                  >
+                    <img
+                      src={previewUrl}
+                      alt="프로필 미리보기"
+                      className="w-20 h-20 rounded-full object-cover border cursor-zoom-in hover:opacity-90 transition"
+                    />
+                  </button>
+                ) : me?.profileImageUrl ? (
+                  // 이미지가 있을 때
+                  <button
+                    type="button"
+                    onClick={openViewer}
+                    className="block focus:outline-none"
+                    aria-label="프로필 큰 이미지 보기"
+                  >
+                    <img
+                      src={me.profileImageUrl}
+                      alt="프로필"
+                      className="w-20 h-20 rounded-full object-cover border cursor-zoom-in hover:opacity-90 transition"
+                    />
+                  </button>
+                ) : (
+                  // 이미지가 없을 때 기본 아이콘
+                  <PersonCircle size={60} />
+                )}
+                {/* 숨겨진 파일 인풋 */}
+                <input
+                  id="profileFile"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={onFileChange}
                 />
-                <button
-                  type="button"
-                  className="absolute -right-1 -bottom-1 w-8 h-8 rounded-full bg-base-300 flex justify-center items-center"
+
+                <label
+                  htmlFor="profileFile"
+                  className="absolute -right-3 -bottom-1 w-8 h-8 rounded-full bg-base-300 flex justify-center items-center cursor-pointer"
                   aria-label="프로필 이미지 변경"
                 >
                   <CameraFill size={14} />
-                </button>
+                </label>
+
+                {/* 업로드/삭제 중 오버레이 */}
+                {(uploading || deleting) && (
+                  <div className="absolute inset-0 rounded-full bg-black/35 backdrop-blur-[1px] flex items-center justify-center">
+                    <span className="loading loading-spinner loading-xs text-white" />
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* 사진 삭제 버튼 (이미지/미리보기 있을 때만 노출) */}
+            {(me?.profileImageUrl || previewUrl) && (
+              <div className="flex justify-center mt-3">
+                <button
+                  type="button"
+                  className="text-xs border border-gray-400 p-1 rounded-lg text-gray-400 disabled:no-underline disabled:opacity-50"
+                  onClick={askDelete}
+                  disabled={uploading || deleting}
+                  title={deleting ? '삭제 중…' : '프로필 사진 삭제'}
+                >
+                  {deleting ? '삭제 중…' : '프로필 사진 삭제'}
+                </button>
+              </div>
+            )}
           </section>
 
           {/* 기본 정보 */}
@@ -144,6 +314,33 @@ export default function MyPageEdit() {
           </button>
         </div>
       </footer>
+
+      <ConfirmModal
+        open={alertOpen}
+        title="안내"
+        message={alertMsg}
+        confirmText="확인"
+        cancelText="취소"
+        onConfirm={closeAlert}
+        onCancel={closeAlert}
+      />
+
+      <ConfirmModal
+        open={deleteOpen}
+        title="프로필 사진 삭제"
+        message="프로필 사진을 삭제할까요?"
+        confirmText={deleting ? '삭제 중…' : '삭제'}
+        cancelText="취소"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteOpen(false)}
+      />
+
+      <ImageViewer
+        open={viewerOpen && !!currentImageSrc}
+        src={currentImageSrc ?? ''}
+        alt="프로필 이미지"
+        onClose={() => setViewerOpen(false)}
+      />
     </div>
   )
 }

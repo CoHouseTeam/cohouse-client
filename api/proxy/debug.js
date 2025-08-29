@@ -41,6 +41,7 @@ export default function handler(req, res) {
     transformedPath: backendPath,
     targetUrl: targetUrl,
     body: req.body,
-    message: "Debug endpoint - path transformation test"
+    message: "Debug endpoint - path transformation test",
+    expectedBackendUrl: "http://52.79.237.86:8080/api/members/login (for login test)"
   });
 }

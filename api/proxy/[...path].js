@@ -46,18 +46,21 @@ export default async function handler(req, res) {
   // 백엔드 서버의 실제 경로가 /api로 시작하므로 경로 처리 로직 수정
   let backendPath = joinedPath;
   
-  // 경로 변환 로직
+  // 경로 변환 로직 - 프론트엔드에서 받은 경로에 /api/ 추가
   if (joinedPath.startsWith('api/')) {
-    // /api/proxy/api/members/login → members/login으로 변환
+    // /api/proxy/api/members/login → members/login으로 변환 (중복 api 제거)
     backendPath = joinedPath.substring(4); // 'api/' 제거
-    console.log(`[PROXY] Path transformation: ${joinedPath} → ${backendPath}`);
+    console.log(`[PROXY] Path transformation (duplicate api): ${joinedPath} → ${backendPath}`);
   } else if (joinedPath === '') {
     // 루트 경로인 경우
     backendPath = '';
     console.log(`[PROXY] Root path detected`);
+  } else {
+    // 일반적인 경우: /api/proxy/members/login → members/login
+    console.log(`[PROXY] Standard path: ${joinedPath}`);
   }
   
-  // 백엔드 URL 구성
+  // 백엔드 URL 구성 - 항상 /api/ 접두사 추가
   let targetUrl;
   if (backendPath === '') {
     targetUrl = `${BACKEND_URL}/api`;
@@ -67,6 +70,7 @@ export default async function handler(req, res) {
   
   const urlWithQuery = new URL(targetUrl);
   console.log(`[PROXY] Final backend URL: ${targetUrl}`);
+  console.log(`[PROXY] Path analysis: joinedPath="${joinedPath}", backendPath="${backendPath}"`);
 
   // Add query parameters if they exist
   if (req.url) {
