@@ -1,15 +1,21 @@
 {
+  "functions": {
+    "api/proxy/[...path].js": {
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/api/proxy/(.*)",
-      "destination": "http://52.79.237.86:8080/$1"
+      "destination": "/api/proxy/[...path]"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/"
     }
-  ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite"
+  ]
 }

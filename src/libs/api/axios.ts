@@ -6,7 +6,7 @@ const getBaseURL = () => {
   
   if (!apiBaseUrl) {
     console.error('❌ VITE_API_BASE_URL이 설정되지 않았습니다!')
-    return '/api' // 기본값: 프록시 경로
+    return '/api/proxy' // Vercel 배포 시 사용될 기본값
   }
   
   console.log('🌐 API Base URL:', apiBaseUrl)
@@ -21,7 +21,7 @@ const api = axios.create({
 
 // ★ 디버깅 로그: 최종 요청이 뭔지 무조건 찍자
 api.interceptors.request.use((c) => {
-  console.log('[REQ]', c.baseURL, c.url) // 예: /api  /settlements/my
+  console.log('[REQ]', c.baseURL, c.url) // 예: /api/proxy  /members/login
   return c
 })
 
