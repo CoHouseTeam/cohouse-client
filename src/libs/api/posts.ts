@@ -1,6 +1,6 @@
 import api from './axios'
 import { POST_ENDPOINTS } from './endpoints'
-import type { Post, CreatePostRequest, UpdatePostRequest, PostListResponse, PostLike, PostLikeResponse, LikeStatusResponse, LikeCountResponse } from '../../types/main'
+import type { Post, CreatePostRequest, UpdatePostRequest, PostListResponse, PostLikeResponse, LikeStatusResponse, LikeCountResponse } from '../../types/main'
 
 // 📰 Post API Functions
 
