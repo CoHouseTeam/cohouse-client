@@ -59,7 +59,7 @@ export default function SettlementCreateModal(props: Props) {
 
   /*{ 영수증 사진 업로드 }*/
   // 영수증 사진 보관 (파일 자체는 사용하지 않고 미리보기만 사용)
-  const [, setReceiptFile] = useState<File | null>(null)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
   // 사진 미리보기
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
   // 이미지 아닌 파일 선택 시 에러메시지

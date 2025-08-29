@@ -1,13 +1,11 @@
 import axios from './axios'
 import type { CreateSettlementBody, CreateSettlementResp, Settlement } from '../../types/settlement'
-import { SETTLEMENTS_ENDPOINTS } from './endpoints'
+import { SETTLEMENT_ENDPOINTS } from './endpoints'
 import api from './axios'
 
 export type UploadReceiptResp = {
   imageUrl: string
 }
-
-
 
 // 내 정산 내역 가져오기
 export async function fetchMySettlements(): Promise<Settlement[]> {
@@ -44,7 +42,7 @@ export async function uploadSettlementReceipt(
   const form = new FormData()
   form.append('file', file)
 
-  const url = SETTLEMENTS_ENDPOINTS.RECEIPT(settlementId)
+  const url = SETTLEMENT_ENDPOINTS.RECEIPT(settlementId)
   const config = {
     headers: { 'Content-Type': 'multipart/form-data' },
     params: { groupId },
@@ -61,12 +59,12 @@ export async function uploadSettlementReceipt(
 
 // 영수증 삭제
 export async function deleteSettlementReceipt(settlementId: number): Promise<void> {
-  const url = SETTLEMENTS_ENDPOINTS.RECEIPT(settlementId)
+  const url = SETTLEMENT_ENDPOINTS.RECEIPT(settlementId)
   await api.delete(url)
 }
 
 // 정산 생성(등록)
 export async function createSettlement(body: CreateSettlementBody): Promise<CreateSettlementResp> {
-  const { data } = await api.post<CreateSettlementResp>(SETTLEMENTS_ENDPOINTS.CREATE, body)
+  const { data } = await api.post<CreateSettlementResp>(SETTLEMENT_ENDPOINTS.CREATE, body)
   return data
 }
