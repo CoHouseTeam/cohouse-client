@@ -42,14 +42,38 @@ export type SettlementListItem = Pick<
 
 // 정산 등록
 // - 균등 분배 / 직접 분배 모두 지원
-export type CreateSettlementRequest = {
+type CreateSettlementBase = {
   title: string
-  description?: string | null
-  category: SettlementCategory // 'FOOD' | 'DAILY_SUPPLIES' | 'CULTURE' | 'ETC'
+  description?: string
   settlementAmount: number
+  category: SettlementCategory
+}
+
+export type CreateSettlementBody =
+  | (CreateSettlementBase & {
+      equalDistribution: true
+      participantIds: number[]
+    })
+  | (CreateSettlementBase & {
+      equalDistribution: false
+      manualShares: Record<number, number>
+    })
+
+export type CreateSettlementResp = {
+  id: number
+  category: string
+  title: string
+  description: string
+  settlementAmount: number
+  status: string
+  imageUrl: string | null
+  payerId: number
+  payerName: string
+  platformSupportAmount: number
   equalDistribution: boolean
-  participantIds: number[] // 선택된 멤버들의 memberId 목록(보통 payer 제외)
-  manualShares?: Record<number, number> // equalDistribution=false일 때만: { [memberId]: shareAmount }
+  participants: SettlementParticipant[]
+  createdAt: string
+  updatedAt: string
 }
 
 export interface MessageResponse {

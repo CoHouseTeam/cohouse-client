@@ -11,15 +11,6 @@ export const AUTH_ENDPOINTS = {
   WITHDRAW: 'api/members/withdraw',
 } as const
 
-// 👤 Profile endpoints
-export const PROFILE_ENDPOINTS = {
-  GET: 'api/members/profile',
-  UPDATE: 'api/members/profile',
-  UPDATE_IMAGE: 'api/members/profile/profile-image',
-  DELETE_IMAGE: 'api/members/profile/profile-image',
-  UPDATE_ALERT_TIME: 'api/members/profile/alert-time',
-} as const
-
 // 👥 Group endpoints
 export const GROUP_ENDPOINTS = {
   CREATE: '/api/groups',
@@ -97,6 +88,25 @@ export const SETTLEMENT_ENDPOINTS = {
   UPDATE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
   DELETE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
 } as const
+
+// Profile endpoints
+export const PROFILE_ENDPOINTS = {
+  GET: '/api/members/profile', // GET: 내 프로필 조회
+  UPDATE: '/api/members/profile', // PUT: 프로필 정보 수정 (name, gender, birthDate 등)
+  UPLOAD_IMAGE: '/api/members/profile/profile-image', // PUT: 프로필 이미지 업로드
+  DELETE_IMAGE: '/api/members/profile/profile-image', // DELETE: 프로필 이미지 삭제
+  UPDATE_ALERT_TIME: '/api/members/profile/alert-time', // PUT: 알림 시간 수정
+} as const
+
+// Tasks endpoints
+export const TASKS_ENDPOINTS = {
+  LIST: '/tasks',
+  CREATE: '/tasks',
+  DETAIL: (id: string) => `/tasks/${id}`,
+  UPDATE: (id: string) => `/tasks/${id}`,
+  DELETE: (id: string) => `/tasks/${id}`,
+  COMPLETE: (id: string) => `/tasks/${id}/complete`,
+}
 
 // 💳 Payment endpoints
 export const PAYMENT_ENDPOINTS = {
