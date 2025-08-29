@@ -6,7 +6,7 @@ const getBaseURL = () => {
   
   if (!apiBaseUrl) {
     console.error('❌ VITE_API_BASE_URL이 설정되지 않았습니다!')
-    return '/api/proxy' // Vercel 배포 시 사용될 기본값
+    return '/http://52.79.237.86:8080' // Vercel 배포 시 사용될 기본값
   }
   
   console.log('🌐 API Base URL:', apiBaseUrl)
