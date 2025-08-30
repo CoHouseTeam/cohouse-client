@@ -31,7 +31,7 @@ export function fromServerList(list: SettlementParticipant[] = []): UIParticipan
     memberName: p.memberName,
     shareAmount: p.shareAmount,
     status: p.status,
-    settlementParticipantId: p.id,
+    settlementParticipantId: p.memberId,
     avatar: getAvatarByMemberId(p.memberId),
   }))
 }
