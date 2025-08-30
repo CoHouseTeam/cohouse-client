@@ -115,13 +115,15 @@ export const PAYMENT_ENDPOINTS = {
 
 // 📰 Post endpoints
 export const POST_ENDPOINTS = {
+  // 기본 CRUD
   CREATE: 'api/posts',
-  LIST: (groupId: number) => `api/posts/${groupId}`,
-  DETAIL: (postId: number) => `api/posts/${postId}`,
+  GET_BY_ID: (postId: number) => `api/posts/${postId}`,
   UPDATE: (postId: number) => `api/posts/${postId}`,
   DELETE: (postId: number) => `api/posts/${postId}`,
 
-  // 좋아요
+  // 그룹별 게시글 목록 (페이지네이션 및 필터링 지원)
+  GET_BY_GROUP: (groupId: number) => `api/posts/${groupId}`,
+
   LIKES: (postId: number) => `api/posts/${postId}/likes`,
   LIKE: (postId: number) => `api/posts/${postId}/likes`,
   LIKE_STATUS: (postId: number) => `api/posts/${postId}/likes/status`,
@@ -130,8 +132,15 @@ export const POST_ENDPOINTS = {
 
 // 🔔 Notification endpoints
 export const NOTIFICATION_ENDPOINTS = {
-  LIST: '/notifications',
-  UNREAD_COUNT: '/notifications/unread-count',
-  MARK_READ: (notificationId: number) => `/notifications/${notificationId}/read`,
-  DELETE_ALL: '/notifications/all',
+  // 알림 목록 (타입 및 읽음 상태 필터링 지원)
+  LIST: 'api/notifications',
+  
+  // 읽지 않은 알림 개수
+  UNREAD_COUNT: 'api/notifications/unread-count',
+  
+  // 알림 읽음 처리
+  MARK_READ: (notificationId: number) => `api/notifications/${notificationId}/read`,
+  
+    // 모든 알림 삭제
+  DELETE_ALL: 'api/notifications/all',
 } as const
