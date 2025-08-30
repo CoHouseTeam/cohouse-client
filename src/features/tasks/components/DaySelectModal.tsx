@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
 import { DaySelectModalProps, RepeatDay } from '../../../types/tasks'
 import { daysKr, toEngDay, KorDay } from '../../../libs/utils/dayMapping'
+import { getRepeatDays, createRepeatDay, deleteRepeatDay } from '../../../libs/api/tasks'
 
 const DaySelectModal: React.FC<DaySelectModalProps> = ({
   days = daysKr,
@@ -12,12 +12,26 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
   const [repeatDays, setRepeatDays] = useState<RepeatDay[]>([])
   const [loading, setLoading] = useState(false)
 
+  const setLoadingWithDelay = (value: boolean) => {
+    if (value) {
+      setLoading(true)
+    } else {
+      setTimeout(() => setLoading(false), 200) // 200ms 지연 후 해제
+    }
+  }
+
+  //StrictMode 라서 두번 호출됨
   useEffect(() => {
     const fetchRepeatDays = async () => {
-      setLoading(true)
-      const res = await axios.get<RepeatDay[]>(`/api/tasks/templates/${templateId}/repeat-days`)
-      setRepeatDays(res.data)
-      setLoading(false)
+      setLoadingWithDelay(true)
+      try {
+        const data = await getRepeatDays(templateId)
+        setRepeatDays(data)
+      } catch (error) {
+        console.error('반복 요일 조회 실패', error)
+      } finally {
+        setLoadingWithDelay(false)
+      }
     }
     fetchRepeatDays()
   }, [templateId])
@@ -29,39 +43,41 @@ const DaySelectModal: React.FC<DaySelectModalProps> = ({
     const exist = Array.isArray(repeatDays)
       ? repeatDays.find((d) => d.dayOfWeek === dayEng)
       : undefined
-    if (!exist) {
-      const res = await axios.post<RepeatDay>(`/api/tasks/templates/${templateId}/repeat-days`, {
-        dayOfWeek: dayEng,
-      })
-      setRepeatDays((prev) => [...prev, res.data])
-    } else {
-      await axios.delete(`/api/tasks/templates/${templateId}/repeat-days/${exist.repeatDayId}`)
-      setRepeatDays((prev) => prev.filter((d) => d.repeatDayId !== exist.repeatDayId))
+    setLoading(true)
+    try {
+      if (!exist) {
+        const newDay = await createRepeatDay(templateId, dayEng)
+        setRepeatDays((prev) => [...prev, newDay])
+      } else {
+        await deleteRepeatDay(templateId, exist.repeatDayId)
+        setRepeatDays((prev) => prev.filter((d) => d.repeatDayId !== exist.repeatDayId))
+      }
+    } catch (error) {
+      console.error('요일 토글 실패', error)
+    } finally {
+      setLoading(false)
     }
   }
 
   const allSelected = checkedDays.length === days.length
 
   const handleToggleAll = async () => {
-    if (allSelected) {
-      await Promise.all(
-        Array.isArray(repeatDays)
-          ? repeatDays.map((d) =>
-              axios.delete(`/api/tasks/templates/${templateId}/repeat-days/${d.repeatDayId}`)
-            )
-          : []
-      )
-      setRepeatDays([])
-    } else {
-      const notChecked = days.filter((day) => !checkedDays.includes(toEngDay(day)))
-      const responses = await Promise.all(
-        notChecked.map((day) =>
-          axios.post<RepeatDay>(`/api/tasks/templates/${templateId}/repeat-days`, {
-            dayOfWeek: toEngDay(day),
-          })
+    setLoading(true)
+    try {
+      if (allSelected) {
+        await Promise.all(repeatDays.map((d) => deleteRepeatDay(templateId, d.repeatDayId)))
+        setRepeatDays([])
+      } else {
+        const notChecked = days.filter((day) => !checkedDays.includes(toEngDay(day)))
+        const responses = await Promise.all(
+          notChecked.map((day) => createRepeatDay(templateId, toEngDay(day)))
         )
-      )
-      setRepeatDays([...repeatDays, ...responses.map((r) => r.data)])
+        setRepeatDays([...repeatDays, ...responses])
+      }
+    } catch (error) {
+      console.error('전체 선택/해제 실패', error)
+    } finally {
+      setLoading(false)
     }
   }
 
