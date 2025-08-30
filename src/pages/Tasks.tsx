@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import TaskHistoryButton from '../features/tasks/components/TaskHistoryButton'
 import TaskTable from '../features/tasks/components/TaskTable'
 import TaskRandomButton from '../features/tasks/components/TaskRandomButton'
@@ -36,6 +36,7 @@ const TasksPage: React.FC = () => {
   const [isAssigned, setIsAssigned] = useState(false)
   const [isLeader, setIsLeader] = useState<boolean | null>(null)
   const [error, setError] = useState('')
+  const [userAuthenticated, setUserAuthenticated] = useState(false)
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -50,31 +51,36 @@ const TasksPage: React.FC = () => {
     fetchAssignments()
   }, [fetchAssignments])
 
+  // 인증 상태 한 번만 평가 및 저장
   useEffect(() => {
-    async function loadGroupInfo() {
-      if (!isAuthenticated()) {
-        setIsLeader(false)
-        setError('')
-        return
-      }
-      setError('')
-      try {
-        const data = await fetchMyGroups()
-        const groupMembers: GroupMember[] = Array.isArray(data.groupMembers)
-          ? data.groupMembers
-          : []
-        // 로그인한 회원 id는 user 상태 또는 토큰 내 정보에서 가져오는 별도 방식으로 교체 필요
-        // 여기 예시는 groupMembers에서 내가 리더인지 체크만 하므로 임시 로직 사용
-        const loggedInUserId = groupMembers[0]?.memberId ?? null // 예시임: 실제는 로그인 유저 정보로 대체
-        const isMyLeader = groupMembers.some((m) => m.memberId === loggedInUserId && m.isLeader)
-        setIsLeader(isMyLeader)
-      } catch (e) {
-        setError('그룹 정보를 불러오는 중 오류가 발생했습니다.')
-        setIsLeader(false)
-      }
-    }
-    loadGroupInfo()
+    setUserAuthenticated(isAuthenticated())
   }, [])
+
+  // 그룹 정보 로딩 (유저 인증 상태 변경 시 실행)
+  const loadGroupInfo = useCallback(async () => {
+    if (!userAuthenticated) {
+      setIsLeader(false)
+      setError('')
+      return
+    }
+    setError('')
+    try {
+      const data = await fetchMyGroups()
+      const groupMembers: GroupMember[] = Array.isArray(data.groupMembers) ? data.groupMembers : []
+
+      // 실제 로그인된 유저 id 로 교체 필요 (임시로 첫 멤버 사용)
+      const loggedInUserId = groupMembers[0]?.memberId ?? null
+      const isMyLeader = groupMembers.some((m) => m.memberId === loggedInUserId && m.isLeader)
+      setIsLeader(isMyLeader)
+    } catch (e) {
+      setError('그룹 정보를 불러오는 중 오류가 발생했습니다.')
+      setIsLeader(false)
+    }
+  }, [userAuthenticated])
+
+  useEffect(() => {
+    loadGroupInfo()
+  }, [loadGroupInfo])
 
   const handleRandomAssign = useCallback(async () => {
     const memberIds = Object.keys(membersObj)

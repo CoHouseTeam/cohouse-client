@@ -15,6 +15,7 @@ const MyPage = lazy(() => import('../pages/MyPage'))
 const MyPgeEdit = lazy(() => import('../pages/MyPageEdit'))
 const MainPage = lazy(() => import('../pages/MainPage'))
 const GroupComplete = lazy(() => import('../pages/GroupComplete'))
+const GroupInvite = lazy(() => import('../pages/GroupInvite'))
 const OAuthCallback = lazy(() => import('../pages/OAuthCallback'))
 
 export function Routes() {
@@ -34,6 +35,7 @@ export function Routes() {
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/mypage/edit" element={<MyPgeEdit />} />
       <Route path="/create-complete" element={<GroupComplete />} />
+      <Route path="/invite" element={<GroupInvite />} />
       <Route path="*" element={<NotFound />} />
     </RouterRoutes>
   )
