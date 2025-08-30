@@ -45,6 +45,7 @@ export default function Board() {
       .then((data) => {
         if (mounted) setPageData(data)
       })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .catch((e: any) => {
         if (mounted) setError(e?.message ?? 'Failed to load posts')
       })
@@ -72,9 +73,7 @@ export default function Board() {
     })
   }, [posts, searchTerm])
 
-  // 현재 사용자 (실제로는 로그인된 사용자 정보)
-  const currentUserId = 'user1'
-  const currentUserName = '김철수'
+
 
   // 탭 변경 함수
   const handleTabChange = (tab: TabKey) => {
@@ -135,11 +134,7 @@ export default function Board() {
     }
   }
 
-  // 삭제 확인 모달 열기
-  const requestDeletePost = (postId: number) => {
-    setPendingDeleteId(postId)
-    setShowConfirm(true)
-  }
+
 
   // 삭제 확정 처리
   const confirmDeletePost = async () => {
@@ -218,6 +213,7 @@ export default function Board() {
       
       closeNewPostModal()
       console.log('🔒 모달 닫기 완료')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error('❌ [createPost] FAILED', {
         error: e,
