@@ -5,13 +5,26 @@ import { useGroupStore } from '../../app/store'
 /**
  * 토큰을 localStorage에 저장
  */
-export const setTokens = (accessToken: string, refreshToken?: string) => {
-  localStorage.setItem('accessToken', accessToken)
-  console.log('✅ Access Token 저장됨', accessToken)
+export const setTokens = (accessToken: string, refreshToken?: string, rememberMe: boolean = false) => {
+  if (rememberMe) {
+    // 로그인 유지하기: localStorage 사용 (장기간 보관)
+    localStorage.setItem('accessToken', accessToken)
+    localStorage.setItem('rememberMe', 'true')
+    console.log('✅ Access Token 저장됨 (로그인 유지)', accessToken)
 
-  if (refreshToken) {
-    localStorage.setItem('refreshToken', refreshToken)
-    console.log('✅ Refresh Token 저장됨', refreshToken)
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken)
+      console.log('✅ Refresh Token 저장됨 (로그인 유지)', refreshToken)
+    }
+  } else {
+    // 일반 로그인: sessionStorage 사용 (브라우저 종료 시 삭제)
+    sessionStorage.setItem('accessToken', accessToken)
+    console.log('✅ Access Token 저장됨 (일반 로그인)', accessToken)
+
+    if (refreshToken) {
+      sessionStorage.setItem('refreshToken', refreshToken)
+      console.log('✅ Refresh Token 저장됨 (일반 로그인)', refreshToken)
+    }
   }
 }
 
@@ -19,23 +32,40 @@ export const setTokens = (accessToken: string, refreshToken?: string) => {
  * localStorage에서 액세스 토큰 가져오기
  */
 export const getAccessToken = (): string | null => {
-  return localStorage.getItem('accessToken')
+  // 로그인 유지하기가 활성화되어 있으면 localStorage에서, 아니면 sessionStorage에서
+  const rememberMe = localStorage.getItem('rememberMe') === 'true'
+  const storage = rememberMe ? localStorage : sessionStorage
+  return storage.getItem('accessToken')
 }
 
 /**
  * localStorage에서 리프레시 토큰 가져오기
  */
 export const getRefreshToken = (): string | null => {
-  return localStorage.getItem('refreshToken')
+  // 로그인 유지하기가 활성화되어 있으면 localStorage에서, 아니면 sessionStorage에서
+  const rememberMe = localStorage.getItem('rememberMe') === 'true'
+  const storage = rememberMe ? localStorage : sessionStorage
+  return storage.getItem('refreshToken')
 }
 
 /**
  * 모든 토큰 제거 (로그아웃)
  */
 export const clearTokens = () => {
+  // localStorage와 sessionStorage 모두에서 제거
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
+  localStorage.removeItem('rememberMe')
+  sessionStorage.removeItem('accessToken')
+  sessionStorage.removeItem('refreshToken')
   console.log('🗑️ 모든 토큰 제거됨')
+}
+
+/**
+ * 로그인 유지하기 상태 확인
+ */
+export const isRememberMeEnabled = (): boolean => {
+  return localStorage.getItem('rememberMe') === 'true'
 }
 
 /**

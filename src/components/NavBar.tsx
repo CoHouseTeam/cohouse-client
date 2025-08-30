@@ -4,6 +4,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { Menu, Bell, Share2, Copy, Check, LogOut } from 'lucide-react'
 import { logout } from '../libs/utils/auth'
 import { useAuth } from '../contexts/AuthContext'
+import { createGroupInvitation } from '../libs/api/groups'
 
 type NavBarProps = {
   unreadCount?: number // optional for the bell dot
@@ -29,7 +30,13 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
 
   const handleShare = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href)
+      // 그룹 ID는 현재 4로 하드코딩 (실제로는 현재 그룹 ID를 가져와야 함)
+      const groupId = 4
+      const invitationData = await createGroupInvitation(groupId)
+      const inviteCode = invitationData.inviteCode
+      
+      // 초대 코드를 클립보드에 복사
+      await navigator.clipboard.writeText(inviteCode)
       setShowCopiedToast(true)
       setShowShareDropdown(false)
       
@@ -38,21 +45,30 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
         setShowCopiedToast(false)
       }, 3000)
     } catch (error) {
-      console.error('Failed to copy URL:', error)
+      console.error('Failed to create invitation:', error)
       // 폴백: 구식 브라우저 지원
-      const textArea = document.createElement('textarea')
-      textArea.value = window.location.href
-      document.body.appendChild(textArea)
-      textArea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textArea)
-      
-      setShowCopiedToast(true)
-      setShowShareDropdown(false)
-      
-      setTimeout(() => {
-        setShowCopiedToast(false)
-      }, 3000)
+      try {
+        const groupId = 4
+        const invitationData = await createGroupInvitation(groupId)
+        const inviteCode = invitationData.inviteCode
+        
+        const textArea = document.createElement('textarea')
+        textArea.value = inviteCode
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+        
+        setShowCopiedToast(true)
+        setShowShareDropdown(false)
+        
+        setTimeout(() => {
+          setShowCopiedToast(false)
+        }, 3000)
+      } catch (fallbackError) {
+        console.error('Fallback copy failed:', fallbackError)
+        alert('초대 코드 생성에 실패했습니다.')
+      }
     }
   }
 
@@ -73,6 +89,27 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showShareDropdown])
+
+  // 사이드 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      const drawerToggle = document.getElementById('app-drawer') as HTMLInputElement
+      
+      // 사이드 메뉴가 열려있고, 클릭한 요소가 사이드 메뉴가 아닌 경우
+      if (drawerToggle?.checked && 
+          !target.closest('.drawer-side') && 
+          !target.closest('[for="app-drawer"]') &&
+          !target.closest('.drawer-overlay')) {
+        drawerToggle.checked = false
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const commonLinks = [
     { to: '/tasks', label: '할 일' },
@@ -138,7 +175,7 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
                   <div className="indicator">
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
-                      <span className="indicator-item badge bg-red-500 text-white badge-xs rounded-lg text-xs" aria-label={`${unreadCount} unread`}>
+                      <span className="indicator-item badge bg-red-500 text-white badge-xs rounded-lg text-xs relative z-0" aria-label={`${unreadCount} unread`}>
                         {unreadCount}
                       </span>
                     )}
@@ -162,7 +199,7 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
                           className="flex items-center gap-2"
                         >
                           <Copy className="w-4 h-4" />
-                          링크 복사하기
+                          초대 코드 복사하기
                         </button>
                       </li>
                     </ul>
@@ -189,9 +226,9 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
       {/* Drawer side panel */}
       <div className="drawer-side">
         {/* Clicking the overlay closes the drawer */}
-        <label htmlFor="app-drawer" className="drawer-overlay" aria-label="Close menu"></label>
+        <label htmlFor="app-drawer" className="z-[70] drawer-overlay" aria-label="Close menu"></label>
 
-        <aside className="w-72 bg-base-100 min-h-full border-r">
+        <aside className="w-72 bg-base-100 min-h-full border-r relative z-[99999]">
           <div className="px-6 pt-6 pb-3 text-lg font-semibold">CoHouse</div>
           <ul className="menu p-2">
             {commonLinks.map(({ to, label }) => (
@@ -231,7 +268,7 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
           <div className="bg-blue-100 border border-blue-200 text-blue-800 shadow-lg rounded-lg px-4 py-3 max-w-sm flex items-center gap-2">
             <Check className="w-5 h-5 text-blue-600" />
-            <span className="font-medium">링크 복사 완료!</span>
+            <span className="font-medium">초대 코드 복사 완료!</span>
           </div>
         </div>
       )}
