@@ -219,7 +219,7 @@ export default function Register() {
                 />
                 <button
                   type="button"
-                  className="btn btn-neutral whitespace-nowrap h-12 rounded-lg"
+                  className="btn btn-neutral btn-sm text-xs px-2 h-12 rounded-lg"
                   onClick={handleEmailCheck}
                   disabled={isCheckingEmail}
                 >

@@ -1,8 +1,9 @@
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import api from '../libs/api/axios'
-import { setTokens } from '../libs/utils/auth'
+import { setTokens, isRememberMeEnabled } from '../libs/utils/auth'
 import { useAuth } from '../contexts/AuthContext'
 import { AUTH_ENDPOINTS, GROUP_ENDPOINTS } from '../libs/api/endpoints'
 import { useGroupStore } from '../app/store'
@@ -14,6 +15,7 @@ interface LoginForm {
 
 export default function Login() {
   const navigate = useNavigate()
+  const [rememberMe, setRememberMe] = useState(false)
   const {
     register,
     handleSubmit,
@@ -21,6 +23,12 @@ export default function Login() {
   } = useForm<LoginForm>()
   const { refreshAuthState } = useAuth()
   const setHasGroups = useGroupStore((state) => state.setHasGroups)
+
+  // 컴포넌트 마운트 시 기존 로그인 유지하기 상태 확인
+  useEffect(() => {
+    const wasRememberMeEnabled = isRememberMeEnabled()
+    setRememberMe(wasRememberMeEnabled)
+  }, [])
 
   // 구글 소셜로그인
   const handleGoogleLogin = () => {
@@ -54,11 +62,11 @@ export default function Login() {
         password: data.password,
       })
 
-      // 토큰 저장
+      // 토큰 저장 (로그인 유지하기 옵션 포함)
       const { accessToken, refreshToken } = response.data
 
       if (accessToken) {
-        setTokens(accessToken, refreshToken)
+        setTokens(accessToken, refreshToken, rememberMe)
         refreshAuthState() // 🔄 인증 상태 즉시 업데이트
         //그룹 상태 확인
         try {
@@ -147,7 +155,12 @@ export default function Login() {
 
             <div className="form-control">
               <label className="cursor-pointer flex items-center gap-3">
-                <input type="checkbox" className="checkbox checkbox-primary rounded" />
+                <input 
+                  type="checkbox" 
+                  className="checkbox checkbox-primary rounded" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
                 <span className="label-text">로그인 유지하기</span>
               </label>
             </div>

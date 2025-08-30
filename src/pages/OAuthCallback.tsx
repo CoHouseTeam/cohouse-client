@@ -25,8 +25,8 @@ export default function OAuthCallback() {
         }
 
         if (accessToken) {
-          // 토큰 저장
-          setTokens(accessToken, refreshToken || '')
+          // 토큰 저장 (소셜 로그인은 기본적으로 로그인 유지하기)
+          setTokens(accessToken, refreshToken || '', true)
           refreshAuthState() // 인증 상태 업데이트
           
           toast.success('로그인이 완료되었습니다!')
