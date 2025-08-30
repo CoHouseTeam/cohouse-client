@@ -74,6 +74,27 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
     }
   }, [showShareDropdown])
 
+  // 사이드 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      const drawerToggle = document.getElementById('app-drawer') as HTMLInputElement
+      
+      // 사이드 메뉴가 열려있고, 클릭한 요소가 사이드 메뉴가 아닌 경우
+      if (drawerToggle?.checked && 
+          !target.closest('.drawer-side') && 
+          !target.closest('[for="app-drawer"]') &&
+          !target.closest('.drawer-overlay')) {
+        drawerToggle.checked = false
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   const commonLinks = [
     { to: '/tasks', label: '할 일' },
     { to: '/settlements', label: '정산하기' },
@@ -138,7 +159,7 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
                   <div className="indicator">
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
-                      <span className="indicator-item badge bg-red-500 text-white badge-xs rounded-lg text-xs" aria-label={`${unreadCount} unread`}>
+                      <span className="indicator-item badge bg-red-500 text-white badge-xs rounded-lg text-xs relative z-0" aria-label={`${unreadCount} unread`}>
                         {unreadCount}
                       </span>
                     )}
@@ -189,9 +210,9 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
       {/* Drawer side panel */}
       <div className="drawer-side">
         {/* Clicking the overlay closes the drawer */}
-        <label htmlFor="app-drawer" className="drawer-overlay" aria-label="Close menu"></label>
+        <label htmlFor="app-drawer" className="z-[70] drawer-overlay" aria-label="Close menu"></label>
 
-        <aside className="w-72 bg-base-100 min-h-full border-r">
+        <aside className="w-72 bg-base-100 min-h-full border-r relative z-[99999]">
           <div className="px-6 pt-6 pb-3 text-lg font-semibold">CoHouse</div>
           <ul className="menu p-2">
             {commonLinks.map(({ to, label }) => (
