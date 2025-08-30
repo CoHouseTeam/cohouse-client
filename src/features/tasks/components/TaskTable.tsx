@@ -4,7 +4,12 @@ import { ChevronRight, PlusCircleFill } from 'react-bootstrap-icons'
 import { Assignment, TaskTableProps, Template } from '../../../types/tasks'
 import { members } from '../../../mocks/db/tasks'
 import { daysKr, toEngDay } from '../../../libs/utils/dayMapping'
-import { createTaskTemplate, getTaskTemplates, updateTaskTemplate } from '../../../libs/api/tasks'
+import {
+  createTaskTemplate,
+  getTaskTemplates,
+  updateTaskTemplate,
+  deleteTaskTemplate,
+} from '../../../libs/api/tasks'
 import { fetchMyGroups } from '../../../libs/api/groups'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
@@ -67,7 +72,6 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
     if (edited !== undefined && edited.trim() !== '' && groupId !== null) {
       try {
         if (templateId < 0) {
-          // 임시 템플릿 → 새 템플릿 생성
           const newTemplate = await createTaskTemplate({
             groupId,
             category: edited,
@@ -117,12 +121,24 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
     return assignments.find((a) => a.templateId === templateId && a.dayOfWeek === engDay)
   }
 
-  // groupId가 로딩 중일 땐 로딩 UI 표시 (최초 렌더링 방지)
+  const handleDeleteTemplate = async (templateId: number) => {
+    if (!confirm('정말로 이 템플릿을 삭제하시겠습니까?')) return
+    try {
+      await deleteTaskTemplate(templateId)
+      setTemplates((prev) => prev.filter((t) => t.templateId !== templateId))
+    } catch (error) {
+      console.error('템플릿 삭제 실패', error)
+    }
+  }
+
   if (groupId === null) return <div>그룹 정보를 불러오는 중...</div>
 
   return (
     <div className="relative w-full">
-      <table className="w-full table-fixed text-center border border-gray-300">
+      <table
+        className="w-full table-fixed text-center border border-gray-300"
+        style={{ width: 'calc(100% - 10px)' }}
+      >
         <thead>
           <tr>
             <th className="bg-base-200 border-b border-gray-300 px-1 py-2 text-xs w-[28%]"></th>
@@ -140,7 +156,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
         <tbody>
           {Array.isArray(templates) &&
             templates.map((template, rowIdx) => (
-              <tr key={template.templateId}>
+              <tr key={template.templateId} className="group">
                 <td
                   className={
                     'bg-base-100 border-gray-300 px-1 py-2 text-xs font-normal relative flex items-center gap-4 border-r' +
@@ -164,7 +180,6 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
                       }
                     }}
                   />
-
                   <div className="relative flex items-center">
                     <button
                       type="button"
@@ -229,6 +244,34 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
           </tr>
         </tbody>
       </table>
+
+      {templates.map((template, idx) => (
+        <button
+          key={template.templateId}
+          type="button"
+          onClick={() => handleDeleteTemplate(template.templateId)}
+          aria-label="템플릿 삭제"
+          title="템플릿 삭제"
+          className={`
+    absolute
+    -right-2
+    text-red-500
+    cursor-pointer
+    border-none
+    bg-transparent
+    p-0
+    select-none
+    z-10
+    leading-none
+    text-lg
+  `}
+          style={{
+            top: `${45 + idx * 40}px`,
+          }}
+        >
+          ×
+        </button>
+      ))}
     </div>
   )
 }
