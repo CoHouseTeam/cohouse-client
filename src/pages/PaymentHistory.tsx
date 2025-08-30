@@ -106,11 +106,7 @@ export default function SettlementHistory() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start md:gap-6">
           {sorted?.map((p: PaymentHistoryItem) => (
-            <PaymentsListItem
-              key={p.paymentHistoryId}
-              item={p}
-              settlement={settlementMap.get(p.settlementId)}
-            />
+            <PaymentsListItem key={p.id} item={p} settlement={settlementMap.get(p.settlementId)} />
           ))}
         </div>
       )}
