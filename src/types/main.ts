@@ -152,6 +152,12 @@ export interface InviteModalProps {
   onDecline: () => void
 }
 
+export interface NicknameModalProps {
+  onClose: () => void
+  onSubmit: (nickname: string) => void
+  loading?: boolean
+}
+
 // 📰 Board Types
 export type BoardColor = 'RED' | 'BLUE' | 'GRAY' | 'ORANGE';
 
