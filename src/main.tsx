@@ -20,17 +20,17 @@ const queryClient = new QueryClient({
   },
 })
 
-// [추가] DEV에서만 렌더 전에 MSW 먼저 시작
-async function enableMocking() {
-  // MSW 완전히 비활성화 (실제 API 테스트를 위해)
-  if (!import.meta.env.DEV || import.meta.env.VITE_USE_MSW !== 'true') return
+// // [추가] DEV에서만 렌더 전에 MSW 먼저 시작
+// async function enableMocking() {
+//   // MSW 완전히 비활성화 (실제 API 테스트를 위해)
+//   if (!import.meta.env.DEV || import.meta.env.VITE_USE_MSW !== 'true') return
 
-  const { worker } = await import('./mocks/browser')
-  await worker.start({
-    serviceWorker: { url: '/mockServiceWorker.js' },
-    onUnhandledRequest: 'bypass',
-  })
-}
+//   const { worker } = await import('./mocks/browser')
+//   await worker.start({
+//     serviceWorker: { url: '/mockServiceWorker.js' },
+//     onUnhandledRequest: 'bypass',
+//   })
+// }
 
 // 기존 Capacitor 초기화는 그대로
 const initializeApp = async () => {
@@ -53,10 +53,7 @@ const initializeApp = async () => {
   }
 }
 
-// [변경] 부트스트랩 순서만 살짝 조정: MSW → 렌더 → Capacitor
 async function bootstrap() {
-  await enableMocking() // ← 여기서 MSW가 먼저 켜짐
-
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
