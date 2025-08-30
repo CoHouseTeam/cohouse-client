@@ -1,6 +1,6 @@
 import api from './axios'
 import { POST_ENDPOINTS } from './endpoints'
-import type { Post, CreatePostRequest, UpdatePostRequest, PostListResponse, PostLikeResponse, LikeStatusResponse, LikeCountResponse } from '../../types/main'
+import type { Post, CreatePostRequest, UpdatePostRequest, PostListResponse, PostLikeResponse, LikeStatusResponse, LikeCountResponse, ApiPost, ApiPostListResponse } from '../../types/main'
 
 // 📰 Post API Functions
 
@@ -28,7 +28,7 @@ export const deletePost = async (postId: number): Promise<void> => {
   return response.data
 }
 
-// 그룹별 게시글 목록 조회 (페이지네이션 및 필터링)
+// 그룹별 게시글 목록 조회 (페이지네이션 및 필터링) - 새로운 API 응답 형식
 export const getPostsByGroup = async (
   groupId: number,
   params?: {
@@ -37,7 +37,7 @@ export const getPostsByGroup = async (
     type?: 'ANNOUNCEMENT' | 'FREE'
     status?: 'ACTIVE' | 'DELETED'
   }
-): Promise<PostListResponse> => {
+): Promise<ApiPostListResponse> => {
   const response = await api.get(POST_ENDPOINTS.GET_BY_GROUP(groupId), { params })
   return response.data
 }

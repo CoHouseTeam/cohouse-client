@@ -51,27 +51,51 @@ export interface Post {
   isLiked: boolean
 }
 
-export interface CreatePostRequest {
-  groupId: number
-  memberId: number
+// API 응답 형식에 맞는 Post 타입
+export interface ApiPost {
+  id: number
   type: 'ANNOUNCEMENT' | 'FREE'
   title: string
-  content: string
-  color: string
+  preview: string
+  groupId: number
+  memberId: number
+  color: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'YELLOW' | 'ORANGE' | 'PINK' | 'GRAY'
+  createdAt: string
+  updatedAt: string
 }
 
-export interface UpdatePostRequest {
-  title?: string
-  content?: string
-  images?: string[]
+// API 응답 형식에 맞는 PostListResponse
+export interface ApiPostListResponse {
+  content: ApiPost[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+  last: boolean
 }
 
+// 기존 PostListResponse (호환성을 위해 유지)
 export interface PostListResponse {
   content: Post[]
   totalElements: number
   totalPages: number
   currentPage: number
   size: number
+}
+
+export interface CreatePostRequest {
+  groupId: number
+  memberId: number
+  type: 'ANNOUNCEMENT' | 'FREE'
+  title: string
+  content: string
+  color: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'YELLOW' | 'ORANGE' | 'PINK' | 'GRAY'
+}
+
+export interface UpdatePostRequest {
+  title?: string
+  content?: string
+  images?: string[]
 }
 
 // 🔔 Notification Types
@@ -126,4 +150,39 @@ export interface InviteModalProps {
   onClose: () => void
   onAccept: () => void
   onDecline: () => void
+}
+
+// 📰 Board Types
+export type BoardColor = 'RED' | 'BLUE' | 'GRAY' | 'ORANGE';
+
+export interface BoardPost {
+  id: number;
+  type: 'FREE' | 'ANNOUNCEMENT';
+  title: string;
+  preview: string;
+  groupId: number;
+  memberId: number;
+  color: BoardColor;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  page: number;         // backend is 1-based in sample
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
+export interface PostLikes {
+  postId: number;
+  totalCount: number;
+  likers: { memberId: number; displayName: string; avatarUrl: string }[];
+}
+
+export interface PostLikesCount {
+  postId: number;
+  count: number;
 }
