@@ -3,8 +3,8 @@ import { TASK_ENDPOINTS } from './endpoints'
 import { Template, RepeatDay, Assignment, AssignmentBody } from '../../types/tasks'
 
 // 할일 템플릿 목록 조회
-export async function getTaskTemplates(): Promise<Template[]> {
-  const response = await api.get(TASK_ENDPOINTS.TEMPLATES)
+export async function getTaskTemplates(groupId: number): Promise<Template[]> {
+  const response = await api.get(TASK_ENDPOINTS.TEMPLATES, { params: { groupId } })
   return response.data
 }
 
@@ -12,6 +12,8 @@ export async function getTaskTemplates(): Promise<Template[]> {
 export async function createTaskTemplate(data: {
   groupId?: number
   category?: string
+  repeatDays?: string[]
+  randomEnabled?: boolean
 }): Promise<Template> {
   const response = await api.post(TASK_ENDPOINTS.CREATE_TEMPLATE, data)
   return response.data

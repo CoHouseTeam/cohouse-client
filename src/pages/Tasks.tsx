@@ -68,9 +68,7 @@ const TasksPage: React.FC = () => {
       const data = await fetchMyGroups()
       const groupMembers: GroupMember[] = Array.isArray(data.groupMembers) ? data.groupMembers : []
 
-      // 실제 로그인된 유저 id 로 교체 필요 (임시로 첫 멤버 사용)
-      const loggedInUserId = groupMembers[0]?.memberId ?? null
-      const isMyLeader = groupMembers.some((m) => m.memberId === loggedInUserId && m.isLeader)
+      const isMyLeader = groupMembers.some((m) => m.isLeader === true)
       setIsLeader(isMyLeader)
     } catch (e) {
       setError('그룹 정보를 불러오는 중 오류가 발생했습니다.')
