@@ -93,6 +93,17 @@ export interface PaymentHistoryRequest {
   toDateTime?: ISODateTime
 }
 
+// 송금 히스토리 응답
+export interface PaymentHistoryItem {
+  id: number
+  settlementId: number
+  senderId: number
+  receiverId: number
+  amount: number
+  status: TransferStatus
+  transferAt: ISODateTime
+}
+
 // 페이지 요청 파라미터(요청)
 export type PageParams = {
   page: number // 0부터 시작

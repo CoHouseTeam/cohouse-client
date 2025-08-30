@@ -7,7 +7,7 @@ import type {
   SettlementListItem as SettlementListItemType,
 } from '../../../types/settlement'
 
-// DTO(HistoryItem) → Settlement 스텁 (settlementAmount 고정 사용)
+// DTO(HistoryItem) → Settlement
 function toSettlementStub(dto: SettlementListItemType): Settlement {
   return {
     id: dto.id,
@@ -21,9 +21,9 @@ function toSettlementStub(dto: SettlementListItemType): Settlement {
     imageUrl: null, // 인터페이스가 string | null 이므로 null로
     platformSupportAmount: 0, // 기본값
     equalDistribution: false, // 기본값
-    participants: [] as Settlement['participants'], // never[] 방지
+    participants: [] as Settlement['participants'],
     createdAt: dto.createdAt,
-    updatedAt: dto.createdAt, // D
+    updatedAt: dto.createdAt,
   }
 }
 
