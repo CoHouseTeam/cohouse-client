@@ -185,3 +185,4 @@ export interface PostLikes {
 export interface PostLikesCount {
   postId: number;
   count: number;
+}
