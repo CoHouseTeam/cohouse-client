@@ -127,3 +127,9 @@ export interface InviteModalProps {
   onAccept: () => void
   onDecline: () => void
 }
+
+export interface NicknameModalProps {
+  onClose: () => void
+  onSubmit?: (nickname: string) => void
+  loading?: boolean
+}
