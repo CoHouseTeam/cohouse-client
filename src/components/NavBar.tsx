@@ -4,6 +4,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { Menu, Bell, Share2, Copy, Check, LogOut } from 'lucide-react'
 import { logout } from '../libs/utils/auth'
 import { useAuth } from '../contexts/AuthContext'
+import { createGroupInvitation } from '../libs/api/groups'
 
 type NavBarProps = {
   unreadCount?: number // optional for the bell dot
@@ -29,7 +30,13 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
 
   const handleShare = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href)
+      // 그룹 ID는 현재 4로 하드코딩 (실제로는 현재 그룹 ID를 가져와야 함)
+      const groupId = 4
+      const invitationData = await createGroupInvitation(groupId)
+      const inviteCode = invitationData.inviteCode
+      
+      // 초대 코드를 클립보드에 복사
+      await navigator.clipboard.writeText(inviteCode)
       setShowCopiedToast(true)
       setShowShareDropdown(false)
       
@@ -38,21 +45,30 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
         setShowCopiedToast(false)
       }, 3000)
     } catch (error) {
-      console.error('Failed to copy URL:', error)
+      console.error('Failed to create invitation:', error)
       // 폴백: 구식 브라우저 지원
-      const textArea = document.createElement('textarea')
-      textArea.value = window.location.href
-      document.body.appendChild(textArea)
-      textArea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textArea)
-      
-      setShowCopiedToast(true)
-      setShowShareDropdown(false)
-      
-      setTimeout(() => {
-        setShowCopiedToast(false)
-      }, 3000)
+      try {
+        const groupId = 4
+        const invitationData = await createGroupInvitation(groupId)
+        const inviteCode = invitationData.inviteCode
+        
+        const textArea = document.createElement('textarea')
+        textArea.value = inviteCode
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+        
+        setShowCopiedToast(true)
+        setShowShareDropdown(false)
+        
+        setTimeout(() => {
+          setShowCopiedToast(false)
+        }, 3000)
+      } catch (fallbackError) {
+        console.error('Fallback copy failed:', fallbackError)
+        alert('초대 코드 생성에 실패했습니다.')
+      }
     }
   }
 
@@ -183,7 +199,7 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
                           className="flex items-center gap-2"
                         >
                           <Copy className="w-4 h-4" />
-                          링크 복사하기
+                          초대 코드 복사하기
                         </button>
                       </li>
                     </ul>
@@ -252,7 +268,7 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
           <div className="bg-blue-100 border border-blue-200 text-blue-800 shadow-lg rounded-lg px-4 py-3 max-w-sm flex items-center gap-2">
             <Check className="w-5 h-5 text-blue-600" />
-            <span className="font-medium">링크 복사 완료!</span>
+            <span className="font-medium">초대 코드 복사 완료!</span>
           </div>
         </div>
       )}
