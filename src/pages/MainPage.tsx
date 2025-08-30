@@ -22,6 +22,11 @@ const MainPage = () => {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [userAuthenticated, setUserAuthenticated] = useState(false)
+
+  useEffect(() => {
+    setUserAuthenticated(isAuthenticated())
+  }, [])
 
   useEffect(() => {
     async function loadGroups() {
@@ -39,13 +44,13 @@ const MainPage = () => {
       }
     }
 
-    if (isAuthenticated()) {
+    if (userAuthenticated) {
       loadGroups()
     } else {
       setHasGroups(false)
       setLoading(false)
     }
-  }, [setHasGroups, isAuthenticated])
+  }, [userAuthenticated, setHasGroups])
 
   return (
     <div className="space-y-6">
