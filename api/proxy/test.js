@@ -1,0 +1,24 @@
+export default function handler(req, res) {
+  // Set CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST,PUT,DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  
+  // Handle preflight OPTIONS requests
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  
+  console.log(`[TEST] ${req.method} request received`);
+  console.log(`[TEST] Body:`, req.body);
+  console.log(`[TEST] Headers:`, req.headers);
+  
+  res.status(200).json({ 
+    ok: true, 
+    method: req.method, 
+    ts: Date.now(), 
+    where: "/api/proxy/test",
+    body: req.body,
+    message: "Test endpoint working correctly"
+  });
+}
