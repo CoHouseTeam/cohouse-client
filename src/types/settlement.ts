@@ -9,7 +9,6 @@ export type SettlementCategory = 'FOOD' | 'DAILY_SUPPLIES' | 'CULTURE' | 'ETC'
 
 // 정산 참여자 정보
 export interface SettlementParticipant {
-  id: number // 정산-참여자 ID
   memberId: number // 그룹 내 멤버 ID (전역 유저ID 아님)
   memberName: string // 멤버 이름
   shareAmount: number // 해당 참여자가 부담해야 할 금액
@@ -61,11 +60,11 @@ export type CreateSettlementBody =
 
 export type CreateSettlementResp = {
   id: number
-  category: string
+  category: SettlementCategory
   title: string
   description: string
   settlementAmount: number
-  status: string
+  status: SettlementStatus
   imageUrl: string | null
   payerId: number
   payerName: string
@@ -80,13 +79,38 @@ export interface MessageResponse {
   message: string
 }
 
-// 송금 내역(히스토리)
-export interface PaymentHistoryItem {
-  paymentHistoryId: number // 송금 기록 PK
-  settlementId: number // Settlement.id
-  senderId: number // 송금자(그룹 멤버 ID)
-  receiverId: number // 수신자(그룹 멤버 ID)
-  amount: number
-  status: TransferStatus
-  transferAt: string // 송금 시각
+// 날짜 문자열 alias
+export type ISODate = string // '2025-08-29'
+export type ISODateTime = string // '2025-08-29T16:10:22.118Z'
+
+// 송금 히스토리
+export interface PaymentHistoryRequest {
+  groupId?: number
+  settlementId?: number
+  fromDate?: ISODate
+  toDate?: ISODate
+  fromDateTime?: ISODateTime
+  toDateTime?: ISODateTime
+}
+
+// 페이지 요청 파라미터(요청)
+export type PageParams = {
+  page: number // 0부터 시작
+  size: number // 페이지 크기
+  sort?: string | string[] // 'createdAt,desc' 또는 ['createdAt,desc','id,asc']
+}
+
+// 페이지네이션 공통(응답)
+export interface Pageable<T> {
+  content: T[]
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+  first?: boolean
+  last?: boolean
+  empty?: boolean
+  numberOfElements?: number
+  sort?: unknown
+  pageable?: unknown
 }
