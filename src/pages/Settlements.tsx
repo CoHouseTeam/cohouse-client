@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { PlusCircle } from 'react-bootstrap-icons'
 import SettlementCreateModal from '../features/settlements/components/SettlementCreateModal'
 import OngoingSettlements from '../features/settlements/components/OngoingSettlements'
