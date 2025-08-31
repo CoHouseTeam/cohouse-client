@@ -14,7 +14,7 @@ import { fetchMyGroups } from '../../../libs/api/groups'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
 
-const getMemberAvatar = (groupMemberId: number) => members[groupMemberId]?.profileUrl || ''
+const getMemberAvatar = (groupMemberId: number) => members[groupMemberId]?.profileImageUrl || ''
 
 const initialEmptyTemplates: Template[] = [
   { templateId: -1, groupId: -1, category: '', createdAt: '', updatedAt: '' },

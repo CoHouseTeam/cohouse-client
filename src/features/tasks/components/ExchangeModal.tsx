@@ -48,7 +48,7 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
                   className="radio radio-sm"
                 />
                 <img
-                  src={member.profileUrl}
+                  src={member.profileImageUrl}
                   alt={member.name}
                   className="w-8 h-8 rounded-full object-cover"
                 />
