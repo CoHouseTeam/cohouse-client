@@ -97,7 +97,12 @@ export interface GroupMember {
   memberId: number
   isLeader: boolean
   nickname: string
+  profileUrl: string
   status: string
   joinedAt: string
   leavedAt: string | null
+}
+
+export interface MyRoleResponse {
+  isLeader: boolean
 }

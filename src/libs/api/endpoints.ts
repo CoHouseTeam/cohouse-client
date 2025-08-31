@@ -16,6 +16,7 @@ export const GROUP_ENDPOINTS = {
   CREATE: '/api/groups',
   JOIN: '/api/groups/join',
   MY_GROUPS: '/api/groups/me',
+  MY_ROLE: '/api/groups/{groupId}/me/role',
 
   // 그룹별 상세
   DETAIL: (groupId: number) => `/api/groups/${groupId}`,
@@ -134,13 +135,13 @@ export const POST_ENDPOINTS = {
 export const NOTIFICATION_ENDPOINTS = {
   // 알림 목록 (타입 및 읽음 상태 필터링 지원)
   LIST: 'api/notifications',
-  
+
   // 읽지 않은 알림 개수
   UNREAD_COUNT: 'api/notifications/unread-count',
-  
+
   // 알림 읽음 처리
   MARK_READ: (notificationId: number) => `api/notifications/${notificationId}/read`,
-  
-    // 모든 알림 삭제
+
+  // 모든 알림 삭제
   DELETE_ALL: 'api/notifications/all',
 } as const
