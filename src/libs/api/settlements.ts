@@ -33,15 +33,20 @@ export async function fetchMySettlementHistory(
   const { page, size, sort = 'createdAt,desc' } = params
 
   const { data } = await axios.get<Pageable<SettlementListItem>>(SETTLEMENT_ENDPOINTS.MY_HISTORY, {
-    params: { 'pageable.page': page, 'pageable.size': size, 'pageable.sort': sort },
-    paramsSerializer: (params) =>
-      Object.entries(params)
-        .map(([key, value]) =>
-          Array.isArray(value)
-            ? value.map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`).join('&')
-            : `${encodeURIComponent(key)}=${encodeURIComponent(value as string)}`
-        )
-        .join('&'),
+    params: { pageable: { page, size, sort } },
+    paramsSerializer: (p) => {
+      const searchParams = new URLSearchParams()
+      Object.entries(p).forEach(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+            searchParams.append(`${key}.${nestedKey}`, String(nestedValue))
+          })
+        } else {
+          searchParams.append(key, String(value))
+        }
+      })
+      return searchParams.toString()
+    },
   })
   return data // ← Page<SettlementListItem> - content와 totalPages 등을 모두 갖는 Page 객체
 }
