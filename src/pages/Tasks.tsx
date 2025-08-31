@@ -10,7 +10,7 @@ import ExchangeModal from '../features/tasks/components/ExchangeModal'
 import { members as membersObj, repeatDays, templates } from '../mocks/db/tasks'
 import axios from 'axios'
 import { Assignment, GroupMember, TaskHistory } from '../types/tasks'
-import { fetchMyGroups, getCurrentGroupId } from '../libs/api/groups'
+import { fetchMyGroups } from '../libs/api/groups'
 import { isAuthenticated } from '../libs/utils/auth'
 
 const members = Object.entries(membersObj).map(([, data]) => ({
