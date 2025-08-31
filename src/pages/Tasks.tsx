@@ -12,7 +12,7 @@ import axios from 'axios'
 import { Assignment, GroupMember, TaskHistory } from '../types/tasks'
 import { fetchMyGroups } from '../libs/api/groups'
 import { isAuthenticated } from '../libs/utils/auth'
-import { groupMembersName } from '../libs/utils/groupMemberName'
+
 
 const historyItems: TaskHistory[] = [
   { date: '2025.07.29', task: '청소', status: '미완료' },
@@ -34,6 +34,7 @@ const TasksPage: React.FC = () => {
   const [error, setError] = useState('')
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [groupId, setGroupId] = useState<number | null>(null)
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
 
 
   const fetchAssignments = useCallback(async () => {
@@ -73,13 +74,9 @@ const TasksPage: React.FC = () => {
       setGroupMembers(groupMembersData)
       setGroupId(data.id)
 
-
-      // 그룹 ID 설정
-      setGroupId(data.id)
-
       // 실제 로그인된 유저 id 로 교체 필요 (임시로 첫 멤버 사용)
-      const loggedInUserId = groupMembers[0]?.memberId ?? null
-      const isMyLeader = groupMembers.some((m) => m.memberId === loggedInUserId && m.isLeader)
+      const loggedInUserId = groupMembersData[0]?.memberId ?? null
+      const isMyLeader = groupMembersData.some((m: GroupMember) => m.memberId === loggedInUserId && m.isLeader)
 
       setIsLeader(isMyLeader)
     } catch (e) {
@@ -93,7 +90,10 @@ const TasksPage: React.FC = () => {
   }, [loadGroupInfo])
 
   // 그룹멤버를 Member 타입으로 변환
-  const members = groupMembersName(groupMembers)
+  const members = groupMembers.map(member => ({
+    name: member.nickname || 'Unknown',
+    profileImageUrl: member.profileImageUrl || ''
+  }))
   const handleRandomAssign = useCallback(async () => {
     if (!groupId) {
       console.error('그룹 ID가 없습니다.')
