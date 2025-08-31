@@ -1,7 +1,15 @@
 import axios from './axios'
-import type { CreateSettlementBody, CreateSettlementResp, Settlement } from '../../types/settlement'
+import type {
+  CreateSettlementBody,
+  CreateSettlementResp,
+  Pageable,
+  PageParams,
+  Settlement,
+  SettlementListItem,
+} from '../../types/settlement'
 import { SETTLEMENT_ENDPOINTS } from './endpoints'
 import api from './axios'
+import qs from 'qs'
 
 export type UploadReceiptResp = {
   imageUrl: string
@@ -20,9 +28,16 @@ export async function fetchGroupSettlements(groupId: number): Promise<Settlement
 }
 
 // 정산 히스토리
-export async function fetchMySettlementHistory(): Promise<Settlement[]> {
-  const { data } = await axios.get(SETTLEMENT_ENDPOINTS.MY_HISTORY)
-  return Array.isArray(data) ? data : (data?.content ?? [])
+export async function fetchMySettlementHistory(
+  params: PageParams
+): Promise<Pageable<SettlementListItem>> {
+  const { page, size, sort = 'createdAt,desc' } = params
+
+  const { data } = await axios.get<Pageable<SettlementListItem>>(SETTLEMENT_ENDPOINTS.MY_HISTORY, {
+    params: { pageable: { page, size, sort } },
+    paramsSerializer: (p) => qs.stringify(p, { allowDots: true, arrayFormat: 'repeat' }),
+  })
+  return data // ← Page<SettlementListItem> - content와 totalPages 등을 모두 갖는 Page 객체
 }
 
 // 송금하기
