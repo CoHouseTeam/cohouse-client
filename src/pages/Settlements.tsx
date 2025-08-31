@@ -1,22 +1,72 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { PlusCircle } from 'react-bootstrap-icons'
 import SettlementCreateModal from '../features/settlements/components/SettlementCreateModal'
 import OngoingSettlements from '../features/settlements/components/OngoingSettlements'
 import RecentSettlements from '../features/settlements/components/RecentSettlements'
-import { GroupMembers, Groups } from '../mocks/db/groupMembers'
+import { getCurrentGroupId } from '../libs/api/groups'
 import { useParams } from 'react-router-dom'
 
 export default function Settlements() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [groupId, setGroupId] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
   // 라우트 파람이 없을 수도 있으니 optional로
   const { groupId: groupIdParam } = useParams<{ groupId?: string }>()
 
-  // 항상 "숫자" groupId를 만들기 + 파람이 없으면 목데이터 첫 그룹 사용
-  const groupId = useMemo(() => {
-    const parsed = groupIdParam ? Number(groupIdParam) : NaN
-    if (Number.isFinite(parsed)) return parsed
-    return Groups?.[0]?.id ?? GroupMembers?.[0]?.groupId ?? 1
+  // 그룹 ID 가져오기
+  useEffect(() => {
+    const fetchGroupId = async () => {
+      try {
+        setLoading(true)
+        // URL 파라미터가 있으면 그것을 사용, 없으면 API에서 가져오기
+        if (groupIdParam) {
+          const parsed = Number(groupIdParam)
+          if (Number.isFinite(parsed)) {
+            setGroupId(parsed)
+            return
+          }
+        }
+        
+        // API에서 현재 그룹 ID 가져오기
+        const currentGroupId = await getCurrentGroupId()
+        setGroupId(currentGroupId)
+      } catch (error) {
+        console.error('그룹 ID 가져오기 실패:', error)
+        setError('그룹 정보를 가져올 수 없습니다.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchGroupId()
   }, [groupIdParam])
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="loading loading-spinner loading-lg"></div>
+        <p className="ml-4 text-gray-500">그룹 정보를 불러오는 중...</p>
+      </div>
+    )
+  }
+
+  if (error || !groupId) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <p className="text-lg text-error mb-4">{error || '그룹 정보를 찾을 수 없습니다.'}</p>
+          <button 
+            className="btn btn-primary"
+            onClick={() => window.location.reload()}
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -42,10 +92,10 @@ export default function Settlements() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 items-start">
           {/* 진행 중인 정산 */}
-          <OngoingSettlements />
+          <OngoingSettlements groupId={groupId} />
 
           {/* 정산 내역 */}
-          <RecentSettlements />
+          <RecentSettlements groupId={groupId} />
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { Menu, Bell, Share2, Copy, Check, LogOut } from 'lucide-react'
 import { logout } from '../libs/utils/auth'
 import { useAuth } from '../contexts/AuthContext'
-import { createGroupInvitation } from '../libs/api/groups'
+import { createGroupInvitation, getCurrentGroupId } from '../libs/api/groups'
 
 type NavBarProps = {
   unreadCount?: number // optional for the bell dot
@@ -30,13 +30,16 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
 
   const handleShare = async () => {
     try {
-      // 그룹 ID는 현재 4로 하드코딩 (실제로는 현재 그룹 ID를 가져와야 함)
-      const groupId = 4
+      // 동적으로 현재 그룹 ID를 가져오기
+      const groupId = await getCurrentGroupId()
       const invitationData = await createGroupInvitation(groupId)
       const inviteCode = invitationData.inviteCode
       
-      // 초대 코드를 클립보드에 복사
-      await navigator.clipboard.writeText(inviteCode)
+      // 전체 초대 URL 생성
+      const inviteUrl = `${window.location.origin}/invite?code=${inviteCode}`
+      
+      // 초대 URL을 클립보드에 복사
+      await navigator.clipboard.writeText(inviteUrl)
       setShowCopiedToast(true)
       setShowShareDropdown(false)
       
@@ -48,12 +51,15 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
       console.error('Failed to create invitation:', error)
       // 폴백: 구식 브라우저 지원
       try {
-        const groupId = 4
+        const groupId = await getCurrentGroupId()
         const invitationData = await createGroupInvitation(groupId)
         const inviteCode = invitationData.inviteCode
         
+        // 전체 초대 URL 생성
+        const inviteUrl = `${window.location.origin}/invite?code=${inviteCode}`
+        
         const textArea = document.createElement('textarea')
-        textArea.value = inviteCode
+        textArea.value = inviteUrl
         document.body.appendChild(textArea)
         textArea.select()
         document.execCommand('copy')
@@ -268,7 +274,7 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
           <div className="bg-blue-100 border border-blue-200 text-blue-800 shadow-lg rounded-lg px-4 py-3 max-w-sm flex items-center gap-2">
             <Check className="w-5 h-5 text-blue-600" />
-            <span className="font-medium">초대 코드 복사 완료!</span>
+            <span className="font-medium">초대 URL 복사 완료!</span>
           </div>
         </div>
       )}

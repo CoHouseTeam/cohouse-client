@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Settlement } from '../../../types/settlement'
+import { PageParams, Settlement } from '../../../types/settlement'
 import {
   fetchMySettlementHistory,
   fetchMySettlements,
   fetchSettlementDetail,
+  fetchGroupSettlements,
 } from '../../api/settlements'
 
 export function useMySettlements() {
@@ -14,11 +15,21 @@ export function useMySettlements() {
   })
 }
 
+// 그룹별 정산 내역
+export function useGroupSettlements(groupId: number) {
+  return useQuery<Settlement[]>({
+    queryKey: ['settlements', 'group', groupId],
+    queryFn: () => fetchGroupSettlements(groupId),
+    staleTime: 30000,
+    enabled: !!groupId,
+  })
+}
+
 // 정산 히스토리
-export function useMySettlementHistory() {
+export function useMySettlementHistory(params: PageParams) {
   return useQuery({
-    queryKey: ['settlements', 'myHistory'],
-    queryFn: fetchMySettlementHistory,
+    queryKey: ['settlements', 'myHistory', params],
+    queryFn: () => fetchMySettlementHistory(params),
     staleTime: 30000,
   })
 }

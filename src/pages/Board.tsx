@@ -3,6 +3,7 @@ import { Heart, X, ChevronDown, ChevronUp } from 'lucide-react'
 import ConfirmModal from '../features/common/ConfirmModal'
 import { createPost, deletePost, togglePostLike } from '../libs/api/posts'
 import { fetchGroupPosts, fetchPost, fetchPostLikesCount } from '../services/posts'
+import { getCurrentGroupId } from '../libs/api/groups'
 import type { BoardPost, PageResponse, BoardColor } from '../types/main'
 
 // 색상 옵션 타입
@@ -32,11 +33,29 @@ export default function Board() {
   const [modalLoading, setModalLoading] = useState(false)
   const [modalData, setModalData] = useState<{ post: BoardPost; likeCount: number } | null>(null)
 
-  const groupId = 4
+  // 동적으로 그룹 ID를 가져오기 위한 상태
+  const [groupId, setGroupId] = useState<number | null>(null)
   const size = 10
+
+  // 컴포넌트 마운트 시 그룹 ID 가져오기
+  useEffect(() => {
+    const fetchGroupId = async () => {
+      try {
+        const currentGroupId = await getCurrentGroupId()
+        setGroupId(currentGroupId)
+      } catch (error) {
+        console.error('그룹 ID 가져오기 실패:', error)
+        setError('그룹 정보를 가져올 수 없습니다.')
+      }
+    }
+    
+    fetchGroupId()
+  }, [])
 
   // API에서 게시글 목록 가져오기
   useEffect(() => {
+    if (!groupId) return // groupId가 없으면 API 호출하지 않음
+    
     let mounted = true
     setLoading(true)
     setError(null)
@@ -52,7 +71,7 @@ export default function Board() {
       .finally(() => mounted && setLoading(false))
 
     return () => { mounted = false }
-  }, [activeTab, currentPage, size])
+  }, [activeTab, currentPage, size, groupId])
 
   // 게시글 목록 (API 데이터 사용)
   const posts = useMemo(() => pageData?.content ?? [], [pageData])
@@ -104,7 +123,7 @@ export default function Board() {
       
       setModalData({ post: postDetail, likeCount: likeCount.count })
       setSelectedPost(postDetail)
-      setShowLikeUsers(false)
+    setShowLikeUsers(false)
     } catch (error) {
       console.error('게시글 상세 정보 가져오기 실패:', error)
     } finally {
@@ -125,7 +144,7 @@ export default function Board() {
       await togglePostLike(postId)
       
       // 좋아요 토글 후 모달 데이터 새로고침
-      if (selectedPost && selectedPost.id === postId) {
+            if (selectedPost && selectedPost.id === postId) {
         const likeCount = await fetchPostLikesCount(postId)
         setModalData(prev => prev ? { ...prev, likeCount: likeCount.count } : null)
       }
@@ -138,7 +157,7 @@ export default function Board() {
 
   // 삭제 확정 처리
   const confirmDeletePost = async () => {
-    if (pendingDeleteId == null) return
+    if (pendingDeleteId == null || !groupId) return
     
     try {
       await deletePost(pendingDeleteId)
@@ -147,9 +166,9 @@ export default function Board() {
       const data = await fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE', page: currentPage, size })
       setPageData(data)
       
-      setShowConfirm(false)
-      setPendingDeleteId(null)
-      closeModal()
+    setShowConfirm(false)
+    setPendingDeleteId(null)
+    closeModal()
     } catch (error) {
       console.error('게시글 삭제 실패:', error)
       alert('게시글 삭제에 실패했습니다.')
@@ -188,12 +207,17 @@ export default function Board() {
       return
     }
 
+    if (!groupId) {
+      alert('그룹 정보를 가져올 수 없습니다.')
+      return
+    }
+
     console.log('🚀 새 글 작성 시작')
     setIsSubmitting(true)
     try {
       // API 요청 데이터 준비
       const postData = {
-        groupId: 4,
+        groupId: groupId,
         memberId: 7,
         type: newPostCategory,
         title: newPostTitle,
@@ -357,48 +381,48 @@ export default function Board() {
 
         {!loading && !error && filteredPosts.length > 0 && (
           <>
-            {/* 반응형 그리드: 모바일 2열, 웹 3열 */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        {/* 반응형 그리드: 모바일 2열, 웹 3열 */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {filteredPosts.map((post, index) => {
-                return (
-                  <div
-                    key={post.id}
+            return (
+              <div
+                key={post.id}
                     className={`card cursor-pointer group transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] ${getColorClass(post.color)} opacity-0 animate-fade-in-up`}
-                    style={{ animationDelay: `${index * 50}ms` }}
-                    onClick={() => handlePostClick(post)}
-                  >
-                    <div className="card-body p-3 sm:p-4">
-                      {/* Title */}
-                      <h3 className="card-title text-sm font-bold line-clamp-2 mb-2">
-                        {post.title}
-                      </h3>
+                style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => handlePostClick(post)}
+              >
+                <div className="card-body p-3 sm:p-4">
+                  {/* Title */}
+                  <h3 className="card-title text-sm font-bold line-clamp-2 mb-2">
+                    {post.title}
+                  </h3>
 
-                      {/* Content preview */}
-                      <p className="text-xs text-base-content/70 line-clamp-3 mb-3">
+                  {/* Content preview */}
+                  <p className="text-xs text-base-content/70 line-clamp-3 mb-3">
                         {post.preview}
-                      </p>
+                  </p>
 
-                      {/* Meta info */}
-                      <div className="flex justify-between items-center text-xs text-base-content/60">
+                  {/* Meta info */}
+                  <div className="flex justify-between items-center text-xs text-base-content/60">
                         <span>작성자</span>
                         <span>{new Date(post.createdAt).toISOString().split('T')[0]}</span>
-                      </div>
+                  </div>
 
-                      {/* Stats */}
-                      <div className="flex items-center justify-end text-xs opacity-60">
-                        <div className="flex items-center gap-1">
+                  {/* Stats */}
+                  <div className="flex items-center justify-end text-xs opacity-60">
+                    <div className="flex items-center gap-1">
                           <Heart className="w-3 h-3" />
                           <span>0</span>
-                        </div>
-                      </div>
-
-                      {/* Hover effect */}
-                      <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-200"></div>
                     </div>
                   </div>
-                )
-              })}
-            </div>
+
+                  {/* Hover effect */}
+                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-200"></div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
           </>
         )}
       </div>
@@ -445,85 +469,85 @@ export default function Board() {
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-bold text-xl text-gray-800">{selectedPost.title}</h3>
-                  <button
-                    className="btn btn-sm btn-circle btn-ghost hover:bg-black/10"
-                    onClick={closeModal}
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-bold text-xl text-gray-800">{selectedPost.title}</h3>
+              <button
+                className="btn btn-sm btn-circle btn-ghost hover:bg-black/10"
+                onClick={closeModal}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-                <div className="space-y-4">
-                  {/* Meta info */}
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+            <div className="space-y-4">
+              {/* Meta info */}
+              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     <span>작성자: 작성자</span>
                     <span>작성일: {new Date(selectedPost.createdAt).toISOString().split('T')[0]}</span>
                     <span>카테고리: {selectedPost.type === 'ANNOUNCEMENT' ? '공지사항' : '자유게시판'}</span>
-                  </div>
+              </div>
 
-                  {/* Content */}
-                  <div className="prose max-w-none">
-                    <p className="whitespace-pre-wrap leading-relaxed text-gray-700">
+              {/* Content */}
+              <div className="prose max-w-none">
+                <p className="whitespace-pre-wrap leading-relaxed text-gray-700">
                       {selectedPost.preview}
-                    </p>
-                  </div>
+                </p>
+              </div>
 
-                  {/* Stats */}
-                  <div className="flex items-center gap-6 pt-4 border-t">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleLikeToggle(selectedPost.id)
-                        }}
-                        className="btn btn-ghost btn-sm p-2"
-                      >
-                        <Heart className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleLikeUsers()
-                        }}
-                        className="flex items-center gap-1 hover:text-primary"
-                      >
-                        <span className="font-semibold">{modalData?.likeCount || 0}</span>
-                        {showLikeUsers ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Like Users Dropdown */}
-                  {showLikeUsers && (modalData?.likeCount || 0) > 0 && (
-                    <div className="border-t pt-4">
-                      <h4 className="font-semibold mb-3">좋아요를 누른 사용자</h4>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {likeUsers.slice(0, modalData?.likeCount || 0).map((user) => (
-                          <div key={user.id} className="flex items-center gap-3 p-2 rounded-lg">
-                            <div className="avatar">
-                              <div className={`w-8 h-8 rounded-full ${getUserAvatarColor(user.name)} flex items-center justify-center text-white text-sm font-semibold`}>
-                                {getUserInitial(user.name)}
-                              </div>
-                            </div>
-                            <span className="font-medium">{user.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="modal-action">
-                  <button 
-                    className="btn btn-sm rounded-lg"
-                    style={{ backgroundColor: '#000000', color: 'white', border: 'none' }}
-                    onClick={closeModal}
+              {/* Stats */}
+              <div className="flex items-center gap-6 pt-4 border-t">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleLikeToggle(selectedPost.id)
+                    }}
+                    className="btn btn-ghost btn-sm p-2"
                   >
-                    닫기
+                        <Heart className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleLikeUsers()
+                    }}
+                    className="flex items-center gap-1 hover:text-primary"
+                  >
+                        <span className="font-semibold">{modalData?.likeCount || 0}</span>
+                    {showLikeUsers ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
                 </div>
+              </div>
+
+              {/* Like Users Dropdown */}
+                  {showLikeUsers && (modalData?.likeCount || 0) > 0 && (
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3">좋아요를 누른 사용자</h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {likeUsers.slice(0, modalData?.likeCount || 0).map((user) => (
+                      <div key={user.id} className="flex items-center gap-3 p-2 rounded-lg">
+                        <div className="avatar">
+                          <div className={`w-8 h-8 rounded-full ${getUserAvatarColor(user.name)} flex items-center justify-center text-white text-sm font-semibold`}>
+                            {getUserInitial(user.name)}
+                          </div>
+                        </div>
+                        <span className="font-medium">{user.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-action">
+              <button 
+                className="btn btn-sm rounded-lg"
+                style={{ backgroundColor: '#000000', color: 'white', border: 'none' }}
+                onClick={closeModal}
+              >
+                닫기
+              </button>
+            </div>
               </>
             )}
           </div>

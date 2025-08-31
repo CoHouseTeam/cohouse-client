@@ -1,5 +1,12 @@
 import axios from './axios'
-import type { CreateSettlementBody, CreateSettlementResp, Settlement } from '../../types/settlement'
+import type {
+  CreateSettlementBody,
+  CreateSettlementResp,
+  Pageable,
+  PageParams,
+  Settlement,
+  SettlementListItem,
+} from '../../types/settlement'
 import { SETTLEMENT_ENDPOINTS } from './endpoints'
 import api from './axios'
 
@@ -13,10 +20,30 @@ export async function fetchMySettlements(): Promise<Settlement[]> {
   return data
 }
 
+// 그룹별 정산 내역 가져오기
+export async function fetchGroupSettlements(groupId: number): Promise<Settlement[]> {
+  const { data } = await axios.get<Settlement[]>(SETTLEMENT_ENDPOINTS.GROUP_LIST(groupId))
+  return data
+}
+
 // 정산 히스토리
-export async function fetchMySettlementHistory(): Promise<Settlement[]> {
-  const { data } = await axios.get(SETTLEMENT_ENDPOINTS.MY_HISTORY)
-  return Array.isArray(data) ? data : (data?.content ?? [])
+export async function fetchMySettlementHistory(
+  params: PageParams
+): Promise<Pageable<SettlementListItem>> {
+  const { page, size, sort = 'createdAt,desc' } = params
+
+  const { data } = await axios.get<Pageable<SettlementListItem>>(SETTLEMENT_ENDPOINTS.MY_HISTORY, {
+    params: { 'pageable.page': page, 'pageable.size': size, 'pageable.sort': sort },
+    paramsSerializer: (params) =>
+      Object.entries(params)
+        .map(([key, value]) =>
+          Array.isArray(value)
+            ? value.map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`).join('&')
+            : `${encodeURIComponent(key)}=${encodeURIComponent(value as string)}`
+        )
+        .join('&'),
+  })
+  return data // ← Page<SettlementListItem> - content와 totalPages 등을 모두 갖는 Page 객체
 }
 
 // 송금하기

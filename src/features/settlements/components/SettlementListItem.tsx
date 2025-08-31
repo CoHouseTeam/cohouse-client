@@ -192,7 +192,7 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
                     : { text: '송금 대기', bg: '#E6A65D' }
 
                 return (
-                  <div key={p.id} className="flex pl-1 gap-2 justify-center items-center">
+                  <div key={p.memberId} className="flex pl-1 gap-2 justify-center items-center">
                     <img src={settlementIcon} alt="프로필 사진" className="w-9 h-9" />
                     <div className="flex flex-col flex-1 justify-center text-sm">
                       <span>{p.memberName}</span>

@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom'
 import SettlementListItem from './SettlementListItem'
-import { useMySettlements } from '../../../libs/hooks/settlements/useMySettlements'
+import { useGroupSettlements } from '../../../libs/hooks/settlements/useMySettlements'
 import LoadingSpinner from '../../common/LoadingSpinner'
 import ErrorCard from '../../common/ErrorCard'
 
-export default function RecentSettlements() {
-  const { data, isLoading, error } = useMySettlements()
+interface RecentSettlementsProps {
+  groupId?: number
+}
+
+export default function RecentSettlements({ groupId }: RecentSettlementsProps) {
+  const { data, isLoading, error } = useGroupSettlements(groupId || 0)
 
   if (isLoading) return <LoadingSpinner />
   if (error) return <ErrorCard />
