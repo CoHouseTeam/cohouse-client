@@ -21,7 +21,8 @@ export async function fetchMyGroups() {
 export async function fetchMyRole(): Promise<MyRoleResponse> {
   const response = await api.get<MyRoleResponse>(GROUP_ENDPOINTS.MY_ROLE)
   return response.data
-  
+}
+
 // 현재 사용자가 속한 그룹의 ID를 가져오는 함수
 export async function getCurrentGroupId(): Promise<number> {
   try {
