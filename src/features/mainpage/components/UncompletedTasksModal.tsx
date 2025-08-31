@@ -6,20 +6,20 @@ const pendingData: Group[] = [
   {
     date: '2025.08.03(일)',
     members: [
-      { task: '분리수거', name: '그룹원1', profileUrl: '/' },
-      { task: '빨래', name: '그룹원2', profileUrl: '/' },
+      { task: '분리수거', name: '그룹원1', profileImageUrl: '/' },
+      { task: '빨래', name: '그룹원2', profileImageUrl: '/' },
     ],
   },
   {
     date: '2025.08.05(월)',
-    members: [{ task: '치킨 배달 정산', name: '그룹원3', profileUrl: '/' }],
+    members: [{ task: '치킨 배달 정산', name: '그룹원3', profileImageUrl: '/' }],
   },
   {
     date: '2025.08.08(금)',
     members: [
-      { task: '치킨 배달 정산', name: '그룹원3', profileUrl: '/' },
-      { task: '분리수거', name: '그룹원1', profileUrl: '/' },
-      { task: '설거지', name: '그룹원2', profileUrl: '/' },
+      { task: '치킨 배달 정산', name: '그룹원3', profileImageUrl: '/' },
+      { task: '분리수거', name: '그룹원1', profileImageUrl: '/' },
+      { task: '설거지', name: '그룹원2', profileImageUrl: '/' },
     ],
   },
 ]
@@ -46,7 +46,7 @@ const UncompletedTasksModal: React.FC<ModalProps> = ({ onClose }) => {
               {group.members.map((m) => (
                 <div key={m.task + m.name} className="flex items-center mb-3 last:mb-0">
                   <img
-                    src={m.profileUrl}
+                    src={m.profileImageUrl}
                     alt={m.task}
                     className="w-8 h-8 rounded-full border mr-3 bg-gray-100 object-cover"
                   />
