@@ -102,3 +102,7 @@ export interface GroupMember {
   joinedAt: string
   leavedAt: string | null
 }
+
+export interface MyRoleResponse {
+  isLeader: boolean
+}
