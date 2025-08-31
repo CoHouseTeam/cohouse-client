@@ -12,11 +12,7 @@ import axios from 'axios'
 import { Assignment, GroupMember, TaskHistory } from '../types/tasks'
 import { fetchMyGroups } from '../libs/api/groups'
 import { isAuthenticated } from '../libs/utils/auth'
-
-const members = Object.entries(membersObj).map(([, data]) => ({
-  name: data.name,
-  profileUrl: data.profileUrl,
-}))
+import { groupMembersName } from '../libs/utils/groupMemberName'
 
 const historyItems: TaskHistory[] = [
   { date: '2025.07.29', task: '청소', status: '미완료' },
@@ -39,6 +35,7 @@ const TasksPage: React.FC = () => {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [groupId, setGroupId] = useState<number | null>(null)
 
+
   const fetchAssignments = useCallback(async () => {
     if (!groupId) return
     
@@ -54,22 +51,28 @@ const TasksPage: React.FC = () => {
     fetchAssignments()
   }, [fetchAssignments])
 
-  // 인증 상태 한 번만 평가 및 저장
+  // 인증 상태 초기 설정
   useEffect(() => {
     setUserAuthenticated(isAuthenticated())
   }, [])
 
-  // 그룹 정보 로딩 (유저 인증 상태 변경 시 실행)
+  // 그룹 및 멤버 정보 로딩
   const loadGroupInfo = useCallback(async () => {
     if (!userAuthenticated) {
       setIsLeader(false)
       setError('')
       return
     }
+
     setError('')
     try {
       const data = await fetchMyGroups()
-      const groupMembers: GroupMember[] = Array.isArray(data.groupMembers) ? data.groupMembers : []
+      const groupMembersData: GroupMember[] = Array.isArray(data.groupMembers)
+        ? data.groupMembers
+        : []
+      setGroupMembers(groupMembersData)
+      setGroupId(data.id)
+
 
       // 그룹 ID 설정
       setGroupId(data.id)
@@ -77,6 +80,7 @@ const TasksPage: React.FC = () => {
       // 실제 로그인된 유저 id 로 교체 필요 (임시로 첫 멤버 사용)
       const loggedInUserId = groupMembers[0]?.memberId ?? null
       const isMyLeader = groupMembers.some((m) => m.memberId === loggedInUserId && m.isLeader)
+
       setIsLeader(isMyLeader)
     } catch (e) {
       setError('그룹 정보를 불러오는 중 오류가 발생했습니다.')
@@ -88,6 +92,8 @@ const TasksPage: React.FC = () => {
     loadGroupInfo()
   }, [loadGroupInfo])
 
+  // 그룹멤버를 Member 타입으로 변환
+  const members = groupMembersName(groupMembers)
   const handleRandomAssign = useCallback(async () => {
     if (!groupId) {
       console.error('그룹 ID가 없습니다.')
@@ -97,7 +103,6 @@ const TasksPage: React.FC = () => {
     const memberIds = Object.keys(membersObj)
       .map(Number)
       .filter((id) => id > 0)
-
     if (memberIds.length === 0) {
       console.error('유효한 멤버가 없습니다.')
       return
@@ -120,12 +125,11 @@ const TasksPage: React.FC = () => {
 
       await Promise.all(assignmentPromises)
     }
-
     await fetchAssignments()
     setIsAssigned(true)
   }, [fetchAssignments, groupId])
 
-  if (isLeader === null) return <div>Loading...</div>
+  if (isLeader === null) return <>Loading...</>
 
   return (
     <div className="space-y-6">
