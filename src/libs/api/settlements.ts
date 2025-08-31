@@ -9,7 +9,6 @@ import type {
 } from '../../types/settlement'
 import { SETTLEMENT_ENDPOINTS } from './endpoints'
 import api from './axios'
-import qs from 'qs'
 
 export type UploadReceiptResp = {
   imageUrl: string
@@ -35,7 +34,19 @@ export async function fetchMySettlementHistory(
 
   const { data } = await axios.get<Pageable<SettlementListItem>>(SETTLEMENT_ENDPOINTS.MY_HISTORY, {
     params: { pageable: { page, size, sort } },
-    paramsSerializer: (p) => qs.stringify(p, { allowDots: true, arrayFormat: 'repeat' }),
+    paramsSerializer: (p) => {
+      const searchParams = new URLSearchParams()
+      Object.entries(p).forEach(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+            searchParams.append(`${key}.${nestedKey}`, String(nestedValue))
+          })
+        } else {
+          searchParams.append(key, String(value))
+        }
+      })
+      return searchParams.toString()
+    },
   })
   return data // ← Page<SettlementListItem> - content와 totalPages 등을 모두 갖는 Page 객체
 }
