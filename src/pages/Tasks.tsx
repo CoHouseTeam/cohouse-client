@@ -10,7 +10,7 @@ import ExchangeModal from '../features/tasks/components/ExchangeModal'
 import { members as membersObj, repeatDays, templates } from '../mocks/db/tasks'
 import axios from 'axios'
 import { Assignment, GroupMember, TaskHistory } from '../types/tasks'
-import { fetchMyGroups } from '../libs/api/groups'
+import { fetchMyGroups, getCurrentGroupId } from '../libs/api/groups'
 import { isAuthenticated } from '../libs/utils/auth'
 
 const members = Object.entries(membersObj).map(([, data]) => ({
@@ -37,15 +37,18 @@ const TasksPage: React.FC = () => {
   const [isLeader, setIsLeader] = useState<boolean | null>(null)
   const [error, setError] = useState('')
   const [userAuthenticated, setUserAuthenticated] = useState(false)
+  const [groupId, setGroupId] = useState<number | null>(null)
 
   const fetchAssignments = useCallback(async () => {
+    if (!groupId) return
+    
     try {
-      const res = await axios.get('/api/tasks/assignments')
+      const res = await axios.get(`/api/tasks/assignments?groupId=${groupId}`)
       setAssignments(Array.isArray(res.data) ? res.data : [])
     } catch {
       setAssignments([])
     }
-  }, [])
+  }, [groupId])
 
   useEffect(() => {
     fetchAssignments()
@@ -68,6 +71,9 @@ const TasksPage: React.FC = () => {
       const data = await fetchMyGroups()
       const groupMembers: GroupMember[] = Array.isArray(data.groupMembers) ? data.groupMembers : []
 
+      // 그룹 ID 설정
+      setGroupId(data.id)
+
       // 실제 로그인된 유저 id 로 교체 필요 (임시로 첫 멤버 사용)
       const loggedInUserId = groupMembers[0]?.memberId ?? null
       const isMyLeader = groupMembers.some((m) => m.memberId === loggedInUserId && m.isLeader)
@@ -83,6 +89,11 @@ const TasksPage: React.FC = () => {
   }, [loadGroupInfo])
 
   const handleRandomAssign = useCallback(async () => {
+    if (!groupId) {
+      console.error('그룹 ID가 없습니다.')
+      return
+    }
+
     const memberIds = Object.keys(membersObj)
       .map(Number)
       .filter((id) => id > 0)
@@ -98,7 +109,7 @@ const TasksPage: React.FC = () => {
         ? repeatInfo.map(async (repeatDay) => {
             const randomMemberId = memberIds[Math.floor(Math.random() * memberIds.length)]
             return axios.post('/api/tasks/assignments', {
-              groupId: tpl.groupId,
+              groupId: groupId, // 동적으로 가져온 groupId 사용
               groupMemberId: randomMemberId,
               templateId: tpl.templateId,
               dayOfWeek: repeatDay.dayOfWeek,
@@ -112,7 +123,7 @@ const TasksPage: React.FC = () => {
 
     await fetchAssignments()
     setIsAssigned(true)
-  }, [fetchAssignments])
+  }, [fetchAssignments, groupId])
 
   if (isLeader === null) return <div>Loading...</div>
 

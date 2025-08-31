@@ -13,6 +13,12 @@ export async function fetchMySettlements(): Promise<Settlement[]> {
   return data
 }
 
+// 그룹별 정산 내역 가져오기
+export async function fetchGroupSettlements(groupId: number): Promise<Settlement[]> {
+  const { data } = await axios.get<Settlement[]>(SETTLEMENT_ENDPOINTS.GROUP_LIST(groupId))
+  return data
+}
+
 // 정산 히스토리
 export async function fetchMySettlementHistory(): Promise<Settlement[]> {
   const { data } = await axios.get(SETTLEMENT_ENDPOINTS.MY_HISTORY)
