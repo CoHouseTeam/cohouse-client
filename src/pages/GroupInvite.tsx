@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import NicknameModal from '../features/mainpage/components/NicknameModal'
 import { AxiosError } from 'axios'
 import { joinGroupByInvite } from '../libs/api/groups'
+import { isAuthenticated } from '../libs/utils/auth'
 
 const GroupInvite = () => {
   const navigate = useNavigate()
@@ -11,6 +12,13 @@ const GroupInvite = () => {
   const [apiError, setApiError] = useState('')
   const [searchParams] = useSearchParams()
   const inviteCode = searchParams.get('code') || ''
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.')
+      navigate('/login', { replace: true })
+    }
+  }, [navigate])
 
   const handleApprove = () => setShowNicknameModal(true)
   const handleReject = () => navigate('/')
@@ -27,16 +35,14 @@ const GroupInvite = () => {
     }
     setApiError('')
     setLoading(true)
-    console.log('Sending invite join request:', { inviteCode, nickname })
-    await joinGroupByInvite(inviteCode, nickname)
-
     try {
-      // 초대코드 + 닉네임으로 가입 API 호출
+      console.log('Sending invite join request:', { inviteCode, nickname })
       await joinGroupByInvite(inviteCode, nickname)
+
       setShowNicknameModal(false)
       setTimeout(() => {
-        navigate('/')
-      }, 100) // 가입 후 그룹 페이지로 이동
+        navigate('/') // 가입 후 메인페이지 이동
+      }, 100)
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>
       setApiError(error.response?.data?.message || '그룹 가입 중 오류가 발생했습니다.')
