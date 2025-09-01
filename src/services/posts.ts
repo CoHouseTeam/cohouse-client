@@ -1,5 +1,5 @@
 import api from '../libs/api/axios';
-import type { BoardPost, PageResponse, PostLikes, PostLikesCount } from '../types/main';
+import type { BoardPost, BoardPostDetail, PageResponse, PostLikeResponse, LikeStatusResponse, LikeCountResponse } from '../types/main';
 
 function assertGroupUrl(url: string) {
   // Guard: prevent accidental /api/posts/{id} usage for lists
@@ -24,15 +24,20 @@ export async function fetchGroupPosts(params: {
 
 export async function fetchPost(postId: number) {
   const { data } = await api.get(`/api/posts/${postId}`);
-  return data as BoardPost;
+  return data as BoardPostDetail;
 }
 
 export async function fetchPostLikes(postId: number) {
   const { data } = await api.get(`/api/posts/${postId}/likes`);
-  return data as PostLikes;
+  return data as PostLikeResponse;
 }
 
 export async function fetchPostLikesCount(postId: number) {
   const { data } = await api.get(`/api/posts/${postId}/likes/count`);
-  return data as PostLikesCount;
+  return data as LikeCountResponse;
+}
+
+export async function fetchPostLikeStatus(postId: number) {
+  const { data } = await api.get(`/api/posts/${postId}/likes/status`);
+  return data as LikeStatusResponse;
 }

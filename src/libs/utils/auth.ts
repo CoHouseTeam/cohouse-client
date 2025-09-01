@@ -49,6 +49,42 @@ export const getRefreshToken = (): string | null => {
 }
 
 /**
+ * JWT 토큰에서 사용자 정보 추출
+ */
+export const getCurrentUser = (): { memberId: number; email: string } | null => {
+  try {
+    const token = getAccessToken()
+    if (!token) {
+      console.log('❌ 액세스 토큰이 없습니다.')
+      return null
+    }
+
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    console.log('🔍 JWT 페이로드:', payload)
+    
+    const memberId = payload.memberId || payload.sub || payload.userId || payload.id
+    console.log('🔍 추출된 memberId:', memberId)
+    
+    return {
+      memberId: memberId,
+      email: payload.email
+    }
+  } catch (error) {
+    console.error('토큰에서 사용자 정보 추출 실패:', error)
+    return null
+  }
+}
+
+/**
+ * 현재 사용자의 memberId 가져오기
+ */
+export const getCurrentMemberId = (): number | null => {
+  const user = getCurrentUser()
+  console.log('🔍 getCurrentMemberId 호출 결과:', user)
+  return user?.memberId || null
+}
+
+/**
  * 모든 토큰 제거 (로그아웃)
  */
 export const clearTokens = () => {
