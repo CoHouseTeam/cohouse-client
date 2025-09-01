@@ -4,9 +4,9 @@ import { Assignment, Member, RepeatDay, Template } from '../../types/tasks'
    1) 멤버(표시용) & 그룹 멤버 ID 매핑
    ───────────────────────────────────────────── */
 export const members: Record<number, Member> = {
-  1: { name: '최꿀꿀', profileUrl: '/avatars/u1.png' },
-  2: { name: '이댕댕', profileUrl: '/avatars/u2.png' },
-  3: { name: '김냥냥', profileUrl: '/avatars/u3.png' },
+  1: { name: '최꿀꿀', profileImageUrl: '/avatars/u1.png' },
+  2: { name: '이댕댕', profileImageUrl: '/avatars/u2.png' },
+  3: { name: '김냥냥', profileImageUrl: '/avatars/u3.png' },
 }
 
 //할일 템플릿(배정표)

@@ -1,10 +1,14 @@
 import LoadingSpinner from '../../common/LoadingSpinner'
 import SettlementListItem from './SettlementListItem'
-import { useMySettlements } from '../../../libs/hooks/settlements/useMySettlements'
+import { useGroupSettlements } from '../../../libs/hooks/settlements/useMySettlements'
 import ErrorCard from '../../common/ErrorCard'
 
-export default function OngoingSettlements() {
-  const { data, isLoading, error } = useMySettlements()
+interface OngoingSettlementsProps {
+  groupId?: number
+}
+
+export default function OngoingSettlements({ groupId }: OngoingSettlementsProps) {
+  const { data, isLoading, error } = useGroupSettlements(groupId || 0)
 
   if (isLoading) return <LoadingSpinner />
   if (error) return <ErrorCard />

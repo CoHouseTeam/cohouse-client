@@ -9,7 +9,10 @@ import type {
 } from '../../types/settlement'
 import { SETTLEMENT_ENDPOINTS } from './endpoints'
 
+
 import qs from 'qs'
+
+
 
 export type ReceiptOcrResp = {
   imageUrl: string
@@ -23,6 +26,12 @@ export async function fetchMySettlements(): Promise<Settlement[]> {
   return data
 }
 
+// 그룹별 정산 내역 가져오기
+export async function fetchGroupSettlements(groupId: number): Promise<Settlement[]> {
+  const { data } = await axios.get<Settlement[]>(SETTLEMENT_ENDPOINTS.GROUP_LIST(groupId))
+  return data
+}
+
 // 정산 히스토리
 export async function fetchMySettlementHistory(
   params: PageParams
@@ -31,7 +40,19 @@ export async function fetchMySettlementHistory(
 
   const { data } = await api.get<Pageable<SettlementListItem>>(SETTLEMENT_ENDPOINTS.MY_HISTORY, {
     params: { pageable: { page, size, sort } },
-    paramsSerializer: (p) => qs.stringify(p, { allowDots: true, arrayFormat: 'repeat' }),
+    paramsSerializer: (p) => {
+      const searchParams = new URLSearchParams()
+      Object.entries(p).forEach(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+            searchParams.append(`${key}.${nestedKey}`, String(nestedValue))
+          })
+        } else {
+          searchParams.append(key, String(value))
+        }
+      })
+      return searchParams.toString()
+    },
   })
   return data // ← Page<SettlementListItem> - content와 totalPages 등을 모두 갖는 Page 객체
 }

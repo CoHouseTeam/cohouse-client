@@ -16,6 +16,7 @@ export const GROUP_ENDPOINTS = {
   CREATE: '/api/groups',
   JOIN: '/api/groups/join',
   MY_GROUPS: '/api/groups/me',
+  MY_ROLE: '/api/groups/{groupId}/me/role',
 
   // 그룹별 상세
   DETAIL: (groupId: number) => `/api/groups/${groupId}`,
