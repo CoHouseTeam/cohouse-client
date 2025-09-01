@@ -1,6 +1,5 @@
 import api from './axios'
 import { GROUP_ENDPOINTS } from './endpoints'
-import { MyRoleResponse } from '../../types/tasks'
 
 // 내가 속한 그룹 정보
 export async function fetchMyGroups() {
@@ -18,9 +17,13 @@ export async function fetchMyGroups() {
 }
 
 //그룹장 확인
-export async function fetchMyRole(): Promise<MyRoleResponse> {
-  const response = await api.get<MyRoleResponse>(GROUP_ENDPOINTS.MY_ROLE)
-  return response.data
+export async function fetchIsLeader(groupId: number): Promise<boolean> {
+  try {
+    const response = await api.get<{ leader: boolean }>(GROUP_ENDPOINTS.MY_ROLE(groupId))
+    return !!response.data.leader
+  } catch {
+    return false
+  }
 }
 
 // 현재 사용자가 속한 그룹의 ID를 가져오는 함수
