@@ -4,6 +4,7 @@ import {
   fetchMySettlementHistory,
   fetchMySettlements,
   fetchSettlementDetail,
+  fetchGroupSettlements,
 } from '../../api/settlements'
 
 export function useMySettlements() {
@@ -11,6 +12,16 @@ export function useMySettlements() {
     queryKey: ['settlements', 'my'],
     queryFn: fetchMySettlements,
     staleTime: 30000,
+  })
+}
+
+// 그룹별 정산 내역
+export function useGroupSettlements(groupId: number) {
+  return useQuery<Settlement[]>({
+    queryKey: ['settlements', 'group', groupId],
+    queryFn: () => fetchGroupSettlements(groupId),
+    staleTime: 30000,
+    enabled: !!groupId,
   })
 }
 

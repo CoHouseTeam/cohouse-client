@@ -3,7 +3,7 @@ import { KorDay } from '../libs/utils/dayMapping'
 
 export interface Member {
   name: string
-  profileUrl: string
+  profileImageUrl: string
 }
 
 export interface GroupMemberListProps {
@@ -97,7 +97,12 @@ export interface GroupMember {
   memberId: number
   isLeader: boolean
   nickname: string
+  profileImageUrl: string
   status: string
   joinedAt: string
   leavedAt: string | null
+}
+
+export interface MyRoleResponse {
+  isLeader: boolean
 }

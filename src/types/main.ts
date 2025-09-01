@@ -15,7 +15,7 @@ export interface Todo {
 
 export interface Member {
   name: string
-  profileUrl: string
+  profileImageUrl: string
   task: string
 }
 
@@ -159,36 +159,36 @@ export interface NicknameModalProps {
 }
 
 // 📰 Board Types
-export type BoardColor = 'RED' | 'BLUE' | 'GRAY' | 'ORANGE';
+export type BoardColor = 'RED' | 'BLUE' | 'GRAY' | 'ORANGE'
 
 export interface BoardPost {
-  id: number;
-  type: 'FREE' | 'ANNOUNCEMENT';
-  title: string;
-  preview: string;
-  groupId: number;
-  memberId: number;
-  color: BoardColor;
-  createdAt: string;
-  updatedAt: string;
+  id: number
+  type: 'FREE' | 'ANNOUNCEMENT'
+  title: string
+  preview: string
+  groupId: number
+  memberId: number
+  color: BoardColor
+  createdAt: string
+  updatedAt: string
 }
 
 export interface PageResponse<T> {
-  content: T[];
-  page: number;         // backend is 1-based in sample
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
+  content: T[]
+  page: number // backend is 1-based in sample
+  size: number
+  totalElements: number
+  totalPages: number
+  last: boolean
 }
 
 export interface PostLikes {
-  postId: number;
-  totalCount: number;
-  likers: { memberId: number; displayName: string; avatarUrl: string }[];
+  postId: number
+  totalCount: number
+  likers: { memberId: number; displayName: string; avatarUrl: string }[]
 }
 
 export interface PostLikesCount {
-  postId: number;
-  count: number;
+  postId: number
+  count: number
 }
