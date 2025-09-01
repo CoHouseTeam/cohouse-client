@@ -1,4 +1,6 @@
 import api from './axios'
+import qs from 'qs'
+
 import type {
   CreateSettlementBody,
   CreateSettlementResp,
@@ -8,8 +10,6 @@ import type {
   SettlementListItem,
 } from '../../types/settlement'
 import { SETTLEMENT_ENDPOINTS } from './endpoints'
-
-import qs from 'qs'
 
 export type ReceiptOcrResp = {
   imageUrl: string
