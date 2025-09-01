@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import DaySelectModal from './DaySelectModal'
 import { ChevronRight, PlusCircleFill } from 'react-bootstrap-icons'
-import { Assignment, TaskTableProps, Template } from '../../../types/tasks'
-import { members } from '../../../mocks/db/tasks'
+import { Assignment, GroupMember, TaskTableProps, Template } from '../../../types/tasks'
 import { daysKr, toEngDay } from '../../../libs/utils/dayMapping'
 import {
   createTaskTemplate,
@@ -14,23 +13,20 @@ import { fetchMyGroups } from '../../../libs/api/groups'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
 
-const getMemberAvatar = (groupMemberId: number) => members[groupMemberId]?.profileImageUrl || ''
+function getMemberAvatar(groupMemberId: number, groupMembers: GroupMember[]) {
+  const member = groupMembers.find((m) => m.memberId === groupMemberId)
+  return member?.profileImageUrl || ''
+}
 
-const initialEmptyTemplates: Template[] = [
-  { templateId: -1, groupId: -1, category: '', createdAt: '', updatedAt: '' },
-  { templateId: -2, groupId: -1, category: '', createdAt: '', updatedAt: '' },
-  { templateId: -3, groupId: -1, category: '', createdAt: '', updatedAt: '' },
-]
-
-const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignments, isLeader }) => {
+const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
   const [openModal, setOpenModal] = useState<number | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [editValues, setEditValues] = useState<Record<number, string>>({})
   const [groupId, setGroupId] = useState<number | null>(null)
 
-  // 그룹 ID를 최초에 받아오기
+  // 그룹 ID 불러오기
   useEffect(() => {
-    const loadGroupId = async () => {
+    async function loadGroup() {
       try {
         const data = await fetchMyGroups()
         setGroupId(data.groupId ?? data.id ?? null)
@@ -39,10 +35,10 @@ const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignmen
         setGroupId(null)
       }
     }
-    loadGroupId()
+    loadGroup()
   }, [])
 
-  // 그룹ID 받아온 후에 템플릿 조회
+  // 그룹ID가 정해지면 템플릿 불러오기
   useEffect(() => {
     if (groupId !== null) {
       fetchTemplates(groupId)
@@ -52,23 +48,21 @@ const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignmen
   const fetchTemplates = async (gid: number) => {
     try {
       const data = await getTaskTemplates(gid)
-      if (Array.isArray(data) && data.length === 0) {
-        setTemplates(initialEmptyTemplates.map((t) => ({ ...t, groupId: gid })))
-      } else {
+      if (Array.isArray(data)) {
         setTemplates(data)
+      } else {
+        setTemplates([])
       }
     } catch (error) {
-      setTemplates(initialEmptyTemplates.map((t) => ({ ...t, groupId: gid })))
+      setTemplates([])
     }
   }
 
   const handleEditChange = (templateId: number, value: string) => {
-    if (!isLeader) return // 리더가 아니면 수정 불가
     setEditValues((prev) => ({ ...prev, [templateId]: value }))
   }
 
   const handleEditSubmit = async (template: Template) => {
-    if (!isLeader) return
     const { templateId } = template
     const edited = editValues[templateId]
     if (edited !== undefined && edited.trim() !== '' && groupId !== null) {
@@ -99,7 +93,7 @@ const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignmen
   }
 
   const handleAddTask = async () => {
-    if (!isLeader || groupId === null) return
+    if (groupId === null) return
     try {
       const newTemplate = await createTaskTemplate({
         groupId,
@@ -114,7 +108,6 @@ const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignmen
   }
 
   const toggleModal = (rowIdx: number) => {
-    if (!isLeader) return
     setOpenModal((prev) => (prev === rowIdx ? null : rowIdx))
   }
 
@@ -125,7 +118,6 @@ const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignmen
   }
 
   const handleDeleteTemplate = async (templateId: number) => {
-    if (!isLeader) return
     if (!confirm('정말로 이 템플릿을 삭제하시겠습니까?')) return
     try {
       await deleteTaskTemplate(templateId)
@@ -156,7 +148,6 @@ const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignmen
             ))}
           </tr>
         </thead>
-
         <tbody>
           {Array.isArray(templates) &&
             templates.map((template, rowIdx) => (
@@ -185,21 +176,17 @@ const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignmen
                     }}
                   />
                   <div className="relative flex items-center">
-                    {isLeader && (
-                      <button
-                        type="button"
-                        className="bbt text-gray-400 focus:text-black z-20 -ml-3"
-                        onClick={() => toggleModal(rowIdx)}
-                      >
-                        <ChevronRight
-                          size={16}
-                          className={
-                            openModal === rowIdx ? 'scale-x-[-1] transition-transform' : ''
-                          }
-                          style={openModal === rowIdx ? { transform: 'scaleX(-1)' } : undefined}
-                        />
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      className="bbt text-gray-400 focus:text-black z-20 -ml-3"
+                      onClick={() => toggleModal(rowIdx)}
+                    >
+                      <ChevronRight
+                        size={16}
+                        className={openModal === rowIdx ? 'scale-x-[-1] transition-transform' : ''}
+                        style={openModal === rowIdx ? { transform: 'scaleX(-1)' } : undefined}
+                      />
+                    </button>
                     {openModal === rowIdx && (
                       <DaySelectModal
                         days={daysKr}
@@ -214,7 +201,7 @@ const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignmen
                   const assignment = findAssignmentForCell(template.templateId, dayIdx)
                   const avatarUrl =
                     assignment?.groupMemberId !== undefined
-                      ? getMemberAvatar(assignment.groupMemberId)
+                      ? getMemberAvatar(assignment.groupMemberId, groupMembers)
                       : ''
                   return (
                     <td
@@ -236,53 +223,37 @@ const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignmen
                 })}
               </tr>
             ))}
-          {isLeader && (
-            <tr>
-              <td colSpan={days.length + 1} className="bg-white border-t border-gray-300 p-0">
-                <div className="flex justify-center items-center py-2.5">
-                  <button
-                    type="button"
-                    onClick={handleAddTask}
-                    className="bg-transparent border-none p-0 m-0"
-                    style={{ cursor: 'pointer', lineHeight: 1 }}
-                  >
-                    <PlusCircleFill size={18} color="gray" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          )}
+          <tr>
+            <td colSpan={days.length + 1} className="bg-white border-t border-gray-300 p-0">
+              <div className="flex justify-center items-center py-2.5">
+                <button
+                  type="button"
+                  onClick={handleAddTask}
+                  className="bg-transparent border-none p-0 m-0"
+                  style={{ cursor: 'pointer', lineHeight: 1 }}
+                >
+                  <PlusCircleFill size={18} color="gray" />
+                </button>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
-
-      {isLeader &&
-        templates.map((template, idx) => (
-          <button
-            key={template.templateId}
-            type="button"
-            onClick={() => handleDeleteTemplate(template.templateId)}
-            aria-label="템플릿 삭제"
-            title="템플릿 삭제"
-            className={`
-    absolute
-    -right-2
-    text-red-500
-    cursor-pointer
-    border-none
-    bg-transparent
-    p-0
-    select-none
-    z-10
-    leading-none
-    text-lg
-  `}
-            style={{
-              top: `${45 + idx * 40}px`,
-            }}
-          >
-            ×
-          </button>
-        ))}
+      {templates.map((template, idx) => (
+        <button
+          key={template.templateId}
+          type="button"
+          onClick={() => handleDeleteTemplate(template.templateId)}
+          aria-label="템플릿 삭제"
+          title="템플릿 삭제"
+          className={`absolute -right-2 text-red-500 cursor-pointer border-none bg-transparent p-0 select-none z-10 leading-none text-lg`}
+          style={{
+            top: `${45 + idx * 40}px`,
+          }}
+        >
+          ×
+        </button>
+      ))}
     </div>
   )
 }
