@@ -87,6 +87,9 @@ export const SETTLEMENT_ENDPOINTS = {
   RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
   UPDATE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
   DELETE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
+
+  // 영수증 OCR 미리보기(정산 생성 전, 전역 엔드포인트)
+  RECEIPT_OCR: 'api/settlements/ocr/receipt',
 } as const
 
 // Profile endpoints
@@ -134,13 +137,13 @@ export const POST_ENDPOINTS = {
 export const NOTIFICATION_ENDPOINTS = {
   // 알림 목록 (타입 및 읽음 상태 필터링 지원)
   LIST: 'api/notifications',
-  
+
   // 읽지 않은 알림 개수
   UNREAD_COUNT: 'api/notifications/unread-count',
-  
+
   // 알림 읽음 처리
   MARK_READ: (notificationId: number) => `api/notifications/${notificationId}/read`,
-  
-    // 모든 알림 삭제
+
+  // 모든 알림 삭제
   DELETE_ALL: 'api/notifications/all',
 } as const

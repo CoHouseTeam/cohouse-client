@@ -3,9 +3,10 @@ import {
   postPaymentDone,
   cancelSettlement,
   uploadSettlementReceipt,
-  UploadReceiptResp,
   deleteSettlementReceipt,
   createSettlement,
+  ReceiptOcrResp,
+  ocrSettlementReceipt,
 } from '../../api/settlements'
 import { CreateSettlementBody, CreateSettlementResp } from '../../../types/settlement'
 
@@ -48,10 +49,19 @@ export function useUploadSettlementReceipt() {
       method?: 'POST' | 'PUT' // 최초 업로드: POST, 교체: PUT
     }) =>
       uploadSettlementReceipt(vars.settlementId, vars.groupId, vars.file, vars.method ?? 'POST'),
-    onSuccess: (resp: UploadReceiptResp, vars) => {
+    onSuccess: (resp: ReceiptOcrResp, vars) => {
       qc.setQueryData(settlementDetailKey(vars.settlementId), (prev) =>
         prev ? { ...prev, imageUrl: resp.imageUrl, updatedAt: new Date().toISOString() } : prev
       )
+    },
+  })
+}
+
+// OCR
+export function useOcrSettlementReceipt() {
+  return useMutation({
+    mutationFn: async (file: File): Promise<ReceiptOcrResp> => {
+      return await ocrSettlementReceipt(file)
     },
   })
 }
