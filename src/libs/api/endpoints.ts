@@ -88,6 +88,9 @@ export const SETTLEMENT_ENDPOINTS = {
   RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
   UPDATE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
   DELETE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
+
+  // 영수증 OCR 미리보기(정산 생성 전, 전역 엔드포인트)
+  RECEIPT_OCR: 'api/settlements/ocr/receipt',
 } as const
 
 // Profile endpoints
