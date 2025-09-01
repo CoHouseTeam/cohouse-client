@@ -1,4 +1,5 @@
-import axios from './axios'
+import api from './axios'
+
 import type {
   CreateSettlementBody,
   CreateSettlementResp,
@@ -8,21 +9,22 @@ import type {
   SettlementListItem,
 } from '../../types/settlement'
 import { SETTLEMENT_ENDPOINTS } from './endpoints'
-import api from './axios'
 
-export type UploadReceiptResp = {
+export type ReceiptOcrResp = {
   imageUrl: string
+  settlementAmount: number
+  ocrSuccess: boolean
 }
 
 // 내 정산 내역 가져오기
 export async function fetchMySettlements(): Promise<Settlement[]> {
-  const { data } = await axios.get<Settlement[]>(SETTLEMENT_ENDPOINTS.MY_LIST)
+  const { data } = await api.get<Settlement[]>(SETTLEMENT_ENDPOINTS.MY_LIST)
   return data
 }
 
 // 그룹별 정산 내역 가져오기
 export async function fetchGroupSettlements(groupId: number): Promise<Settlement[]> {
-  const { data } = await axios.get<Settlement[]>(SETTLEMENT_ENDPOINTS.GROUP_LIST(groupId))
+  const { data } = await api.get<Settlement[]>(SETTLEMENT_ENDPOINTS.GROUP_LIST(groupId))
   return data
 }
 
@@ -32,7 +34,7 @@ export async function fetchMySettlementHistory(
 ): Promise<Pageable<SettlementListItem>> {
   const { page, size, sort = 'createdAt,desc' } = params
 
-  const { data } = await axios.get<Pageable<SettlementListItem>>(SETTLEMENT_ENDPOINTS.MY_HISTORY, {
+  const { data } = await api.get<Pageable<SettlementListItem>>(SETTLEMENT_ENDPOINTS.MY_HISTORY, {
     params: { pageable: { page, size, sort } },
     paramsSerializer: (p) => {
       const searchParams = new URLSearchParams()
@@ -53,40 +55,51 @@ export async function fetchMySettlementHistory(
 
 // 송금하기
 export const postPaymentDone = (id: number) =>
-  axios.post<Settlement>(SETTLEMENT_ENDPOINTS.PAYMENT_DONE(id)).then((r) => r.data)
+  api.post<Settlement>(SETTLEMENT_ENDPOINTS.PAYMENT_DONE(id)).then((r) => r.data)
 
 // 정산 취소
-export const cancelSettlement = (id: number) => axios.delete(SETTLEMENT_ENDPOINTS.DELETE(id))
+export const cancelSettlement = (id: number) => api.delete(SETTLEMENT_ENDPOINTS.DELETE(id))
 
 // 정산 상세 조회
 export async function fetchSettlementDetail(id: number): Promise<Settlement> {
-  const { data } = await axios.get<Settlement>(SETTLEMENT_ENDPOINTS.DETAIL(id))
+  const { data } = await api.get<Settlement>(SETTLEMENT_ENDPOINTS.DETAIL(id))
   return data
 }
 
-// 영수증 이미지 업로드(POST: 최초 업로드 / PUT: 교체)
+// 정산 생성/수정 이후의 영수증 업로드(저장)(POST: 최초 업로드 / PUT: 교체)
 export async function uploadSettlementReceipt(
   settlementId: number,
   groupId: number,
   file: File,
   method: 'POST' | 'PUT' = 'POST'
-): Promise<UploadReceiptResp> {
+): Promise<ReceiptOcrResp> {
   const form = new FormData()
   form.append('file', file)
 
   const url = SETTLEMENT_ENDPOINTS.RECEIPT(settlementId)
   const config = {
-    headers: { 'Content-Type': 'multipart/form-data' },
     params: { groupId },
+    timeout: 20000,
+    withCredentials: true,
   }
 
-  if (method === 'PUT') {
-    const { data } = await api.put<UploadReceiptResp>(url, form, config)
-    return data
-  } else {
-    const { data } = await api.post<UploadReceiptResp>(url, form, config)
-    return data
-  }
+  const { data } =
+    method === 'PUT'
+      ? await api.put<ReceiptOcrResp>(url, form, config)
+      : await api.post<ReceiptOcrResp>(url, form, config)
+  return data
+}
+
+// 정산 생성 전 OCR 미리보기
+export async function ocrSettlementReceipt(file: File): Promise<ReceiptOcrResp> {
+  const form = new FormData()
+  form.append('file', file, file.name)
+
+  const { data } = await api.post<ReceiptOcrResp>(SETTLEMENT_ENDPOINTS.RECEIPT_OCR, form, {
+    timeout: 20000,
+    validateStatus: (s) => s >= 200 && s < 300,
+  })
+  return data
 }
 
 // 영수증 삭제

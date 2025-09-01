@@ -49,8 +49,19 @@ export function fromMembers(list: BasicMember[] = []): UIParticipant[] {
 // 균등분배 적용
 export function applyEvenSplit(participants: UIParticipant[], total: number): UIParticipant[] {
   const n = participants.length
-  if (!n || total <= 0) return participants.map((p) => ({ ...p, shareAmount: 0 }))
-  const base = Math.floor(total / n)
-  const rem = total % n
-  return participants.map((p, i) => ({ ...p, shareAmount: i < rem ? base + 1 : base }))
+  if (n <= 0 || total <= 0) {
+    return participants.map((p) => ({ ...p, shareAmount: 0 }))
+  }
+  const divisor = n + 1 // 참여자 + 결제자
+  const base = Math.floor(total / divisor)
+  return participants.map((p) => ({ ...p, shareAmount: base }))
+}
+
+// 플랫폼 부담 금액 계산 헬퍼
+export function computePlatformRemainder(participants: UIParticipant[], total: number): number {
+  const n = participants.length
+  if (n <= 0 || total <= 0) return 0
+  const divisor = n + 1
+  const base = Math.floor(total / divisor)
+  return total - base * divisor
 }
