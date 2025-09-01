@@ -10,7 +10,7 @@ import ExchangeModal from '../features/tasks/components/ExchangeModal'
 import { members as membersObj, repeatDays, templates } from '../mocks/db/tasks'
 import axios from 'axios'
 import { Assignment, GroupMember, TaskHistory } from '../types/tasks'
-import { fetchMyGroups } from '../libs/api/groups'
+import { fetchIsLeader, fetchMyGroups } from '../libs/api/groups'
 import { isAuthenticated } from '../libs/utils/auth'
 
 
@@ -74,11 +74,13 @@ const TasksPage: React.FC = () => {
       setGroupMembers(groupMembersData)
       setGroupId(data.id)
 
-      // 실제 로그인된 유저 id 로 교체 필요 (임시로 첫 멤버 사용)
-      const loggedInUserId = groupMembersData[0]?.memberId ?? null
-      const isMyLeader = groupMembersData.some((m: GroupMember) => m.memberId === loggedInUserId && m.isLeader)
-
-      setIsLeader(isMyLeader)
+      //리더 여부 확인
+      if (data.id) {
+        const leaderStatus = await fetchIsLeader(data.id)
+        setIsLeader(leaderStatus)
+      } else {
+        setIsLeader(false)
+      }
     } catch (e) {
       setError('그룹 정보를 불러오는 중 오류가 발생했습니다.')
       setIsLeader(false)
@@ -138,7 +140,7 @@ const TasksPage: React.FC = () => {
         <TaskHistoryButton onClick={() => setShowHistory(true)} />
       </div>
       {error && <div className="text-red-600">{error}</div>}
-      <TaskTable assignments={assignments} />
+      <TaskTable assignments={assignments} isLeader={isLeader} />
       <div className="flex flex-col items-center space-y-4 mt-2">
         <div className="flex space-x-2">
           {isLeader && <TaskRandomButton onClick={handleRandomAssign} disabled={isAssigned} />}

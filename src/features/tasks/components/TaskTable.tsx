@@ -22,7 +22,7 @@ const initialEmptyTemplates: Template[] = [
   { templateId: -3, groupId: -1, category: '', createdAt: '', updatedAt: '' },
 ]
 
-const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
+const TaskTable: React.FC<TaskTableProps & { isLeader: boolean }> = ({ assignments, isLeader }) => {
   const [openModal, setOpenModal] = useState<number | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [editValues, setEditValues] = useState<Record<number, string>>({})
@@ -63,10 +63,12 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
   }
 
   const handleEditChange = (templateId: number, value: string) => {
+    if (!isLeader) return // 리더가 아니면 수정 불가
     setEditValues((prev) => ({ ...prev, [templateId]: value }))
   }
 
   const handleEditSubmit = async (template: Template) => {
+    if (!isLeader) return
     const { templateId } = template
     const edited = editValues[templateId]
     if (edited !== undefined && edited.trim() !== '' && groupId !== null) {
@@ -97,7 +99,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
   }
 
   const handleAddTask = async () => {
-    if (groupId === null) return
+    if (!isLeader || groupId === null) return
     try {
       const newTemplate = await createTaskTemplate({
         groupId,
@@ -112,6 +114,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
   }
 
   const toggleModal = (rowIdx: number) => {
+    if (!isLeader) return
     setOpenModal((prev) => (prev === rowIdx ? null : rowIdx))
   }
 
@@ -122,6 +125,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
   }
 
   const handleDeleteTemplate = async (templateId: number) => {
+    if (!isLeader) return
     if (!confirm('정말로 이 템플릿을 삭제하시겠습니까?')) return
     try {
       await deleteTaskTemplate(templateId)
@@ -181,17 +185,21 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
                     }}
                   />
                   <div className="relative flex items-center">
-                    <button
-                      type="button"
-                      className="bbt text-gray-400 focus:text-black z-20 -ml-3"
-                      onClick={() => toggleModal(rowIdx)}
-                    >
-                      <ChevronRight
-                        size={16}
-                        className={openModal === rowIdx ? 'scale-x-[-1] transition-transform' : ''}
-                        style={openModal === rowIdx ? { transform: 'scaleX(-1)' } : undefined}
-                      />
-                    </button>
+                    {isLeader && (
+                      <button
+                        type="button"
+                        className="bbt text-gray-400 focus:text-black z-20 -ml-3"
+                        onClick={() => toggleModal(rowIdx)}
+                      >
+                        <ChevronRight
+                          size={16}
+                          className={
+                            openModal === rowIdx ? 'scale-x-[-1] transition-transform' : ''
+                          }
+                          style={openModal === rowIdx ? { transform: 'scaleX(-1)' } : undefined}
+                        />
+                      </button>
+                    )}
                     {openModal === rowIdx && (
                       <DaySelectModal
                         days={daysKr}
@@ -228,31 +236,34 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
                 })}
               </tr>
             ))}
-          <tr>
-            <td colSpan={days.length + 1} className="bg-white border-t border-gray-300 p-0">
-              <div className="flex justify-center items-center py-2.5">
-                <button
-                  type="button"
-                  onClick={handleAddTask}
-                  className="bg-transparent border-none p-0 m-0"
-                  style={{ cursor: 'pointer', lineHeight: 1 }}
-                >
-                  <PlusCircleFill size={18} color="gray" />
-                </button>
-              </div>
-            </td>
-          </tr>
+          {isLeader && (
+            <tr>
+              <td colSpan={days.length + 1} className="bg-white border-t border-gray-300 p-0">
+                <div className="flex justify-center items-center py-2.5">
+                  <button
+                    type="button"
+                    onClick={handleAddTask}
+                    className="bg-transparent border-none p-0 m-0"
+                    style={{ cursor: 'pointer', lineHeight: 1 }}
+                  >
+                    <PlusCircleFill size={18} color="gray" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
 
-      {templates.map((template, idx) => (
-        <button
-          key={template.templateId}
-          type="button"
-          onClick={() => handleDeleteTemplate(template.templateId)}
-          aria-label="템플릿 삭제"
-          title="템플릿 삭제"
-          className={`
+      {isLeader &&
+        templates.map((template, idx) => (
+          <button
+            key={template.templateId}
+            type="button"
+            onClick={() => handleDeleteTemplate(template.templateId)}
+            aria-label="템플릿 삭제"
+            title="템플릿 삭제"
+            className={`
     absolute
     -right-2
     text-red-500
@@ -265,13 +276,13 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
     leading-none
     text-lg
   `}
-          style={{
-            top: `${45 + idx * 40}px`,
-          }}
-        >
-          ×
-        </button>
-      ))}
+            style={{
+              top: `${45 + idx * 40}px`,
+            }}
+          >
+            ×
+          </button>
+        ))}
     </div>
   )
 }
