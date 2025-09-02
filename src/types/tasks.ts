@@ -48,11 +48,12 @@ export interface DaySelectModalProps {
 //POST 요청으로 받는
 export interface AssignmentBody {
   groupId: number
-  groupMemberId?: number
+  groupMemberId?: number[]
   templateId: number
+  randomEnabled: boolean
+  fixedAssigneeId: number
   date: string
   status?: string
-  dayOfWeek: string
   repeatType?: string
   updatedAt?: string
 }
@@ -68,6 +69,7 @@ export interface Assignment {
   repeatType?: string
   createdAt?: string
   updatedAt?: string
+  category: string
 }
 
 export interface RandomProps {
@@ -77,6 +79,8 @@ export interface RandomProps {
 
 export interface TaskTableProps {
   assignments: Assignment[]
+  groupMembers: GroupMember[]
+  isLeader: boolean
 }
 
 export interface TaskHistory {
@@ -88,7 +92,7 @@ export interface TaskHistory {
 export interface HistoryModalProps {
   open: boolean
   onClose: () => void
-  items: TaskHistory[]
+  assignmentId: number
 }
 
 export interface GroupMember {
