@@ -1,5 +1,5 @@
 import React from 'react'
-import { useCalendarStore } from '../../../app/store'
+import { useCalendarStore } from '../../../app/tasksStore'
 import { CalendarDateDetailsProps } from '../../../types/main.ts'
 
 const CalendarDateDetails: React.FC<CalendarDateDetailsProps> = ({ events }) => {
