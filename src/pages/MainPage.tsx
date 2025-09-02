@@ -9,6 +9,7 @@ import { isAuthenticated } from '../libs/utils/auth'
 import { getAssignments } from '../libs/api/tasks'
 import { Assignment } from '../types/tasks'
 import { useGroupStore } from '../app/store'
+import { getProfile } from '../libs/api/profile'
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
@@ -26,12 +27,27 @@ const MainPage = () => {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [groupId, setGroupId] = useState<number | null>(null)
   const [myMemberId, setMyMemberId] = useState<number | null>(null)
+  const [userName, setUserName] = useState<string>('')
 
   const [myAssignments, setMyAssignments] = useState<string[]>([])
 
   // 인증 상태 감지
   useEffect(() => {
     setUserAuthenticated(isAuthenticated())
+  }, [])
+
+  //사용자의 프로필
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const profile = await getProfile()
+        setUserName(profile.name || '') // name 필드에 따라 수정
+      } catch {
+        setUserName('')
+      }
+    }
+
+    fetchUser()
   }, [])
 
   // 그룹 정보 로딩
@@ -107,7 +123,7 @@ const MainPage = () => {
 
   return (
     <div className="space-y-6">
-      <p>Name님 반가워요!</p>
+      <p>{userName ? `${userName}님 반가워요!` : '반가워요!'}</p>
 
       {loadingGroup && <div>그룹 정보를 불러오는 중...</div>}
       {errorGroup && <div className="text-red-600">{errorGroup}</div>}
