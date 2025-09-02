@@ -56,3 +56,9 @@ export async function updateAlertTime(hour: number, minute: number): Promise<Pro
   const { data } = await api.put<Profile>(PROFILE_ENDPOINTS.UPDATE_ALERT_TIME, { hour, minute })
   return data
 }
+
+// 내 멤버 ID 조회
+export async function getMyMemberId(): Promise<number> {
+  const response = await api.get(PROFILE_ENDPOINTS.GET_MY_ID)
+  return response.data.memberId
+}
