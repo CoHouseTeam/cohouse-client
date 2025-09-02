@@ -51,7 +51,10 @@ export interface AssignmentBody {
   groupMemberId?: number[]
   templateId: number
   randomEnabled: boolean
-  fixedAssigneeId: number
+  fixedAssigneeId?: number
+  get_compatAssigneeId?: number
+  get_compatCandidateIds?: number[]
+  get_compatAssignType?: string
   date: string
   status?: string
   repeatType?: string

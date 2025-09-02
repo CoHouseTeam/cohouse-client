@@ -8,7 +8,7 @@ import GroupMemberList from '../features/tasks/components/GroupMemberList'
 import HistoryModal from '../features/tasks/components/HistoryModal'
 import ExchangeModal from '../features/tasks/components/ExchangeModal'
 import { Assignment, GroupMember } from '../types/tasks'
-import { fetchIsLeader, fetchMyGroups } from '../libs/api/groups'
+import { fetchGroupMembers, fetchIsLeader, fetchMyGroups } from '../libs/api/groups'
 import { isAuthenticated } from '../libs/utils/auth'
 import { groupMembersName } from '../libs/utils/groupMemberName'
 import {
@@ -40,6 +40,24 @@ const TasksPage: React.FC = () => {
     setUserAuthenticated(isAuthenticated())
   }, [])
 
+  // 베정 데이터 상태 설정
+  useEffect(() => {
+    if (groupId) {
+      getAssignments({ groupId })
+        .then((data) => {
+          const assigned = Array.isArray(data) && data.length > 0
+          setIsAssigned(assigned)
+          setAssignments(data)
+        })
+        .catch(() => {
+          setIsAssigned(false)
+          setAssignments([])
+        })
+    } else {
+      setIsAssigned(false)
+    }
+  }, [groupId])
+
   const loadGroupData = useCallback(async () => {
     if (!userAuthenticated) {
       setError('')
@@ -49,13 +67,13 @@ const TasksPage: React.FC = () => {
 
     setError('')
     try {
+      // 그룹 정보 id만 별도로 불러오기 위해 fetchMyGroups 호출
       const myGroupData = await fetchMyGroups()
       setGroupId(myGroupData.id)
 
-      const groupMembersData: GroupMember[] = Array.isArray(myGroupData.groupMembers)
-        ? myGroupData.groupMembers
-        : []
-      setGroupMembers(groupMembersData)
+      // 그룹 ID로 그룹 멤버 목록 fetchGroupMembers 호출
+      const members = await fetchGroupMembers(myGroupData.id)
+      setGroupMembers(Array.isArray(members) ? members : [])
 
       // 리더 여부
       if (myGroupData.id) {
@@ -68,7 +86,7 @@ const TasksPage: React.FC = () => {
       const templatesData = await getTaskTemplates(myGroupData.id)
       setTemplates(Array.isArray(templatesData) ? templatesData : [])
 
-      // 모든 템플릿의 반복요일 조회
+      // 반복요일 조회
       let allRepeatDays: RepeatDay[] = []
       for (const tpl of templatesData) {
         const tplRepeatDays = await getRepeatDays(tpl.templateId)
@@ -82,6 +100,7 @@ const TasksPage: React.FC = () => {
     } catch (e) {
       setError('그룹 데이터를 불러오는 중 오류가 발생했습니다.')
       setIsLeader(false)
+      setGroupMembers([])
     }
   }, [userAuthenticated])
 
@@ -134,7 +153,6 @@ const TasksPage: React.FC = () => {
               templateId: tpl.templateId,
               groupMemberId: [assignedMemberId],
               randomEnabled: true,
-              fixedAssigneeId: 0,
             })
           )
         }
