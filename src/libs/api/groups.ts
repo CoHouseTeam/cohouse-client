@@ -71,6 +71,6 @@ export async function createGroupInvitation(groupId: number) {
 
 // 해당 그룹 멤버 목록
 export async function fetchGroupMembers(groupId: number) {
-  const response = await api.get(`/groups/${groupId}/members`)
+  const response = await api.get(GROUP_ENDPOINTS.MEMBERS(groupId))
   return response.data
 }

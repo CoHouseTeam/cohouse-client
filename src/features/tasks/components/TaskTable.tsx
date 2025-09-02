@@ -13,9 +13,15 @@ import { fetchMyGroups } from '../../../libs/api/groups'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
 
-function getMemberAvatar(groupMemberId: number, groupMembers: GroupMember[]) {
-  const member = groupMembers.find((m) => m.memberId === groupMemberId)
-  return member?.profileImageUrl || ''
+//테스트 위해 임시 프로필 사진
+function getMemberAvatar(
+  groupMemberId: number | number[],
+  groupMembers: GroupMember[],
+  defaultImage: string = '/src/assets/icons/defaultImage.svg'
+) {
+  const memberId = Array.isArray(groupMemberId) ? groupMemberId[0] : groupMemberId
+  const member = groupMembers.find((m) => m.memberId === memberId)
+  return member?.profileImageUrl || defaultImage
 }
 
 const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
@@ -112,9 +118,26 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
   }
 
   const findAssignmentForCell = (templateId: number, dayIdx: number): Assignment | undefined => {
-    const korDay = daysKr[dayIdx]
-    const engDay = toEngDay(korDay)
-    return assignments.find((a) => a.templateId === templateId && a.dayOfWeek === engDay)
+    const korDay = daysKr[dayIdx] // '일', '월', ...
+    const engDay = toEngDay(korDay) // 'SUNDAY', 'MONDAY', ...
+
+    return assignments.find((a) => {
+      if (!a.date) return false
+
+      const dateObj = new Date(a.date)
+      const dayMap: Record<number, string> = {
+        0: 'SUNDAY',
+        1: 'MONDAY',
+        2: 'TUESDAY',
+        3: 'WEDNESDAY',
+        4: 'THURSDAY',
+        5: 'FRIDAY',
+        6: 'SATURDAY',
+      }
+      const assignmentDay = dayMap[dateObj.getDay()] || ''
+
+      return a.templateId === templateId && assignmentDay === engDay
+    })
   }
 
   const handleDeleteTemplate = async (templateId: number) => {
