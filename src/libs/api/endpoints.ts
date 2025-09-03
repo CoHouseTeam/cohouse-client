@@ -61,6 +61,8 @@ export const TASK_ENDPOINTS = {
   UPDATE_ASSIGNMENT: (assignmentId: number) => `/api/tasks/assignments/${assignmentId}`,
   ASSIGNMENT_HISTORIES: (assignmentId: number) =>
     `/api/tasks/assignments/${assignmentId}/histories`,
+  MEMBER_HISTORIES: `/api/tasks/assignments/histories`,
+  UNCOMPLETED_HISTORIES: `/api/tasks/assignments/uncompleted`,
 
   // 대신하기 요청
   OVERRIDE_REQUEST: (assignmentId: number) =>

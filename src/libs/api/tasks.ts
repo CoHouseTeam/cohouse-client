@@ -106,3 +106,15 @@ export async function getOverrideRequestHistories(
   const response = await api.get(TASK_ENDPOINTS.OVERRIDE_HISTORIES(requestId), { params })
   return response.data
 }
+
+// 미이행 내역 조회 (전체/일주일)
+export async function getUncompletedHistories(params: { groupId: number; memberId?: number }) {
+  const response = await api.get(TASK_ENDPOINTS.UNCOMPLETED_HISTORIES, { params })
+  return response.data
+}
+
+// 멤버별 히스토리
+export async function MemberAssignmentsHistories(params: { groupId: number; memberId?: number }) {
+  const response = await api.get(TASK_ENDPOINTS.MEMBER_HISTORIES, { params })
+  return response.data
+}

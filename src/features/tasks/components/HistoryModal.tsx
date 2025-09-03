@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { CaretDownFill, XCircleFill } from 'react-bootstrap-icons'
 import { HistoryModalProps, TaskHistory } from '../../../types/tasks'
-import { getAssignmentHistories } from '../../../libs/api/tasks'
+import { MemberAssignmentsHistories } from '../../../libs/api/tasks'
 
 const filterOptions = [
   { label: '전체보기', value: 'all' },
@@ -11,10 +11,11 @@ const filterOptions = [
 
 const ITEMS_PER_PAGE = 7 // 한 페이지당 아이템 수
 
-const HistoryModal: React.FC<HistoryModalProps & { assignmentId: number }> = ({
+const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: number }> = ({
   open,
   onClose,
-  assignmentId,
+  groupId,
+  memberId,
 }) => {
   const [filter, setFilter] = useState('all')
   const [openDropdown, setOpenDropdown] = useState(false)
@@ -26,23 +27,35 @@ const HistoryModal: React.FC<HistoryModalProps & { assignmentId: number }> = ({
 
   useEffect(() => {
     if (!open) return // 모달이 열릴 때만 요청
-
     setLoading(true)
     setError(null)
-    getAssignmentHistories(assignmentId)
-      .then((data) => setItems(data))
-      .catch(() => setError('업무 내역을 불러오지 못했습니다.'))
+    MemberAssignmentsHistories({ groupId, memberId })
+      .then((data) => setItems(Array.isArray(data) ? data : []))
+      .catch(() => setError('내 업무 내역을 불러오지 못했습니다.'))
       .finally(() => setLoading(false))
-  }, [open, assignmentId])
+  }, [open, groupId, memberId])
 
   useEffect(() => {
     setCurrentPage(1)
   }, [filter, items])
 
+  function getStatusLabel(status: string) {
+    if (status === 'COMPLETED') return '완료'
+    if (status === 'PENDING') return '미완료'
+    return status
+  }
+
   if (!open) return null
 
   // 필터에 따라 아이템 필터링
-  const filteredItems = filter === 'all' ? items : items.filter((i) => i.status === filter)
+  const filteredItems =
+    filter === 'all'
+      ? items
+      : items.filter(
+          (i) =>
+            (filter === '완료' && i.status === 'COMPLETED') ||
+            (filter === '미완료' && i.status === 'PENDING')
+        )
 
   // 페이지 계산 및 현재 페이지에 해당하는 아이템 추출
   const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE)
@@ -137,13 +150,13 @@ const HistoryModal: React.FC<HistoryModalProps & { assignmentId: number }> = ({
                     <div className="flex-1 text-md">{item.task}</div>
                     <span
                       className={`
-                    badge h-9 w-20
-                    py-3 ml-3 rounded-lg
-                    font-semibold border-none
-                    ${item.status === '완료' ? 'bg-[#757575] text-white' : 'bg-gray-100 text-gray-500'}
-                  `}
+    badge h-9 w-20
+    py-3 ml-3 rounded-lg
+    font-semibold border-none
+    ${item.status === 'COMPLETED' ? 'bg-[#757575] text-white' : 'bg-gray-100 text-gray-500'}
+  `}
                     >
-                      {item.status}
+                      {getStatusLabel(item.status)}
                     </span>
                   </div>
                 ))}

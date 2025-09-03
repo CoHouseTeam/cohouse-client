@@ -8,9 +8,11 @@ export interface CalendarDotsProps {
   dayLength?: number
 }
 
-export interface Todo {
-  text: string
+export interface TodoItem {
   checked: boolean
+  assignmentId?: number
+  category: string
+  status?: 'COMPLETED' | 'PENDING' | string
 }
 
 export interface Member {
@@ -24,13 +26,29 @@ export interface Group {
   members: Member[]
 }
 
+export interface UncompletedGroup {
+  date: string // 예: '2025.08.03(일)'
+  members: Array<{
+    task: string
+    name: string
+    profileImageUrl: string
+  }>
+}
+
 export interface CalendarBoxProps {
-  onDateSelect?: (date: Date) => void
-  value?: Date
+  onDateSelect: (date: Date) => void
+  value: Date
+  scheduledDates: string[]
 }
 
 export interface ModalProps {
   onClose: () => void
+}
+
+export interface UncompletedTasksModalProps {
+  onClose: () => void
+  groupId: number | null
+  memberId?: number | null
 }
 
 // 📰 Post Types

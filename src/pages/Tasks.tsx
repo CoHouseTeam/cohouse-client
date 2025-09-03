@@ -27,7 +27,6 @@ const TasksPage: React.FC = () => {
   const [showHistory, setShowHistory] = useState(false)
   const [exchangeSelected, setExchangeSelected] = useState<number[]>([])
   const [modalOpen, setModalOpen] = useState(false)
-  const [selected] = useState<number | null>(null)
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [templates, setTemplates] = useState<Template[]>([])
   const [repeatDays, setRepeatDays] = useState<RepeatDay[]>([])
@@ -319,7 +318,8 @@ const TasksPage: React.FC = () => {
       <HistoryModal
         open={showHistory}
         onClose={() => setShowHistory(false)}
-        assignmentId={selected ?? 0}
+        groupId={groupId ?? 0}
+        memberId={myMemberId ?? 0}
       />
 
       {isLeader && isAssigned && (
