@@ -12,6 +12,24 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
 }) => {
   if (!open) return null
 
+  const allSelected = Array.isArray(members) && selected.length === members.length
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      onSelect([])
+    } else {
+      onSelect(members.map((_, idx) => idx))
+    }
+  }
+
+  const toggleSelect = (idx: number) => {
+    if (selected.includes(idx)) {
+      onSelect(selected.filter((i) => i !== idx))
+    } else {
+      onSelect([...selected, idx])
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-xl p-6 w-80 relative">
@@ -24,16 +42,18 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
           <XCircleFill className="text-xl text-gray-400" />
         </button>
         <div className="space-y-2 mb-5 mt-2">
+          {/* 전체선택 체크박스 */}
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
-              type="radio"
-              name="group"
-              checked={selected === null}
-              onChange={() => onSelect(null)}
-              className="radio radio-sm"
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleSelectAll}
+              className="checkbox checkbox-sm"
             />
             <span className="text-sm">전체선택</span>
           </label>
+
+          {/* 멤버별 체크박스 */}
           {Array.isArray(members) &&
             members.map((member, idx) => (
               <label
@@ -41,11 +61,10 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
                 className="flex items-center space-x-3 p-3 bg-base-100 rounded-lg cursor-pointer border mt-2"
               >
                 <input
-                  type="radio"
-                  name="group"
-                  checked={selected === idx}
-                  onChange={() => onSelect(idx)}
-                  className="radio radio-sm"
+                  type="checkbox"
+                  checked={selected.includes(idx)}
+                  onChange={() => toggleSelect(idx)}
+                  className="checkbox checkbox-sm"
                 />
                 <img
                   src={member.profileImageUrl}
@@ -58,7 +77,8 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
         </div>
         <button
           className="btn bg-[#242424] w-[60%] text-white rounded-lg mt-2 text-[16px] mx-auto block"
-          onClick={onRequest}
+          onClick={() => onRequest(selected)}
+          disabled={selected.length === 0}
         >
           요청하기
         </button>

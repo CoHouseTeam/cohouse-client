@@ -7,7 +7,7 @@ import CheckRepeat from '../features/tasks/components/CheckRepeat'
 import GroupMemberList from '../features/tasks/components/GroupMemberList'
 import HistoryModal from '../features/tasks/components/HistoryModal'
 import ExchangeModal from '../features/tasks/components/ExchangeModal'
-import { Assignment, GroupMember } from '../types/tasks'
+import { Assignment, GroupMember, OverrideRequestBody } from '../types/tasks'
 import { fetchGroupMembers, fetchIsLeader, fetchMyGroups } from '../libs/api/groups'
 import { isAuthenticated } from '../libs/utils/auth'
 import { groupMembersName } from '../libs/utils/groupMemberName'
@@ -16,15 +16,18 @@ import {
   createAssignment,
   getTaskTemplates,
   getRepeatDays,
+  createOverrideRequest,
 } from '../libs/api/tasks'
 import { getDateOfThisWeek } from '../libs/utils/dayMapping'
 import { Template, RepeatDay } from '../types/tasks'
+import { getMyMemberId } from '../libs/api/profile'
 
 const TasksPage: React.FC = () => {
   const [repeat, setRepeat] = useState(true)
   const [showHistory, setShowHistory] = useState(false)
+  const [exchangeSelected, setExchangeSelected] = useState<number[]>([])
   const [modalOpen, setModalOpen] = useState(false)
-  const [selected, setSelected] = useState<number | null>(null)
+  const [selected] = useState<number | null>(null)
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [templates, setTemplates] = useState<Template[]>([])
   const [repeatDays, setRepeatDays] = useState<RepeatDay[]>([])
@@ -90,9 +93,13 @@ const TasksPage: React.FC = () => {
       let allRepeatDays: RepeatDay[] = []
       for (const tpl of templatesData) {
         const tplRepeatDays = await getRepeatDays(tpl.templateId)
-        allRepeatDays = [...allRepeatDays, ...(Array.isArray(tplRepeatDays) ? tplRepeatDays : [])]
+        if (Array.isArray(tplRepeatDays) && tplRepeatDays.length > 0) {
+          allRepeatDays = [...allRepeatDays, ...tplRepeatDays]
+        }
       }
       setRepeatDays(allRepeatDays)
+
+      console.log('전체 반복요일:', allRepeatDays)
 
       // 업무 조회
       const assignmentData = await getAssignments({ groupId: myGroupData.id })
@@ -108,6 +115,34 @@ const TasksPage: React.FC = () => {
     loadGroupData()
   }, [loadGroupData])
 
+  // 사용자 멤버 ID 상태 추가
+  const [myMemberId, setMyMemberId] = useState<number | null>(null)
+
+  // 사용자 멤버 ID 조회
+  useEffect(() => {
+    async function fetchMemberId() {
+      try {
+        const id = await getMyMemberId()
+        setMyMemberId(id)
+      } catch {
+        setMyMemberId(null)
+      }
+    }
+    fetchMemberId()
+  }, [])
+
+  // 중복 체크
+  function isAlreadyAssigned(
+    assignments: Assignment[],
+    memberId: number,
+    templateId: number,
+    date: string
+  ): boolean {
+    return assignments.some(
+      (a) => a.groupMemberId === memberId && a.templateId === templateId && a.date === date
+    )
+  }
+
   // 랜덤 배정
   const handleRandomAssign = useCallback(async () => {
     if (!isAuthenticated()) {
@@ -119,8 +154,14 @@ const TasksPage: React.FC = () => {
       alert('그룹 정보가 없습니다.')
       return
     }
-    if (templates.length === 0 || repeatDays.length === 0) {
-      alert('템플릿 또는 반복 요일 정보가 없습니다.')
+
+    if (templates.length === 0) {
+      alert('템플릿 정보가 없습니다.')
+      return
+    }
+
+    if (repeatDays.length === 0) {
+      alert('반복 요일 정보가 없습니다. 템플릿의 반복 설정을 확인해 주세요.')
       return
     }
 
@@ -136,7 +177,6 @@ const TasksPage: React.FC = () => {
 
       const assignmentPromises = []
 
-      // 템플릿별 멤버 배정 (중복 없이)
       for (let idx = 0; idx < templates.length; idx++) {
         const tpl = templates[idx]
         const tplRepeatDays = repeatDays.filter((rd) => rd.templateId === tpl.templateId)
@@ -146,15 +186,18 @@ const TasksPage: React.FC = () => {
         for (const day of tplRepeatDays) {
           const assignDate = getDateOfThisWeek(day.dayOfWeek)
 
-          assignmentPromises.push(
-            createAssignment({
-              groupId,
-              date: assignDate,
-              templateId: tpl.templateId,
-              groupMemberId: [assignedMemberId],
-              randomEnabled: true,
-            })
-          )
+          // 중복 배정 방지 체크
+          if (!isAlreadyAssigned(assignments, assignedMemberId, tpl.templateId, assignDate)) {
+            assignmentPromises.push(
+              createAssignment({
+                groupId,
+                date: assignDate,
+                templateId: tpl.templateId,
+                groupMemberId: [assignedMemberId],
+                randomEnabled: true,
+              })
+            )
+          }
         }
       }
 
@@ -168,7 +211,71 @@ const TasksPage: React.FC = () => {
       console.error('랜덤 배정 실패', error)
       alert('랜덤 배정에 실패했습니다.')
     }
-  }, [groupId, groupMembers, templates, repeatDays])
+  }, [groupId, groupMembers, templates, repeatDays, assignments])
+
+  // 교환 요청
+  const handleExchangeRequest = useCallback(
+    async (selectedIndices: number[]) => {
+      try {
+        if (selectedIndices.length === 0) {
+          alert('교환할 멤버를 선택해 주세요.')
+          return
+        }
+
+        // 대상 멤버 ID들 구하기
+        const targetIds = selectedIndices.map((idx) => groupMembers[idx].memberId)
+        const targetId = targetIds[0] // 단일 대상 우선
+
+        // 교환 상대의 업무 ID 매핑
+        const swapAssignment = assignments.find((a) => {
+          if (!a.groupMemberId) return false
+          if (Array.isArray(a.groupMemberId)) {
+            return a.groupMemberId.includes(targetId)
+          } else {
+            return a.groupMemberId === targetId
+          }
+        })
+
+        const swapAssignmentId = swapAssignment?.assignmentId ?? 0
+
+        const currentUserAssignment = assignments.find((a) => {
+          if (!a.groupMemberId) return false
+          if (Array.isArray(a.groupMemberId)) {
+            return a.groupMemberId.includes(myMemberId)
+          } else {
+            return a.groupMemberId === myMemberId
+          }
+        })
+        const assignmentId = currentUserAssignment?.assignmentId ?? 0
+
+        if (myMemberId === null) {
+          alert('현재 로그인한 사용자 ID가 없습니다.')
+          return
+        }
+
+        const requestData: OverrideRequestBody = {
+          assignmentId,
+          targetId,
+          targetIds,
+          requesterId: myMemberId,
+          swapAssignmentId,
+        }
+
+        await createOverrideRequest(requestData)
+        console.log('Request 데이터:', requestData)
+        await createOverrideRequest(requestData)
+        console.log('API 호출 완료')
+
+        alert('업무 교환 요청이 성공하였습니다.')
+        setModalOpen(false)
+        setExchangeSelected([])
+      } catch (error) {
+        console.error('교환 요청 실패', error)
+        alert('교환 요청에 실패했습니다.')
+      }
+    },
+    [assignments, groupMembers, myMemberId]
+  )
 
   if (isLeader === null) return <>Loading...</>
 
@@ -212,9 +319,9 @@ const TasksPage: React.FC = () => {
         <ExchangeModal
           open={modalOpen}
           members={members}
-          selected={selected}
-          onSelect={setSelected}
-          onRequest={() => setModalOpen(false)}
+          selected={exchangeSelected}
+          onSelect={setExchangeSelected}
+          onRequest={handleExchangeRequest}
           onClose={() => setModalOpen(false)}
         />
       )}
