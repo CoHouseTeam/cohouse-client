@@ -1,6 +1,6 @@
 import React from 'react'
 import Calendar from 'react-calendar'
-import { useCalendarStore } from '../../../app/store'
+import { useCalendarStore } from '../../../app/tasksStore'
 import CalendarDateDots from './CalendarDateDots'
 import '../../../styles/Calendar.css'
 import { Value } from 'react-calendar/dist/shared/types.js'

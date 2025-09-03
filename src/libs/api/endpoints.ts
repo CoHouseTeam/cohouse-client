@@ -16,7 +16,7 @@ export const GROUP_ENDPOINTS = {
   CREATE: '/api/groups',
   JOIN: '/api/groups/join',
   MY_GROUPS: '/api/groups/me',
-  MY_ROLE: '/api/groups/{groupId}/me/role',
+  MY_ROLE: (groupId: number) => `/api/groups/${groupId}/me/role`,
 
   // 그룹별 상세
   DETAIL: (groupId: number) => `/api/groups/${groupId}`,
@@ -100,6 +100,7 @@ export const PROFILE_ENDPOINTS = {
   UPLOAD_IMAGE: '/api/members/profile/profile-image', // PUT: 프로필 이미지 업로드
   DELETE_IMAGE: '/api/members/profile/profile-image', // DELETE: 프로필 이미지 삭제
   UPDATE_ALERT_TIME: '/api/members/profile/alert-time', // PUT: 알림 시간 수정
+  GET_MY_ID: '/api/members/me/id', //GET: 내 Member ID 조회
 } as const
 
 // Tasks endpoints
