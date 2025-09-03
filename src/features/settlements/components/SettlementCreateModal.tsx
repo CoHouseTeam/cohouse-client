@@ -69,7 +69,7 @@ export default function SettlementCreateModal(props: Props) {
   const [receiptError, setReceiptError] = useState<string | null>(null)
 
   // 정산 생성(등록) API
-  const { mutateAsync: createSettlement, isPending: creating } = useCreateSettlement(groupId)
+  const { mutateAsync: createSettlement, isPending: creating } = useCreateSettlement()
 
   // 영수증  API
   const { mutateAsync: uploadReceipt, isPending: uploadingReceipt } = useUploadSettlementReceipt()
@@ -176,14 +176,14 @@ export default function SettlementCreateModal(props: Props) {
     setParticipants(fromServerList(data.participants))
   }, [data])
 
-  // 균등분배 재계산
+  // 균등분배 계산 (1인 부담 금액)
   useEffect(() => {
     if (readOnly) return
     if (!evenSplitOn) return
     if (!participants.length) return
     const total = typeof amount === 'number' ? amount : Number(amount || 0)
     if (total <= 0) return
-    setParticipants((prev) => applyEvenSplit(prev, total)) // [수정] 재분배 트리거 고정
+    setParticipants((prev) => applyEvenSplit(prev, total))
   }, [evenSplitOn, amount, participants.length, readOnly])
 
   const receiptImageSrc = receiptPreview ?? data?.imageUrl ?? null
@@ -191,6 +191,7 @@ export default function SettlementCreateModal(props: Props) {
   // 총액 숫자화
   const total = typeof amount === 'number' ? amount : Number(amount || 0)
 
+  // 플랫폼 부담
   const platformRemainder = useMemo(
     () => (evenSplitOn ? computePlatformRemainder(participants, total) : 0),
     [evenSplitOn, participants, total]
@@ -285,7 +286,12 @@ export default function SettlementCreateModal(props: Props) {
 
       // 모달 닫기
       props.onClose()
-    } catch (e) {
+    } catch (e: any) {
+      console.error(
+        'Create settlement error:',
+        e?.response?.status,
+        e?.response?.data || e?.message
+      )
       showAlert('정산 등록에 실패했어요. 다시 시도해 주세요.')
     }
   }
@@ -407,7 +413,7 @@ export default function SettlementCreateModal(props: Props) {
                 <div className="flex w-full items-center gap-2 mb-2">
                   {readOnly ? (
                     // 읽기 전용
-                    <div className="relative flex border border-dashed rounded-lg h-10 w-16 justify-center items-center">
+                    <div className="relative flex border border-dashed rounded-lg overflow-hidden h-10 w-16 justify-center items-center">
                       {receiptImageSrc ? (
                         <button
                           type="button"
@@ -419,7 +425,7 @@ export default function SettlementCreateModal(props: Props) {
                           <img
                             src={receiptImageSrc}
                             alt=""
-                            className="w-full h-full object-cover rounded-lg cursor-zoom-in hover:opacity-90 transition"
+                            className="w-full h-full object-cover"
                           />
                         </button>
                       ) : (
@@ -501,7 +507,7 @@ export default function SettlementCreateModal(props: Props) {
                         checked={evenSplitOn}
                         onChange={(v) => {
                           if (readOnly) return
-                          setEvenSplitOn(v) // [그대
+                          setEvenSplitOn(v)
                         }}
                         disabled={readOnly}
                       />
@@ -516,7 +522,7 @@ export default function SettlementCreateModal(props: Props) {
                         >
                           <div className="flex items-center gap-3 ml-2">
                             <img
-                              src={p.avatar ?? '/placeholder-avatar.png'}
+                              src={p.profileImageUrl ?? '/placeholder-avatar.png'}
                               alt="avatar"
                               className="rounded-full w-6 h-6"
                             />

@@ -10,6 +10,7 @@ import { fetchMySettlementHistory } from '../libs/api/settlements'
 import type { SettlementListItem as SettlementListItemType } from '../types/settlement'
 import SettlementItemWithDetail from '../features/settlements/components/SettlementItemWithDetail'
 import Pagination from '../features/common/Pagination'
+import { useGroupStore } from '../app/store'
 
 // 카테고리 라벨
 const CATEGORY_LIST = ['전체', '식비', '생활용품', '문화생활', '기타'] as const
@@ -44,6 +45,11 @@ export default function SettlementHistory() {
   const [allLoaded, setAllLoaded] = useState(false) // 한 번 전체 수집 완료했는가
   const [allLoading, setAllLoading] = useState(false) // 전체 수집 로딩중
   const [allError, setAllError] = useState<string | null>(null) // 전체 수집 에러
+
+  const viewerId = useGroupStore((s) => s.myMemberId ?? 0)
+  const groupId = useGroupStore((s) => s.groupId)
+
+  if (groupId == null) return <LoadingSpinner />
 
   // 검색어/카테고리 변경 시 서버/클라 페이지 모두 0으로 초기화
   useEffect(() => {
@@ -272,7 +278,12 @@ export default function SettlementHistory() {
         <>
           {/* 리스트 */}
           {listToRender.map((s) => (
-            <SettlementItemWithDetail key={s.id} initial={s} viewerId={3} />
+            <SettlementItemWithDetail
+              key={s.id}
+              initial={s}
+              viewerId={viewerId}
+              groupId={groupId}
+            />
           ))}
 
           {/* 페이지네이션 바 */}

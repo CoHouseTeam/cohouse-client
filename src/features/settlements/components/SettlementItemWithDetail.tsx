@@ -30,15 +30,16 @@ function toSettlementStub(dto: SettlementListItemType): Settlement {
 type Props = {
   initial: SettlementListItemType
   viewerId: number
+  groupId: number
 }
 
 /** id로 상세를 조회해 기존 카드에 그대로 전달하는 래퍼 컴포넌트 */
-export default function SettlementItemWithDetail({ initial, viewerId }: Props) {
+export default function SettlementItemWithDetail({ initial, viewerId, groupId }: Props) {
   const { data, error } = useSettlementDetail(initial.id)
 
   if (error) return <ErrorCard />
 
   // 상세 오기 전엔 DTO 스텁으로 먼저 렌더, 도착하면 자동 교체
   const item: Settlement = data ?? toSettlementStub(initial)
-  return <SettlementListItem item={item} viewerId={viewerId} />
+  return <SettlementListItem item={item} viewerId={viewerId} groupId={groupId} />
 }

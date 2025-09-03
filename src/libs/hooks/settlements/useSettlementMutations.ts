@@ -8,7 +8,7 @@ import {
   ReceiptOcrResp,
   ocrSettlementReceipt,
 } from '../../api/settlements'
-import { CreateSettlementBody, CreateSettlementResp } from '../../../types/settlement'
+import { CreateSettlementBody, Settlement } from '../../../types/settlement'
 
 export const settlementDetailKey = (id: number) => ['settlementDetail', id] as const
 export const mySettlementsKey = ['settlements', 'my'] as const
@@ -81,20 +81,26 @@ export function useDeleteSettlementReceipt() {
 }
 
 // 정산 생성(등록)
-export function useCreateSettlement(groupId: number) {
+const MY_KEY = ['settlements', 'my'] as const
+const DETAIL_KEY = (id: number) => ['settlementDetail', id] as const
+
+export function useCreateSettlement() {
   const qc = useQueryClient()
 
-  return useMutation<CreateSettlementResp, unknown, CreateSettlementBody>({
-    mutationFn: (body) => createSettlement(body),
-
+  return useMutation<Settlement, unknown, CreateSettlementBody>({
+    mutationFn: createSettlement,
     onSuccess: (created) => {
-      // 방금 생성된 상세(created: CreateSettlementResp)를 캐시에 미리 심기
-      qc.setQueryData(settlementDetailKey(created.id), created)
-      // 목록들 갱신(필요 시 쿼리키 프로젝트에 맞게 조정)
-      qc.invalidateQueries({ queryKey: mySettlementsKey })
-      if (groupId !== undefined) {
-        qc.invalidateQueries({ queryKey: groupSettlementsKey(groupId) })
-      }
+      // 1) 상세 캐시에 즉시 반영 (키는 훅과 동일하게)
+      qc.setQueryData(DETAIL_KEY(created.id), created)
+
+      // 2) "진행 중(내가 참여한)" 리스트에 바로 끼워넣기
+      qc.setQueryData<Settlement[] | undefined>(MY_KEY, (prev) => {
+        const list = Array.isArray(prev) ? prev : []
+        return list.some((s) => s.id === created.id) ? list : [created, ...list]
+      })
+
+      // 3) 현재 화면은 유지하고, 비활성 쿼리만 백그라운드에서 최신화
+      qc.invalidateQueries({ queryKey: MY_KEY, refetchType: 'inactive' })
     },
   })
 }
