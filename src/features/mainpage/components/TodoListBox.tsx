@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import UncompletedTasksModal from './UncompletedTasksModal'
 import { TodoItem } from '../../../types/main.ts'
 import { updateAssignment } from '../../../libs/api/tasks.ts'
@@ -7,7 +7,7 @@ interface TodoListBoxProps {
   todos: TodoItem[]
 }
 
-const TodoListBox = ({ todos }: TodoListBoxProps) => {
+const TodoListBox = React.memo(({ todos }: TodoListBoxProps) => {
   const [localTodos, setLocalTodos] = useState<TodoItem[]>([])
 
   useEffect(() => {
@@ -54,33 +54,37 @@ const TodoListBox = ({ todos }: TodoListBoxProps) => {
             미이행 내역
           </button>
         </div>
-        <ul>
-          {localTodos.map((todo, idx) => (
-            <li
-              key={`${todo.assignmentId ?? 'todo'}-${idx}`}
-              className={`flex items-center mb-2 last:mb-0 text-[16px] ${
-                todo.checked ? 'text-base-300 line-through' : 'text-base-content'
-              }`}
-              style={todo.checked ? { color: '#5C5C5C' } : undefined}
-            >
-              <input
-                type="checkbox"
-                className={`checkbox checkbox-sm mr-2 ${
-                  todo.checked ? 'bg-[#5C5C5C] border-[#5C5C5C]' : 'bg-white border-[#5C5C5C]'
+        {localTodos.length === 0 ? (
+          <p className="text-left text-base-content text-[16px]">오늘 일정이 없어요</p>
+        ) : (
+          <ul>
+            {localTodos.map((todo, idx) => (
+              <li
+                key={`${todo.assignmentId ?? 'todo'}-${idx}`}
+                className={`flex items-center mb-2 last:mb-0 text-[16px] ${
+                  todo.checked ? 'text-base-300 line-through' : 'text-base-content'
                 }`}
-                checked={todo.checked}
-                onChange={() => handleToggle(idx)} // 상태 변경 시 API 호출 포함
-                style={{ accentColor: todo.checked ? '#5C5C5C' : '#fff' }}
-              />
-              {todo.category || '할 일'}
-            </li>
-          ))}
-        </ul>
+                style={todo.checked ? { color: '#5C5C5C' } : undefined}
+              >
+                <input
+                  type="checkbox"
+                  className={`checkbox checkbox-sm mr-2 ${
+                    todo.checked ? 'bg-[#5C5C5C] border-[#5C5C5C]' : 'bg-white border-[#5C5C5C]'
+                  }`}
+                  checked={todo.checked}
+                  onChange={() => handleToggle(idx)} // 상태 변경 시 API 호출 포함
+                  style={{ accentColor: todo.checked ? '#5C5C5C' : '#fff' }}
+                />
+                {todo.category || '할 일'}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {isModalOpen && <UncompletedTasksModal onClose={() => setIsModalOpen(false)} />}
     </>
   )
-}
+})
 
 export default TodoListBox

@@ -14,6 +14,7 @@ import { AxiosError } from 'axios'
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
+
   const dateKey = useMemo(() => {
     const d = selectedDate
     const year = d.getFullYear()
@@ -21,6 +22,11 @@ const MainPage = () => {
     const day = String(d.getDate()).padStart(2, '0') // 일 2자리
     return `${year}-${month}-${day}`
   }, [selectedDate])
+
+  const todayKey = useMemo(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  }, [])
 
   // 그룹 및 사용자 상태
   const hasGroups = useGroupStore((state) => state.hasGroups)
@@ -127,6 +133,29 @@ const MainPage = () => {
     loadGroupData()
   }, [loadGroupData])
 
+  // 오늘 할 일
+  const todayAssignments = useMemo(
+    () =>
+      assignments
+        .filter((a) => {
+          const assignmentDate = a.date ? a.date.slice(0, 10) : ''
+          let isAssignedToUser = false
+          if (Array.isArray(a.groupMemberId)) {
+            isAssignedToUser = a.groupMemberId.includes(myMemberId)
+          } else {
+            isAssignedToUser = a.groupMemberId === myMemberId
+          }
+          return assignmentDate === todayKey && isAssignedToUser
+        })
+        .map((a) => ({
+          assignmentId: a.assignmentId,
+          category: a.category,
+          checked: false,
+          status: a.status,
+        })),
+    [assignments, myMemberId, todayKey]
+  )
+
   // 할당된 업무 조회 및 필터링
   useEffect(() => {
     async function loadAssignments() {
@@ -191,25 +220,7 @@ const MainPage = () => {
       {errorAssignments && <div className="text-red-600">{errorAssignments}</div>}
 
       {!loadingGroup && !errorGroup && !loadingAssignments && !errorAssignments && hasGroups && (
-        <TodoListBox
-          todos={assignments
-            .filter((a) => {
-              const assignmentDate = a.date ? a.date.slice(0, 10) : ''
-              let isAssignedToUser = false
-              if (Array.isArray(a.groupMemberId)) {
-                isAssignedToUser = a.groupMemberId.includes(myMemberId)
-              } else {
-                isAssignedToUser = a.groupMemberId === myMemberId
-              }
-              return assignmentDate === dateKey && isAssignedToUser
-            })
-            .map((a) => ({
-              assignmentId: a.assignmentId,
-              category: a.category,
-              checked: false,
-              status: a.status,
-            }))}
-        />
+        <TodoListBox todos={todayAssignments} />
       )}
 
       <CalendarBox onDateSelect={setSelectedDate} value={selectedDate} />
