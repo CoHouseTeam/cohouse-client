@@ -112,3 +112,9 @@ export async function getUncompletedHistories(params: { groupId: number; memberI
   const response = await api.get(TASK_ENDPOINTS.UNCOMPLETED_HISTORIES, { params })
   return response.data
 }
+
+// 멤버별 히스토리
+export async function MemberAssignmentsHistories(params: { groupId: number; memberId?: number }) {
+  const response = await api.get(TASK_ENDPOINTS.MEMBER_HISTORIES, { params })
+  return response.data
+}
