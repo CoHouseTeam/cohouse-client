@@ -55,7 +55,7 @@ export async function fetchMySettlementHistory(
 
 // 송금하기
 export const postPaymentDone = (id: number) =>
-  api.post<Settlement>(SETTLEMENT_ENDPOINTS.PAYMENT_DONE(id)).then((r) => r.data)
+  api.post<void>(SETTLEMENT_ENDPOINTS.PAYMENT_DONE(id)).then((r) => r.data)
 
 // 정산 취소
 export const cancelSettlement = (id: number) => api.delete(SETTLEMENT_ENDPOINTS.DELETE(id))
