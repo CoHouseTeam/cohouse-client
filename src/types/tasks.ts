@@ -21,8 +21,8 @@ export interface Template {
 export interface ExchangeModalProps {
   open: boolean
   members: Member[]
-  selected: number | null
-  onSelect: (idx: number | null) => void
+  selected: number[]
+  onSelect: (selected: number[]) => void
   onRequest: () => void
   onClose: () => void
 }
@@ -112,4 +112,13 @@ export interface GroupMember {
 
 export interface MyRoleResponse {
   isLeader: boolean
+}
+
+// 교환 요청
+export interface OverrideRequestBody {
+  assignmentId: number
+  targetId: number
+  targetIds: number[]
+  requesterId: number
+  swapAssignmentId: number
 }

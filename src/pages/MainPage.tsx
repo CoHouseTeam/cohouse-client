@@ -10,6 +10,7 @@ import { getAssignments } from '../libs/api/tasks'
 import { Assignment } from '../types/tasks'
 import { useGroupStore } from '../app/store'
 import { getMyMemberId, getProfile } from '../libs/api/profile'
+import { AxiosError } from 'axios'
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
@@ -83,10 +84,19 @@ const MainPage = () => {
           setMyMemberId(null)
         }
       } catch (e) {
-        setErrorGroup('그룹 정보를 불러오는 중 오류가 발생했습니다.')
-        setHasGroups(false)
-        setGroupId(null)
-        setMyMemberId(null)
+        const error = e as AxiosError
+        if (error.response?.status === 404) {
+          // 그룹 없음으로 간주
+          setHasGroups(false)
+          setGroupId(null)
+          setMyMemberId(null)
+          setErrorGroup('') // 에러 메시지 없이 처리
+        } else {
+          setErrorGroup('그룹 정보를 불러오는 중 오류가 발생했습니다.')
+          setHasGroups(false)
+          setGroupId(null)
+          setMyMemberId(null)
+        }
       } finally {
         setLoadingGroup(false)
       }
