@@ -5,9 +5,11 @@ import { updateAssignment } from '../../../libs/api/tasks.ts'
 
 interface TodoListBoxProps {
   todos: TodoItem[]
+  groupId: number | null
+  memberId: number | null
 }
 
-const TodoListBox = React.memo(({ todos }: TodoListBoxProps) => {
+const TodoListBox = React.memo(({ todos, groupId, memberId }: TodoListBoxProps) => {
   const [localTodos, setLocalTodos] = useState<TodoItem[]>([])
 
   useEffect(() => {
@@ -82,7 +84,13 @@ const TodoListBox = React.memo(({ todos }: TodoListBoxProps) => {
         )}
       </div>
 
-      {isModalOpen && <UncompletedTasksModal onClose={() => setIsModalOpen(false)} />}
+      {isModalOpen && (
+        <UncompletedTasksModal
+          onClose={() => setIsModalOpen(false)}
+          groupId={groupId}
+          memberId={memberId}
+        />
+      )}
     </>
   )
 })

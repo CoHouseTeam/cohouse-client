@@ -26,6 +26,15 @@ export interface Group {
   members: Member[]
 }
 
+export interface UncompletedGroup {
+  date: string // 예: '2025.08.03(일)'
+  members: Array<{
+    task: string
+    name: string
+    profileImageUrl: string
+  }>
+}
+
 export interface CalendarBoxProps {
   onDateSelect: (date: Date) => void
   value: Date
@@ -34,6 +43,12 @@ export interface CalendarBoxProps {
 
 export interface ModalProps {
   onClose: () => void
+}
+
+export interface UncompletedTasksModalProps {
+  onClose: () => void
+  groupId: number | null
+  memberId?: number | null
 }
 
 // 📰 Post Types

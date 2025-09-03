@@ -233,7 +233,7 @@ const MainPage = () => {
       {errorAssignments && <div className="text-red-600">{errorAssignments}</div>}
 
       {!loadingGroup && !errorGroup && !loadingAssignments && !errorAssignments && hasGroups && (
-        <TodoListBox todos={todayAssignments} />
+        <TodoListBox todos={todayAssignments} groupId={groupId} memberId={myMemberId} />
       )}
 
       <CalendarBox
