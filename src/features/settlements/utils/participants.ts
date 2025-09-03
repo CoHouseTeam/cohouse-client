@@ -1,6 +1,5 @@
 // libs/utils/participants.ts
-import { users } from '../../../mocks/db/users'
-import { SettlementParticipant, TransferStatus } from '../../../types/settlement'
+import { TransferStatus } from '../../../types/settlement'
 
 // UI에서 쓰는 참가자 타입(이미 컴포넌트에 있다면 import해서 쓰세요)
 export type UIParticipant = {
@@ -9,40 +8,26 @@ export type UIParticipant = {
   shareAmount?: number
   status?: TransferStatus
   settlementParticipantId?: number
-  avatar?: string
+  profileImageUrl?: string | null
 }
 
-// 모달이 올려주는 멤버
-export type BasicMember = {
-  memberId: number
-  memberName: string
-  avatar?: string
-}
-
-export function getAvatarByMemberId(memberId: number): string {
-  const user = users.find((u) => u.id === memberId)
-  return user?.profileImageUrl ?? '/placeholder-avatar.png'
-}
-
-// 서버 응답(상세조회 participants) -> UI 모델
-export function fromServerList(list: SettlementParticipant[] = []): UIParticipant[] {
+export function fromServerList(
+  list: Array<{
+    memberId: number
+    memberName?: string
+    shareAmount?: number | null
+    status?: TransferStatus | null
+    settlementParticipantId?: number | null
+    profileImageUrl?: string | null
+  }> = []
+): UIParticipant[] {
   return list.map((p) => ({
     memberId: p.memberId,
-    memberName: p.memberName,
-    shareAmount: p.shareAmount,
-    status: p.status,
-    settlementParticipantId: p.memberId,
-    avatar: getAvatarByMemberId(p.memberId),
-  }))
-}
-
-// 모달 선택 결과 -> UI 모델
-export function fromMembers(list: BasicMember[] = []): UIParticipant[] {
-  return list.map((m) => ({
-    memberId: m.memberId,
-    memberName: m.memberName,
-    avatar: m.avatar ?? getAvatarByMemberId(m.memberId),
-    shareAmount: undefined, // 초기값 비움
+    memberName: p.memberName ?? `멤버 ${p.memberId}`,
+    shareAmount: p.shareAmount ?? undefined,
+    status: p.status ?? undefined,
+    settlementParticipantId: p.settlementParticipantId ?? undefined,
+    profileImageUrl: p.profileImageUrl ?? null,
   }))
 }
 

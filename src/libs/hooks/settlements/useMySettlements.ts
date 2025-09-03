@@ -11,7 +11,7 @@ export function useMySettlements() {
   return useQuery<Settlement[]>({
     queryKey: ['settlements', 'my'],
     queryFn: fetchMySettlements,
-    staleTime: 30000,
+    staleTime: 0,
   })
 }
 

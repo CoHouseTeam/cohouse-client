@@ -5,13 +5,17 @@ import OngoingSettlements from '../features/settlements/components/OngoingSettle
 import RecentSettlements from '../features/settlements/components/RecentSettlements'
 import { getCurrentGroupId } from '../libs/api/groups'
 import { useParams } from 'react-router-dom'
+import { useMyMemberId } from '../libs/hooks/useGroupMembers'
 
 export default function Settlements() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [groupId, setGroupId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
+  // viewerId = 이 그룹에서의 "내 memberId"
+  const { data: viewerId } = useMyMemberId(groupId)
+
   // 라우트 파람이 없을 수도 있으니 optional로
   const { groupId: groupIdParam } = useParams<{ groupId?: string }>()
 
@@ -28,7 +32,7 @@ export default function Settlements() {
             return
           }
         }
-        
+
         // API에서 현재 그룹 ID 가져오기
         const currentGroupId = await getCurrentGroupId()
         setGroupId(currentGroupId)
@@ -39,7 +43,7 @@ export default function Settlements() {
         setLoading(false)
       }
     }
-    
+
     fetchGroupId()
   }, [groupIdParam])
 
@@ -57,10 +61,7 @@ export default function Settlements() {
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
           <p className="text-lg text-error mb-4">{error || '그룹 정보를 찾을 수 없습니다.'}</p>
-          <button 
-            className="btn btn-primary"
-            onClick={() => window.location.reload()}
-          >
+          <button className="btn btn-primary" onClick={() => window.location.reload()}>
             다시 시도
           </button>
         </div>
@@ -92,10 +93,10 @@ export default function Settlements() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 items-start">
           {/* 진행 중인 정산 */}
-          <OngoingSettlements groupId={groupId} />
+          <OngoingSettlements groupId={groupId} viewerId={viewerId} />
 
           {/* 정산 내역 */}
-          <RecentSettlements groupId={groupId} />
+          <RecentSettlements groupId={groupId} viewerId={viewerId} />
         </div>
       </div>
 

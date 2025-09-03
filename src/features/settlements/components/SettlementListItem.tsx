@@ -16,10 +16,11 @@ import SettlementCreateModal from './SettlementCreateModal'
 
 type SettlementListItemProps = {
   item: Settlement
-  viewerId: number
+  groupId: number
+  viewerId?: number
 }
 
-export default function SettlementListItem({ item, viewerId }: SettlementListItemProps) {
+export default function SettlementListItem({ item, groupId, viewerId }: SettlementListItemProps) {
   if (!item) return null
 
   const [cardOpen, SetCardOpen] = useState(false)
@@ -58,8 +59,11 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
   const cancelMut = useCancelSettlement()
 
   const settlement = item
-  const isPayer = settlement.payerId === viewerId
-  const me = settlement.participants.find((p) => p.memberId === viewerId)
+  const isPayer = viewerId != null && settlement.payerId === viewerId
+  const me =
+    viewerId != null
+      ? settlement.participants.find((p) => p.memberId === viewerId) // [CHANGED]
+      : undefined
   const myDue = me?.shareAmount ?? 0
   const isMyPaymentDone = me?.status === 'PAID'
   const isPendingSettlement = settlement.status === 'PENDING'
@@ -126,7 +130,7 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
               >
                 정산 상세
               </button>
-              {isPendingSettlement && (
+              {isPendingSettlement && isPayer && (
                 <>
                   <div className="border-t w-full"></div>
                   <button
@@ -225,7 +229,7 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
           onClose={() => setDetailOpen(false)}
           mode="detail"
           detailId={settlement.id}
-          groupId={1}
+          groupId={groupId}
         />
       )}
     </>
