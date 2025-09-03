@@ -20,7 +20,10 @@ export function usePaySettlement() {
   return useMutation({
     mutationFn: (id: number) => postPaymentDone(id),
     onSuccess: () => {
+      // 목록/히스토리/그룹 모두 갱신
       qc.invalidateQueries({ queryKey: ['settlements', 'my'] })
+      qc.invalidateQueries({ queryKey: ['settlements', 'myHistory'] })
+      qc.invalidateQueries({ queryKey: ['settlements', 'group'] })
     },
   })
 }

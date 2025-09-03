@@ -36,7 +36,14 @@ export interface Settlement {
 // 정산 내역
 export type SettlementListItem = Pick<
   Settlement,
-  'id' | 'category' | 'title' | 'settlementAmount' | 'status' | 'createdAt'
+  | 'id'
+  | 'category'
+  | 'title'
+  | 'settlementAmount'
+  | 'status'
+  | 'createdAt'
+  | 'payerId'
+  | 'payerName'
 >
 
 // 정산 등록

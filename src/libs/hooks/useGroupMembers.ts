@@ -37,11 +37,11 @@ export function useMyMemberId(groupId: number | null) {
   const { data: me } = useProfile()
 
   return useQuery<number | undefined>({
-    queryKey: ['groups', groupId, 'myMemberId', me?.name],
-    enabled: !!groupId && !!me?.name,
+    queryKey: ['groups', groupId, 'myMemberId', me?.id],
+    enabled: !!groupId && !!me?.id,
     queryFn: async () => {
       const members = (await fetchGroupMembers(groupId!)) as MemberResp[]
-      const mine = members.find((m) => m.status === 'ACTIVE' && m.nickname === me!.name)
+      const mine = members.find((m) => m.status === 'ACTIVE' && m.memberId === me!.id)
       return mine?.memberId
     },
     staleTime: 30000,

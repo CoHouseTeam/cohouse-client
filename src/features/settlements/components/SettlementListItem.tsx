@@ -13,6 +13,8 @@ import {
 } from '../../../libs/hooks/settlements/useSettlementMutations'
 import { fromCategory } from '../../../libs/utils/categoryMapping'
 import SettlementCreateModal from './SettlementCreateModal'
+import ConfirmModal from '../../common/ConfirmModal'
+import axios from 'axios'
 
 type SettlementListItemProps = {
   item: Settlement
@@ -26,6 +28,7 @@ export default function SettlementListItem({ item, groupId, viewerId }: Settleme
   const [cardOpen, SetCardOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [payModalOpen, setPayModalOpen] = useState(false)
 
   const menuRef = useRef<HTMLDivElement | null>(null)
   const menuBtnRef = useRef<HTMLButtonElement | null>(null)
@@ -61,19 +64,53 @@ export default function SettlementListItem({ item, groupId, viewerId }: Settleme
   const settlement = item
   const isPayer = viewerId != null && settlement.payerId === viewerId
   const me =
-    viewerId != null
-      ? settlement.participants.find((p) => p.memberId === viewerId) // [CHANGED]
-      : undefined
+    viewerId != null ? settlement.participants.find((p) => p.memberId === viewerId) : undefined
   const myDue = me?.shareAmount ?? 0
   const isMyPaymentDone = me?.status === 'PAID'
   const isPendingSettlement = settlement.status === 'PENDING'
 
+  useEffect(() => {
+    console.log(
+      'viewerId=',
+      viewerId,
+      'payerId=',
+      settlement.payerId,
+      'participants=',
+      settlement.participants.map((p) => ({
+        id: p.memberId,
+        name: p.memberName,
+        share: p.shareAmount,
+        status: p.status,
+      }))
+    )
+  }, [viewerId, settlement])
+
   const handlePayClick = () => {
+    console.log({
+      id: settlement.id,
+      isPayer,
+      isPendingSettlement,
+      isMyPaymentDone,
+      payerId: settlement.payerId,
+      viewerId,
+    })
+
     if (isPayer) return
     if (!isPendingSettlement) return
     if (isMyPaymentDone) return
     if (payMut.isPending) return
-    payMut.mutate(settlement.id)
+    setPayModalOpen(true)
+  }
+  const handlePayConfirm = async () => {
+    try {
+      await payMut.mutateAsync(settlement.id)
+      setPayModalOpen(false)
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        console.error('payment 500', e.response?.data)
+        alert(`송금 실패 (HTTP ${e.response?.status})`)
+      }
+    }
   }
 
   const handleCancelClick = () => {
@@ -232,6 +269,16 @@ export default function SettlementListItem({ item, groupId, viewerId }: Settleme
           groupId={groupId}
         />
       )}
+
+      <ConfirmModal
+        open={payModalOpen}
+        title="송금 처리"
+        message="송금하시겠습니까?"
+        confirmText="확인"
+        cancelText="취소"
+        onConfirm={handlePayConfirm}
+        onCancel={() => setPayModalOpen(false)}
+      />
     </>
   )
 }

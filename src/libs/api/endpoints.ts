@@ -82,7 +82,7 @@ export const SETTLEMENT_ENDPOINTS = {
   DELETE: (settlementId: number) => `api/settlements/${settlementId}`,
   PARTICIPANTS: (settlementId: number) => `api/settlements/${settlementId}/participants`,
   PAYMENT: (settlementId: number) => `api/settlements/${settlementId}/payment`,
-  PAYMENT_DONE: (settlementId: number) => `api/settlements/${settlementId}/payment-done`,
+  PAYMENT_DONE: (settlementId: number) => `api/settlements/${settlementId}/payment`,
 
   // 영수증 관리
   RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
