@@ -276,6 +276,13 @@ const TasksPage: React.FC = () => {
     },
     [assignments, groupMembers, myMemberId]
   )
+  const handleRequest = () => {
+    handleExchangeRequest(exchangeSelected)
+  }
+
+  const handleSelect = (selected: number[]) => {
+    setExchangeSelected(selected)
+  }
 
   if (isLeader === null) return <>Loading...</>
 
@@ -320,8 +327,8 @@ const TasksPage: React.FC = () => {
           open={modalOpen}
           members={members}
           selected={exchangeSelected}
-          onSelect={setExchangeSelected}
-          onRequest={handleExchangeRequest}
+          onSelect={handleSelect}
+          onRequest={handleRequest}
           onClose={() => setModalOpen(false)}
         />
       )}

@@ -23,7 +23,7 @@ export interface ExchangeModalProps {
   members: Member[]
   selected: number[]
   onSelect: (selected: number[]) => void
-  onRequest: (selected: number[]) => void
+  onRequest: () => void
   onClose: () => void
 }
 

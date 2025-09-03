@@ -12,17 +12,22 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
 }) => {
   if (!open) return null
 
-  const allSelected = Array.isArray(members) && selected.length === members.length
+  // 전체선택 체크 여부: 모든 멤버 선택 시 true, 아닐 경우 false
+  const allSelected =
+    Array.isArray(selected) && members.length > 0 && selected.length === members.length
 
+  // 전체선택 토글 함수
   const toggleSelectAll = () => {
     if (allSelected) {
-      onSelect([])
+      onSelect([]) // 모두 선택 해제
     } else {
-      onSelect(members.map((_, idx) => idx))
+      onSelect(members.map((_, idx) => idx)) // 모두 선택
     }
   }
 
+  // 개별 멤버 선택 토글
   const toggleSelect = (idx: number) => {
+    if (!Array.isArray(selected)) return
     if (selected.includes(idx)) {
       onSelect(selected.filter((i) => i !== idx))
     } else {
@@ -42,7 +47,6 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
           <XCircleFill className="text-xl text-gray-400" />
         </button>
         <div className="space-y-2 mb-5 mt-2">
-          {/* 전체선택 체크박스 */}
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
               type="checkbox"
@@ -52,8 +56,6 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
             />
             <span className="text-sm">전체선택</span>
           </label>
-
-          {/* 멤버별 체크박스 */}
           {Array.isArray(members) &&
             members.map((member, idx) => (
               <label
@@ -62,7 +64,7 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
               >
                 <input
                   type="checkbox"
-                  checked={selected.includes(idx)}
+                  checked={Array.isArray(selected) ? selected.includes(idx) : false}
                   onChange={() => toggleSelect(idx)}
                   className="checkbox checkbox-sm"
                 />
@@ -77,8 +79,7 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
         </div>
         <button
           className="btn bg-[#242424] w-[60%] text-white rounded-lg mt-2 text-[16px] mx-auto block"
-          onClick={() => onRequest(selected)}
-          disabled={selected.length === 0}
+          onClick={onRequest}
         >
           요청하기
         </button>
