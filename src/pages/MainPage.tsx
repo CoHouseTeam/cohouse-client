@@ -45,7 +45,20 @@ const MainPage = () => {
 
   const [userName, setUserName] = useState('')
   const [myAssignments, setMyAssignments] = useState<string[]>([])
-  const [assignments, setAssignments] = useState<Assignment[]>([]) // 전체 업무 데이터 저장
+  const [assignments, setAssignments] = useState<Assignment[]>([])
+
+  const assignmentDates: string[] = assignments
+    .filter((a) => {
+      // 본인에게 할당된 업무만 필터
+      if (Array.isArray(a.groupMemberId)) {
+        return a.groupMemberId.includes(myMemberId)
+      } else {
+        return a.groupMemberId === myMemberId
+      }
+    })
+    .map((a) => a.date?.slice(0, 10))
+    .filter((d): d is string => !!d)
+    .filter((d, i, arr) => arr.indexOf(d) === i) // 중복 제거
 
   // 인증 상태 설정
   useEffect(() => {
@@ -223,7 +236,11 @@ const MainPage = () => {
         <TodoListBox todos={todayAssignments} />
       )}
 
-      <CalendarBox onDateSelect={setSelectedDate} value={selectedDate} />
+      <CalendarBox
+        onDateSelect={setSelectedDate}
+        value={selectedDate}
+        scheduledDates={assignmentDates}
+      />
       <CalendarDateDetails selectedDate={selectedDate} events={myAssignments} />
     </div>
   )

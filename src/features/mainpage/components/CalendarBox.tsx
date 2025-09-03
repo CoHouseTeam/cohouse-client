@@ -6,16 +6,14 @@ import '../../../styles/Calendar.css'
 import { Value } from 'react-calendar/dist/shared/types.js'
 import { CalendarBoxProps } from '../../../types/main'
 
-const CalendarBox: React.FC<CalendarBoxProps> = ({ onDateSelect, value }) => {
+const CalendarBox: React.FC<CalendarBoxProps> = ({ onDateSelect, value, scheduledDates }) => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
 
-  const isDay = (date: Date) => {
-    const day = new Date()
-    return (
-      date.getDate() === day.getDate() &&
-      date.getMonth() === day.getMonth() &&
-      date.getFullYear() === day.getFullYear()
-    )
+  const isScheduledDay = (date: Date) => {
+    const yyyy = date.getFullYear()
+    const mm = String(date.getMonth() + 1).padStart(2, '0')
+    const dd = String(date.getDate()).padStart(2, '0')
+    return scheduledDates.includes(`${yyyy}-${mm}-${dd}`)
   }
 
   const onChangeHandler = (value: Value) => {
@@ -46,10 +44,13 @@ const CalendarBox: React.FC<CalendarBoxProps> = ({ onDateSelect, value }) => {
         formatMonthYear={(_locale, date) => `${date.getFullYear()}.${date.getMonth() + 1}`}
         formatDay={(_locale, date) => String(date.getDate())}
         tileContent={({ date, view }) => {
-          if (view !== 'month' || !isDay(date)) return null
-          const fakeDots = ['#E88F7F', '#F8DF9F', '#D5E4AD']
-          const dayLength = String(date.getDate()).length
-          return <CalendarDateDots colors={fakeDots} dayLength={dayLength} />
+          if (view !== 'month') return null
+          if (isScheduledDay(date)) {
+            return (
+              <CalendarDateDots colors={['#E88F7F']} dayLength={String(date.getDate()).length} />
+            )
+          }
+          return null
         }}
       />
     </div>

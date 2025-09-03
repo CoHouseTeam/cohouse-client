@@ -27,8 +27,9 @@ export interface Group {
 }
 
 export interface CalendarBoxProps {
-  onDateSelect?: (date: Date) => void
-  value?: Date
+  onDateSelect: (date: Date) => void
+  value: Date
+  scheduledDates: string[]
 }
 
 export interface ModalProps {
