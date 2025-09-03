@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { CameraFill, ChevronLeft, PersonCircle } from 'react-bootstrap-icons'
 import { Link } from 'react-router-dom'
 import DatePicker, { registerLocale } from 'react-datepicker'
@@ -15,6 +15,14 @@ import ImageViewer from '../features/common/ImageViewer'
 
 registerLocale('ko', ko)
 
+const MAX_IMAGE_BYTES = 1 * 1024 * 1024
+
+function formatBytes(n: number) {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 ** 2) return `${(n / 1024).toFixed(1)} KB`
+  return `${(n / 1024 ** 2).toFixed(1)} MB`
+}
+
 export default function MyPageEdit() {
   const [pwOpen, setPwOpen] = useState(false)
 
@@ -27,6 +35,9 @@ export default function MyPageEdit() {
 
   // 프로필 미리보기
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  // 저장 시 업로드할 파일 예약
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
 
   // 프로필 이미지 삭제
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -42,7 +53,20 @@ export default function MyPageEdit() {
   }
 
   // 프로필 사진
-  const { data: me, isLoading } = useProfile()
+  const { data: me, isLoading } = useProfile() // ✅ CHANGED: useProfile 선언을 useEffect 위로
+
+  // 의존성 배열 추가 + me 로드 후 초기값 주입
+  useEffect(() => {
+    if (!me) return
+    setSelectedBtdDate(me.birthDate ? new Date(me.birthDate) : null)
+  }, [me])
+
+  // 미리보기 URL 메모리 정리
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
 
   // 프로필 서버 업로드 API
   const { mutateAsync: uploadImage, isPending: uploading } = useUploadProfileImage()
@@ -60,8 +84,8 @@ export default function MyPageEdit() {
   }
 
   // 사진 파일 선택 핸들러
-  const onFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    // 업로드 중이면 바로 리턴해서 동시 업로드를 막기
+  // 미리보기만 + 예약
+  const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (uploading) {
       e.currentTarget.value = ''
       return
@@ -75,7 +99,14 @@ export default function MyPageEdit() {
       // 이미지 타입만 허용
       if (!file.type.startsWith('image/')) {
         showAlert('이미지 파일만 업로드 할 수 있어요')
-        e.currentTarget.value = '' // 같은 파일 재선택 허용
+        input.value = '' // 같은 파일 재선택 허용
+        return
+      }
+
+      // 1MB 용량 체크 추가
+      if (file.size > MAX_IMAGE_BYTES) {
+        showAlert(`프로필 이미지는 1MB 이하만 가능합니다. (현재: ${formatBytes(file.size)})`)
+        input.value = ''
         return
       }
 
@@ -86,11 +117,10 @@ export default function MyPageEdit() {
       const url = URL.createObjectURL(file)
       setPreviewUrl(url)
 
-      // 서버 업로드
-      await uploadImage(file)
+      // 서버 업로드는 저장 버튼에서 → 파일만 예약
+      setPendingFile(file)
     } catch (err) {
-      showAlert('업로드에 실패했어요. 잠시 후 다시 시도해 주세요.')
-      // 실패 시 미리보기 되돌리고 싶다면:
+      showAlert('미리보기에 실패했어요. 잠시 후 다시 시도해 주세요.')
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl)
         setPreviewUrl(null)
@@ -101,6 +131,7 @@ export default function MyPageEdit() {
     }
   }
 
+  // 삭제는 즉시 서버에 반영
   const confirmDelete = async () => {
     try {
       // 서버에서 프로필 이미지 삭제
@@ -109,6 +140,8 @@ export default function MyPageEdit() {
         URL.revokeObjectURL(previewUrl)
         setPreviewUrl(null)
       }
+      // 업로드 예약이 있다면 취소
+      setPendingFile(null)
     } catch (err) {
       showAlert('사진 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.')
     } finally {
@@ -123,6 +156,20 @@ export default function MyPageEdit() {
     if (!currentImageSrc) return
     if (uploading || deleting) return
     setViewerOpen(true)
+  }
+
+  // 저장 버튼에서만 실제 업로드 실행
+  const onSave = async () => {
+    try {
+      if (pendingFile) {
+        await uploadImage(pendingFile)
+        setPendingFile(null)
+      }
+      // (여기에 생년월일/비번 저장 로직을 이어붙일 수 있음)
+      showAlert('저장되었습니다.')
+    } catch {
+      showAlert('저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.')
+    }
   }
 
   return (
@@ -174,7 +221,7 @@ export default function MyPageEdit() {
                   </button>
                 ) : (
                   // 이미지가 없을 때 기본 아이콘
-                  <PersonCircle size={60} />
+                  <PersonCircle size={70} />
                 )}
                 {/* 숨겨진 파일 인풋 */}
                 <input
@@ -182,7 +229,7 @@ export default function MyPageEdit() {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={onFileChange}
+                  onChange={onFileChange} //업로드 호출 안 함
                 />
 
                 <label
@@ -245,15 +292,15 @@ export default function MyPageEdit() {
                 onChange={(date: Date | null) => setSelectedBtdDate(date)}
                 locale="ko"
                 dateFormat="yyyy년 MM월 dd일"
-                // withPortal // 모바일에서 전체화면 모달로 띄우기
-                popperPlacement="bottom" // 달력 위치
-                showPopperArrow={false} // 화살표 숨김
-                maxDate={new Date()} // 오늘 이후(미래) 선택 못 하게
+                // withPortal
+                popperPlacement="bottom"
+                showPopperArrow={false}
+                maxDate={new Date()}
                 showYearDropdown
                 showMonthDropdown
                 dropdownMode="scroll"
-                scrollableYearDropdown // ← 스크롤 가능
-                yearDropdownItemNumber={85} // 보이는 연도 개수
+                scrollableYearDropdown
+                yearDropdownItemNumber={85}
                 className="input input-bordered h-10 w-full md:max-w-md text-sm rounded-lg"
               />
             </div>
@@ -309,8 +356,13 @@ export default function MyPageEdit() {
       {/* 푸터 */}
       <footer className="sticky bottom-0 bg-white px-5 pb-[env(safe-area-inset-bottom)]">
         <div className="h-16 flex items-center justify-center">
-          <button type="button" className="btn bg-secondary text-white btn-sm w-32 rounded-lg">
-            저장
+          <button
+            type="button"
+            className="btn bg-secondary text-white btn-sm w-32 rounded-lg"
+            onClick={onSave} // 저장에서만 업로드 실행
+            disabled={isLoading || uploading || deleting} // 진행 중 비활성화
+          >
+            {uploading || deleting ? '저장 중…' : '저장'}
           </button>
         </div>
       </footer>

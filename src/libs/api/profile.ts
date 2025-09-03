@@ -1,5 +1,5 @@
 import api from './axios'
-import { PROFILE_ENDPOINTS } from './endpoints'
+import { AUTH_ENDPOINTS, PROFILE_ENDPOINTS } from './endpoints'
 
 export type Profile = {
   id: number
@@ -37,7 +37,7 @@ export async function updateProfile(
 // 프로필 이미지 업로드
 export async function uploadProfileImage(file: File) {
   const form = new FormData()
-  form.append('file', file)
+  form.append('image', file)
 
   const { data } = await api.put<UploadImageResp>(PROFILE_ENDPOINTS.UPLOAD_IMAGE, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
@@ -61,4 +61,9 @@ export async function updateAlertTime(hour: number, minute: number): Promise<Pro
 export async function getMyMemberId(): Promise<number> {
   const response = await api.get(PROFILE_ENDPOINTS.GET_MY_ID)
   return response.data.memberId
+}
+
+// 비밀번호 변경
+export async function refreshPassword() {
+  const { data } = await api.post(AUTH_ENDPOINTS.REFRESH)
 }
