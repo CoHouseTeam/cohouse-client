@@ -16,6 +16,10 @@ interface GroupState {
   setHasGroups: (val: boolean) => void
   myMemberId: number | null
   setMyMemberId: (id: number | null) => void
+  groupId: number | null
+  setGroupId: (id: number | null) => void
+  groupName: string | null
+  setGroupName: (id: string | null) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -28,4 +32,8 @@ export const useGroupStore = create<GroupState>((set) => ({
   setHasGroups: (val) => set({ hasGroups: val }),
   myMemberId: null,
   setMyMemberId: (id) => set({ myMemberId: id }),
+  groupId: null,
+  setGroupId: (id) => set({ groupId: id }),
+  groupName: null,
+  setGroupName: (name) => set({ groupName: name }),
 }))
