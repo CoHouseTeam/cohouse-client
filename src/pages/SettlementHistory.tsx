@@ -18,7 +18,12 @@ type Category = (typeof CATEGORY_LIST)[number]
 // 페이지 사이즈(한 화면당 5개)
 const PAGE_SIZE = 5
 
-export default function SettlementHistory() {
+type SettlementHistoryProps = {
+  groupId: number
+  viewerId: number
+}
+
+export default function SettlementHistory({ groupId, viewerId }: SettlementHistoryProps) {
   // 카테고리 드롭다운 open 상태
   const [open, setOpen] = useState(false)
 
@@ -272,7 +277,12 @@ export default function SettlementHistory() {
         <>
           {/* 리스트 */}
           {listToRender.map((s) => (
-            <SettlementItemWithDetail key={s.id} initial={s} viewerId={3} />
+            <SettlementItemWithDetail
+              key={s.id}
+              initial={s}
+              viewerId={viewerId}
+              groupId={groupId}
+            />
           ))}
 
           {/* 페이지네이션 바 */}
