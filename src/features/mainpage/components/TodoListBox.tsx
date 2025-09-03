@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import UncompletedTasksModal from './UncompletedTasksModal'
 import { TodoItem } from '../../../types/main.ts'
-import { updateAssignment } from '../../../libs/api/tasks.ts'
+import { getAssignments, updateAssignment } from '../../../libs/api/tasks.ts'
 
 interface TodoListBoxProps {
   todos: TodoItem[]
@@ -11,13 +11,32 @@ interface TodoListBoxProps {
 
 const TodoListBox = React.memo(({ todos, groupId, memberId }: TodoListBoxProps) => {
   const [localTodos, setLocalTodos] = useState<TodoItem[]>([])
-
-  useEffect(() => {
-    setLocalTodos(todos)
-  }, [todos])
-
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  // status에 따라 checked 상태로 초기화
+  useEffect(() => {
+    setLocalTodos(
+      todos.map((todo) => ({
+        ...todo,
+        checked: todo.status === 'COMPLETED',
+      }))
+    )
+  }, [todos])
+
+  // 할 일 업데이트
+  async function refetchTodos() {
+    if (groupId && memberId) {
+      const updated = await getAssignments({ groupId, memberId })
+      setLocalTodos(
+        updated.map((todo) => ({
+          ...todo,
+          checked: todo.status === 'COMPLETED',
+        }))
+      )
+    }
+  }
+
+  // 체크박스 토글 처리
   const handleToggle = async (index: number) => {
     const todo = localTodos[index]
     if (!todo.assignmentId) {
@@ -33,9 +52,11 @@ const TodoListBox = React.memo(({ todos, groupId, memberId }: TodoListBoxProps) 
     try {
       const newStatus = newChecked ? 'COMPLETED' : 'PENDING'
       await updateAssignment(todo.assignmentId, { status: newStatus })
+
+      // 상태 변경 후 서버에서 할 일 다시 조회
+      await refetchTodos()
     } catch (error) {
       console.error('업무 상태 업데이트 실패', error)
-      // 실패 시 상태 되돌리기
       setLocalTodos((prevTodos) =>
         prevTodos.map((t, i) => (i === index ? { ...t, checked: !newChecked } : t))
       )
@@ -74,7 +95,7 @@ const TodoListBox = React.memo(({ todos, groupId, memberId }: TodoListBoxProps) 
                     todo.checked ? 'bg-[#5C5C5C] border-[#5C5C5C]' : 'bg-white border-[#5C5C5C]'
                   }`}
                   checked={todo.checked}
-                  onChange={() => handleToggle(idx)} // 상태 변경 시 API 호출 포함
+                  onChange={() => handleToggle(idx)}
                   style={{ accentColor: todo.checked ? '#5C5C5C' : '#fff' }}
                 />
                 {todo.category || '할 일'}
