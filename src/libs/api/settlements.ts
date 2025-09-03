@@ -32,10 +32,10 @@ export async function fetchGroupSettlements(groupId: number): Promise<Settlement
 export async function fetchMySettlementHistory(
   params: PageParams
 ): Promise<Pageable<SettlementListItem>> {
-  const { page, size, sort = 'createdAt,desc', groupId } = params
+  const { page, size, sort = 'createdAt,desc' } = params
 
   const { data } = await api.get<Pageable<SettlementListItem>>(SETTLEMENT_ENDPOINTS.MY_HISTORY, {
-    params: { pageable: { page, size, sort }, ...(groupId ? { groupId } : {}) },
+    params: { pageable: { page, size, sort } },
     paramsSerializer: (p) => {
       const searchParams = new URLSearchParams()
       Object.entries(p).forEach(([key, value]) => {
