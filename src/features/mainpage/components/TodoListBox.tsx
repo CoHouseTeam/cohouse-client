@@ -1,20 +1,44 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import UncompletedTasksModal from './UncompletedTasksModal'
-import { Todo } from '../../../types/main.ts'
+import { TodoItem } from '../../../types/main.ts'
+import { updateAssignment } from '../../../libs/api/tasks.ts'
 
-const initialTodos: Todo[] = [
-  { text: '설거지', checked: false },
-  { text: '분리수거', checked: true },
-]
+interface TodoListBoxProps {
+  todos: TodoItem[]
+}
 
-const TodoListBox = () => {
-  const [todos, setTodos] = useState<Todo[]>(initialTodos)
+const TodoListBox = ({ todos }: TodoListBoxProps) => {
+  const [localTodos, setLocalTodos] = useState<TodoItem[]>([])
+
+  useEffect(() => {
+    setLocalTodos(todos)
+  }, [todos])
+
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleToggle = (idx: number) => {
-    setTodos((prev) =>
-      prev.map((todo, i) => (i === idx ? { ...todo, checked: !todo.checked } : todo))
+  const handleToggle = async (index: number) => {
+    const todo = localTodos[index]
+    if (!todo.assignmentId) {
+      console.warn('업무 ID가 없습니다.')
+      return
+    }
+
+    const newChecked = !todo.checked
+    setLocalTodos((prevTodos) =>
+      prevTodos.map((t, i) => (i === index ? { ...t, checked: newChecked } : t))
     )
+
+    try {
+      const newStatus = newChecked ? 'COMPLETED' : 'PENDING'
+      await updateAssignment(todo.assignmentId, { status: newStatus })
+    } catch (error) {
+      console.error('업무 상태 업데이트 실패', error)
+      // 실패 시 상태 되돌리기
+      setLocalTodos((prevTodos) =>
+        prevTodos.map((t, i) => (i === index ? { ...t, checked: !newChecked } : t))
+      )
+      alert('업무 상태 업데이트에 실패했습니다.')
+    }
   }
 
   return (
@@ -31,9 +55,9 @@ const TodoListBox = () => {
           </button>
         </div>
         <ul>
-          {todos.map((todo, idx) => (
+          {localTodos.map((todo, idx) => (
             <li
-              key={todo.text}
+              key={`${todo.assignmentId ?? 'todo'}-${idx}`}
               className={`flex items-center mb-2 last:mb-0 text-[16px] ${
                 todo.checked ? 'text-base-300 line-through' : 'text-base-content'
               }`}
@@ -41,14 +65,14 @@ const TodoListBox = () => {
             >
               <input
                 type="checkbox"
-                className={`checkbox checkbox-sm mr-2 
-                  ${todo.checked ? 'bg-[#5C5C5C] border-[#5C5C5C]' : 'bg-white border-[#5C5C5C]'}
-                `}
+                className={`checkbox checkbox-sm mr-2 ${
+                  todo.checked ? 'bg-[#5C5C5C] border-[#5C5C5C]' : 'bg-white border-[#5C5C5C]'
+                }`}
                 checked={todo.checked}
-                onChange={() => handleToggle(idx)}
+                onChange={() => handleToggle(idx)} // 상태 변경 시 API 호출 포함
                 style={{ accentColor: todo.checked ? '#5C5C5C' : '#fff' }}
               />
-              {todo.text}
+              {todo.category || '할 일'}
             </li>
           ))}
         </ul>

@@ -6,10 +6,15 @@ interface CalendarState {
   setSelectedDate: (date: Date) => void
 }
 
-export const useCalendarStore = create<CalendarState>((set) => ({
-  selectedDate: new Date(),
-  setSelectedDate: (date) => set({ selectedDate: date }),
-}))
+export const useCalendarStore = create<CalendarState>((set) => {
+  const now = new Date()
+  const localToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()) // 자정 시각
+
+  return {
+    selectedDate: localToday,
+    setSelectedDate: (date) => set({ selectedDate: date }),
+  }
+})
 
 interface TaskState {
   assignments: Assignment[]

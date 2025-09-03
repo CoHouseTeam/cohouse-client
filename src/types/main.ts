@@ -8,9 +8,11 @@ export interface CalendarDotsProps {
   dayLength?: number
 }
 
-export interface Todo {
-  text: string
+export interface TodoItem {
   checked: boolean
+  assignmentId?: number
+  category: string
+  status?: 'COMPLETED' | 'PENDING' | string
 }
 
 export interface Member {
