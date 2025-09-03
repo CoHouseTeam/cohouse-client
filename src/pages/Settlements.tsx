@@ -4,67 +4,44 @@ import SettlementCreateModal from '../features/settlements/components/Settlement
 import OngoingSettlements from '../features/settlements/components/OngoingSettlements'
 import RecentSettlements from '../features/settlements/components/RecentSettlements'
 import { getCurrentGroupId } from '../libs/api/groups'
-import { useParams } from 'react-router-dom'
+
 import { useMyMemberId } from '../libs/hooks/useGroupMembers'
+import { useGroupStore } from '../app/store'
 
 export default function Settlements() {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [groupId, setGroupId] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+
+  const groupId = useGroupStore((s) => s.groupId)
+  const setGroupId = useGroupStore((s) => s.setGroupId)
+  const setHasGroups = useGroupStore((s) => s.setHasGroups)
 
   // viewerId = 이 그룹에서의 "내 memberId"
   const { data: viewerId } = useMyMemberId(groupId)
 
-  // 라우트 파람이 없을 수도 있으니 optional로
-  const { groupId: groupIdParam } = useParams<{ groupId?: string }>()
-
-  // 그룹 ID 가져오기
+  // 스토어에 groupId가 없으면 백엔드에서 한 번 가져와 채워넣기
   useEffect(() => {
-    const fetchGroupId = async () => {
+    if (groupId != null) return
+    let cancelled = false
+    ;(async () => {
       try {
-        setLoading(true)
-        // URL 파라미터가 있으면 그것을 사용, 없으면 API에서 가져오기
-        if (groupIdParam) {
-          const parsed = Number(groupIdParam)
-          if (Number.isFinite(parsed)) {
-            setGroupId(parsed)
-            return
-          }
+        const id = await getCurrentGroupId()
+        if (!cancelled) {
+          setGroupId(id)
+          setHasGroups(true)
         }
-
-        // API에서 현재 그룹 ID 가져오기
-        const currentGroupId = await getCurrentGroupId()
-        setGroupId(currentGroupId)
-      } catch (error) {
-        console.error('그룹 ID 가져오기 실패:', error)
-        setError('그룹 정보를 가져올 수 없습니다.')
-      } finally {
-        setLoading(false)
+      } catch (e) {
+        console.error('현재 그룹 조회 실패:', e)
       }
+    })()
+    return () => {
+      cancelled = true
     }
+  }, [groupId, setGroupId, setHasGroups])
 
-    fetchGroupId()
-  }, [groupIdParam])
-
-  if (loading) {
+  if (groupId == null) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="loading loading-spinner loading-lg"></div>
-        <p className="ml-4 text-gray-500">그룹 정보를 불러오는 중...</p>
-      </div>
-    )
-  }
-
-  if (error || !groupId) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <p className="text-lg text-error mb-4">{error || '그룹 정보를 찾을 수 없습니다.'}</p>
-          <button className="btn btn-primary" onClick={() => window.location.reload()}>
-            다시 시도
-          </button>
-        </div>
+        그룹 정보를 불러오는 중...
       </div>
     )
   }
