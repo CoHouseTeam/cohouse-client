@@ -19,8 +19,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // 인증 상태 새로고침
   const refreshAuthState = () => {
     const authState = checkAuth()
-    console.log('🔄 인증 상태 업데이트:', authState)
-    setIsAuthenticated(authState)
+    const isAuthFromStorage = localStorage.getItem('isAuthenticated') === 'true'
+    const hasToken = localStorage.getItem('accessToken')
+    
+    const finalAuthState = authState || (isAuthFromStorage && !!hasToken)
+    console.log('🔄 인증 상태 업데이트:', finalAuthState, '| localStorage:', isAuthFromStorage, '| hasToken:', !!hasToken)
+    setIsAuthenticated(finalAuthState)
   }
 
   // 컴포넌트 마운트 시 초기 인증 상태 확인

@@ -12,7 +12,7 @@ export default function RecentSettlements({ groupId }: RecentSettlementsProps) {
   const { data, isLoading, error } = useGroupSettlements(groupId || 0)
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorCard />
+  if (error) return <ErrorCard message="최근 정산 정보를 불러오는 중 오류가 발생했습니다." />
 
   // 완료된 정산
   const completed = Array.isArray(data) ? data.filter((s) => s.status === 'COMPLETED') : []

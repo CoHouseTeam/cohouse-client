@@ -1,18 +1,17 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Heart, X, ChevronDown, ChevronUp, Edit, Trash2 } from 'lucide-react'
 import ConfirmModal from '../features/common/ConfirmModal'
-import { createPost, deletePost, togglePostLike, getPostLikes, getPostLikeStatus, updatePost } from '../libs/api/posts'
+import { createPost, deletePost, togglePostLike, getPostLikes, updatePost } from '../libs/api/posts'
 import { fetchGroupPosts, fetchPost, fetchPostLikesCount, fetchPostLikeStatus } from '../services/posts'
 import { getCurrentGroupId, fetchGroupMembers } from '../libs/api/groups'
-import { getCurrentMemberId } from '../libs/utils/auth'
-import type { BoardPost, BoardPostDetail, PageResponse, BoardColor, PostLikeResponse, LikeStatusResponse } from '../types/main'
-
-// 색상 옵션 타입
-type ColorOption = 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'YELLOW' | 'ORANGE' | 'PINK' | 'GRAY'
+import { getCurrentMemberId, getCurrentUser, getAccessToken } from '../libs/utils/auth'
+import { useAuth } from '../libs/hooks/useAuth'
+import type { BoardPost, BoardPostDetail, PageResponse, BoardColor, PostLikeResponse } from '../types/main'
 
 type TabKey = 'FREE' | 'ANNOUNCEMENT'
 
 export default function Board() {
+  const { permissions } = useAuth()
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedPost, setSelectedPost] = useState<BoardPostDetail | null>(null)
   const [activeTab, setActiveTab] = useState<TabKey>('ANNOUNCEMENT')
@@ -24,14 +23,16 @@ export default function Board() {
   const [editPostTitle, setEditPostTitle] = useState('')
   const [editPostContent, setEditPostContent] = useState('')
   const [editPostCategory, setEditPostCategory] = useState<'ANNOUNCEMENT' | 'FREE'>('FREE')
-  const [editPostColor, setEditPostColor] = useState<ColorOption>('BLUE')
+  const [editPostColor, setEditPostColor] = useState<BoardColor>('BLUE')
   const [showConfirm, setShowConfirm] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [newPostCategory, setNewPostCategory] = useState<'ANNOUNCEMENT' | 'FREE'>('FREE')
-  const [newPostColor, setNewPostColor] = useState<ColorOption>('BLUE')
+  const [newPostColor, setNewPostColor] = useState<BoardColor>('BLUE')
   const [searchTerm, setSearchTerm] = useState('')
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   // API 상태 관리
   const [loading, setLoading] = useState(false)
@@ -51,22 +52,43 @@ export default function Board() {
   const [currentMemberId, setCurrentMemberId] = useState<number | null>(null)
   const size = 10
 
+
+
   // 컴포넌트 마운트 시 그룹 ID와 현재 사용자 ID 가져오기
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         console.log('🔍 초기 데이터 가져오기 시작')
         
-        // 현재 사용자 ID 가져오기
-        const memberId = getCurrentMemberId()
+        // 현재 사용자 ID 가져오기 (여러 방법 시도)
+        let memberId = getCurrentMemberId()
+        console.log('🔍 getCurrentMemberId() 결과:', memberId)
+        
+        if (!memberId) {
+          // JWT 토큰에서 직접 추출 시도
+          const userFromToken = getCurrentUser()
+          if (userFromToken?.memberId) {
+            memberId = userFromToken.memberId
+            console.log('✅ JWT 토큰에서 memberId 추출 성공:', memberId)
+          } else {
+            console.log('⚠️ JWT 토큰에서도 memberId를 찾을 수 없습니다.')
+          }
+        }
+        
         setCurrentMemberId(memberId)
-        console.log('✅ 현재 사용자 ID:', memberId)
+        console.log('✅ 현재 사용자 ID 설정 완료:', memberId)
         
         // 그룹 ID 가져오기
         const currentGroupId = await getCurrentGroupId()
         console.log('✅ 그룹 ID 가져오기 성공:', currentGroupId)
         setGroupId(currentGroupId)
-        setError(null)
+        
+        // 그룹이 없는 경우 에러가 아닌 안내 메시지로 설정
+        if (!currentGroupId) {
+          setError('그룹에 속해있지 않습니다. 그룹에 가입하거나 그룹을 생성해주세요.')
+        } else {
+          setError(null)
+        }
       } catch (error) {
         console.error('❌ 초기 데이터 가져오기 실패:', error)
         setError('그룹 정보를 가져올 수 없습니다. 로그인이 필요할 수 있습니다.')
@@ -98,6 +120,12 @@ export default function Board() {
     fetchGroupInfo()
   }, [groupId])
 
+  // 권한에 따라 탭 자동 설정
+  useEffect(() => {
+    if (!permissions.canCreateAnnouncement && activeTab === 'ANNOUNCEMENT') {
+      setActiveTab('FREE')
+    }
+  }, [permissions.canCreateAnnouncement, activeTab])
 
   // API에서 게시글 목록 가져오기
   useEffect(() => {
@@ -107,7 +135,7 @@ export default function Board() {
     setLoading(true)
     setError(null)
 
-    fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE', page: currentPage, size })
+    fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE' })
       .then((data) => {
         if (mounted) setPageData(data)
       })
@@ -122,6 +150,16 @@ export default function Board() {
 
   // 게시글 목록 (API 데이터 사용)
   const posts = useMemo(() => pageData?.content ?? [], [pageData])
+
+  // memberId로 닉네임을 찾는 함수
+  const getNicknameByMemberId = (memberId: number) => {
+    if (!groupMembers || groupMembers.length === 0) {
+      return '작성자'
+    }
+    
+    const member = groupMembers.find(m => m.memberId === memberId)
+    return member ? member.nickname : '작성자'
+  }
 
   // 검색 필터링된 게시글 목록
   const filteredPosts = useMemo(() => {
@@ -142,17 +180,73 @@ export default function Board() {
 
   // 현재 사용자가 게시글 작성자인지 확인하는 함수
   const isPostAuthor = (postMemberId: number) => {
-    // 임시로 하드코딩된 값 사용 (테스트용)
-    const testMemberId = 3 // 실제 사용자 ID로 변경
-    const isAuthor = testMemberId === postMemberId
+    // JWT 토큰에서 사용자 정보 가져오기
+    const userFromToken = getCurrentUser()
+    const tokenMemberId = userFromToken?.memberId
+    const tokenName = userFromToken?.name
     
-    console.log('🔍 작성자 확인:', {
+    // 게시글 작성자 이름 가져오기
+    const postAuthorName = getNicknameByMemberId(postMemberId)
+    
+    console.log('🔍 작성자 확인 상세:', {
       currentMemberId,
-      testMemberId,
+      tokenMemberId,
+      tokenName,
       postMemberId,
-      isAuthor
+      postAuthorName,
+      hasToken: !!getAccessToken(),
+      userFromToken
     })
-    return isAuthor
+    
+    // JWT 토큰에서 추출한 ID 사용 (우선순위)
+    if (tokenMemberId && tokenMemberId > 0) {
+      const isAuthor = tokenMemberId === postMemberId
+      console.log('✅ JWT 토큰으로 작성자 확인:', {
+        tokenMemberId,
+        postMemberId,
+        isAuthor
+      })
+      return isAuthor
+    }
+    
+    // memberId가 없는 경우, JWT의 name과 게시글 작성자 이름 비교
+    if (tokenName && postAuthorName && postAuthorName !== '작성자') {
+      const isAuthorByName = tokenName === postAuthorName
+      console.log('✅ 이름으로 작성자 확인:', {
+        tokenName,
+        postAuthorName,
+        isAuthorByName
+      })
+      return isAuthorByName
+    }
+    
+    // 이름이 '작성자'로 표시되는 경우, 그룹 멤버 정보에서 정확한 이름 찾기
+    if (tokenName && groupMembers.length > 0) {
+      const member = groupMembers.find(m => m.memberId === postMemberId)
+      if (member && member.nickname && member.nickname !== '작성자') {
+        const isAuthorByMemberName = tokenName === member.nickname
+        console.log('✅ 그룹 멤버 정보로 작성자 확인:', {
+          tokenName,
+          memberNickname: member.nickname,
+          isAuthorByMemberName
+        })
+        return isAuthorByMemberName
+      }
+    }
+    
+    // fallback: state의 currentMemberId 사용
+    if (currentMemberId) {
+      const isAuthor = currentMemberId === postMemberId
+      console.log('✅ State로 작성자 확인:', {
+        currentMemberId,
+        postMemberId,
+        isAuthor
+      })
+      return isAuthor
+    }
+    
+    console.log('❌ 사용자 ID를 찾을 수 없습니다.')
+    return false
   }
 
   // 탭 변경 함수
@@ -211,7 +305,7 @@ export default function Board() {
   // 좋아요 토글 함수
   const handleLikeToggle = async (postId: number) => {
     try {
-      const response = await togglePostLike(postId)
+      await togglePostLike(postId)
       
       // 좋아요 토글 후 모달 데이터 새로고침
       if (selectedPost && selectedPost.id === postId) {
@@ -238,7 +332,7 @@ export default function Board() {
     if (!selectedPost) return
     
     setEditPostTitle(selectedPost.title)
-    setEditPostContent(selectedPost.preview)
+    setEditPostContent(selectedPost.content || selectedPost.preview || '')
     setEditPostCategory(selectedPost.type)
     setEditPostColor(selectedPost.color)
     setShowEditPostModal(true)
@@ -277,7 +371,7 @@ export default function Board() {
       
       // 수정 후 목록 새로고침
       if (groupId) {
-        const data = await fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE', page: currentPage, size })
+        const data = await fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE' })
         setPageData(data)
       }
       
@@ -314,7 +408,7 @@ export default function Board() {
       await deletePost(pendingDeleteId)
       
       // 삭제 후 목록 새로고침
-      const data = await fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE', page: currentPage, size })
+      const data = await fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE' })
       setPageData(data)
       
     setShowConfirm(false)
@@ -351,6 +445,12 @@ export default function Board() {
     setNewPostColor('BLUE')
   }
 
+  // 에러 모달 닫기
+  const closeErrorModal = () => {
+    setShowErrorModal(false)
+    setErrorMessage('')
+  }
+
   // 새 글 작성 제출
   const handleNewPostSubmit = async () => {
     if (!newPostTitle.trim() || !newPostContent.trim()) {
@@ -363,26 +463,81 @@ export default function Board() {
       return
     }
 
+    // 사용자 ID 디버깅 및 fallback 처리
+    console.log('🔍 사용자 ID 확인:', {
+      currentMemberId,
+      type: typeof currentMemberId,
+      fromAuth: getCurrentMemberId(),
+      hasToken: !!getAccessToken(),
+      tokenValue: getAccessToken() ? getAccessToken()?.substring(0, 20) + '...' : 'NO_TOKEN'
+    })
+
+    let memberIdToUse = currentMemberId
+    
+    if (!memberIdToUse) {
+      // JWT 토큰에서 직접 추출 시도
+      const userFromToken = getCurrentUser()
+      console.log('🔍 JWT 토큰에서 사용자 정보 추출 시도:', userFromToken)
+      
+      if (userFromToken?.memberId) {
+        memberIdToUse = userFromToken.memberId
+        console.log('✅ JWT 토큰에서 memberId 추출 성공:', memberIdToUse)
+      } else {
+        // 마지막 fallback: 임시 ID 사용 (테스트용)
+        memberIdToUse = 7
+        console.log('⚠️ 임시 memberId 사용 (테스트용):', memberIdToUse)
+      }
+    }
+
+    if (!memberIdToUse) {
+      alert('사용자 정보를 가져올 수 없습니다. 다시 로그인해주세요.')
+      return
+    }
+
     console.log('🚀 새 글 작성 시작')
     setIsSubmitting(true)
+    
+    // API 요청 데이터 준비 (catch 블록에서도 접근 가능하도록 try 블록 밖에 선언)
+    const postData = {
+      groupId: groupId,
+      memberId: memberIdToUse,
+      type: newPostCategory,
+      title: newPostTitle.trim(),
+      content: newPostContent.trim(),
+      color: newPostColor
+    }
+    
     try {
-      // API 요청 데이터 준비
-      const postData = {
-        groupId: groupId,
-        memberId: currentMemberId || 7, // 임시로 7 사용, 나중에 제거
-        type: newPostCategory,
-        title: newPostTitle,
-        content: newPostContent,
-        color: newPostColor
+      // 색상 값 검증
+      const validColors: BoardColor[] = ['RED', 'PURPLE', 'BLUE', 'GREEN', 'ORANGE']
+      if (!validColors.includes(newPostColor)) {
+        throw new Error(`유효하지 않은 색상입니다: ${newPostColor}`)
       }
 
       console.log('📤 전송할 데이터:', postData)
+
+      console.log('🚀 API 요청 시작:', {
+        endpoint: 'POST /api/posts',
+        data: postData,
+        dataStringified: JSON.stringify(postData)
+      })
+
+      // API 요청 전 최종 데이터 검증
+      console.log('🔍 최종 데이터 검증:', {
+        groupId: typeof groupId === 'number' ? groupId : 'INVALID',
+        memberId: typeof memberIdToUse === 'number' ? memberIdToUse : 'INVALID',
+        type: newPostCategory,
+        title: newPostTitle.trim(),
+        content: newPostContent.trim(),
+        color: newPostColor,
+        colorValid: validColors.includes(newPostColor)
+      })
 
       await createPost(postData)
       console.log('📥 API 응답 완료')
       
       // 새 글 작성 후 목록 새로고침
-      const data = await fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE', page: 1, size })
+      const data = await fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE' })
       setPageData(data)
       setCurrentPage(1)
       
@@ -393,10 +548,34 @@ export default function Board() {
       console.error('❌ [createPost] FAILED', {
         error: e,
         status: e?.response?.status,
+        statusText: e?.response?.statusText,
         data: e?.response?.data,
-        headers: e?.response?.headers
+        headers: e?.response?.headers,
+        config: e?.config,
+        message: e?.message
       })
-      throw e
+      
+      // API 에러 메시지 표시
+      let errorMessage = '게시글 작성에 실패했습니다.'
+      if (e?.response?.data?.message) {
+        errorMessage = `게시글 작성 실패: ${e.response.data.message}`
+      } else if (e?.response?.data?.error) {
+        errorMessage = `게시글 작성 실패: ${e.response.data.error}`
+      } else if (e?.response?.data?.detail) {
+        errorMessage = `게시글 작성 실패: ${e.response.data.detail}`
+      } else if (e?.response?.data?.errors) {
+        // 필드별 오류 메시지가 있는 경우
+        const fieldErrors = Object.entries(e.response.data.errors || {})
+          .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+          .join('; ')
+        errorMessage = `게시글 작성 실패: ${fieldErrors}`
+      } else if (e?.message) {
+        errorMessage = `게시글 작성 실패: ${e.message}`
+      }
+      
+      console.error('🚨 사용자에게 표시할 에러 메시지:', errorMessage)
+      setErrorMessage(errorMessage)
+      setShowErrorModal(true)
     } finally {
       console.log('🏁 작성 프로세스 종료, isSubmitting:', false)
       setIsSubmitting(false)
@@ -408,12 +587,9 @@ export default function Board() {
     const colorMap: Record<BoardColor, string> = {
       RED: 'border-red-300 bg-red-100',
       BLUE: 'border-blue-300 bg-blue-100',
-      GRAY: 'border-gray-300 bg-gray-100',
-      ORANGE: 'border-orange-300 bg-orange-100',
       GREEN: 'border-green-300 bg-green-100',
       PURPLE: 'border-purple-300 bg-purple-100',
-      YELLOW: 'border-yellow-300 bg-yellow-100',
-      PINK: 'border-pink-300 bg-pink-100'
+      ORANGE: 'border-orange-300 bg-orange-100'
     }
     return colorMap[color]
   }
@@ -429,7 +605,6 @@ export default function Board() {
       'bg-blue-500',
       'bg-red-500', 
       'bg-green-500',
-      'bg-yellow-500',
       'bg-purple-500',
       'bg-pink-500',
       'bg-indigo-500',
@@ -439,28 +614,20 @@ export default function Board() {
     return colors[index]
   }
 
-  // memberId로 닉네임을 찾는 함수
-  const getNicknameByMemberId = (memberId: number) => {
-    if (!groupMembers || groupMembers.length === 0) {
-      return '작성자'
-    }
-    
-    const member = groupMembers.find(m => m.memberId === memberId)
-    return member ? member.nickname : '작성자'
-  }
-
   return (
     <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
       {/* 헤더 */}
       <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 animate-slide-in">
         <div className="flex justify-between items-start gap-3">
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">게시판</h1>
-          <button
-            onClick={openNewPostModal}
-            className="btn btn-primary btn-sm rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg"
-          >
-            새 글 작성
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={openNewPostModal}
+              className="btn btn-primary btn-sm rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg"
+            >
+              새 글 작성
+            </button>
+          </div>
         </div>
         
         {/* 검색창 */}
@@ -492,12 +659,14 @@ export default function Board() {
 
       {/* 탭 */}
       <div className="tabs tabs-boxed mb-6 animate-slide-in" style={{ animationDelay: '100ms' }}>
-        <button
-          className={`tab transition-all duration-200 ${activeTab === 'ANNOUNCEMENT' ? 'tab-active' : 'hover:bg-base-200'}`}
-          onClick={() => handleTabChange('ANNOUNCEMENT')}
-        >
-          공지사항
-        </button>
+        {permissions.canCreateAnnouncement && (
+          <button
+            className={`tab transition-all duration-200 ${activeTab === 'ANNOUNCEMENT' ? 'tab-active' : 'hover:bg-base-200'}`}
+            onClick={() => handleTabChange('ANNOUNCEMENT')}
+          >
+            공지사항
+          </button>
+        )}
         <button
           className={`tab transition-all duration-200 ${activeTab === 'FREE' ? 'tab-active' : 'hover:bg-base-200'}`}
           onClick={() => handleTabChange('FREE')}
@@ -517,7 +686,21 @@ export default function Board() {
 
         {error && (
           <div className="text-center py-8">
-            <p className="text-lg text-error">오류가 발생했습니다: {error}</p>
+            {error.includes('그룹에 속해있지 않습니다') ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">그룹이 필요합니다</h3>
+                <p className="text-blue-600 mb-4">{error}</p>
+                <div className="space-y-2">
+                  <p className="text-sm text-blue-500">그룹을 생성하거나 초대 코드로 가입할 수 있습니다.</p>
+                  <p className="text-sm text-blue-500">그룹에 가입하면 게시글을 작성하고 볼 수 있어요!</p>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                <h3 className="text-lg font-semibold text-red-800 mb-2">오류가 발생했습니다</h3>
+                <p className="text-red-600">{error}</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -634,7 +817,9 @@ export default function Board() {
                     selectedPostId: selectedPost.id,
                     selectedPostMemberId: selectedPost.memberId,
                     currentMemberId,
-                    isAuthor
+                    isAuthor,
+                    currentUserFromAuth: getCurrentMemberId(),
+                    hasToken: !!getAccessToken()
                   })
                   return isAuthor
                 })() && (
@@ -671,6 +856,8 @@ export default function Board() {
             </div>
 
             <div className="space-y-4">
+              
+              
               {/* Meta info */}
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     <span>작성자: {getNicknameByMemberId(selectedPost.memberId)}</span>
@@ -768,7 +955,7 @@ export default function Board() {
 
             <div className="space-y-4">
               {/* Title Input */}
-              <div className="form-control">
+              <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-medium">제목</span>
                 </label>
@@ -782,7 +969,7 @@ export default function Board() {
               </div>
 
               {/* Content Input */}
-              <div className="form-control">
+              <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-medium">내용</span>
                 </label>
@@ -795,12 +982,12 @@ export default function Board() {
               </div>
 
               {/* Category Select */}
-              <div className="form-control">
+              <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-medium">카테고리</span>
                 </label>
                 <select
-                  className="select select-bordered rounded-lg focus:select-primary"
+                  className="select select-bordered rounded-lg focus:select-primary w-full"
                   value={editPostCategory}
                   onChange={(e) => setEditPostCategory(e.target.value as 'ANNOUNCEMENT' | 'FREE')}
                 >
@@ -810,23 +997,20 @@ export default function Board() {
               </div>
 
               {/* Color Select */}
-              <div className="form-control">
+              <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-medium">색상</span>
                 </label>
                 <select
-                  className="select select-bordered rounded-lg focus:select-primary"
+                  className="select select-bordered rounded-lg focus:select-primary w-full"
                   value={editPostColor}
-                  onChange={(e) => setEditPostColor(e.target.value as ColorOption)}
+                  onChange={(e) => setEditPostColor(e.target.value as BoardColor)}
                 >
                   <option value="BLUE">파란색</option>
                   <option value="RED">빨간색</option>
                   <option value="PURPLE">보라색</option>
                   <option value="GREEN">초록색</option>
-                  <option value="YELLOW">노란색</option>
-                  <option value="ORANGE">주황색</option>
-                  <option value="PINK">분홍색</option>
-                  <option value="GRAY">회색</option>
+                  <option value="ORANGE">오렌지색</option>
                 </select>
               </div>
             </div>
@@ -860,7 +1044,7 @@ export default function Board() {
 
             <div className="space-y-4">
               {/* Title Input */}
-              <div className="form-control">
+              <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-medium">제목</span>
                 </label>
@@ -874,7 +1058,7 @@ export default function Board() {
               </div>
 
               {/* Content Input */}
-              <div className="form-control">
+              <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-medium">내용</span>
                 </label>
@@ -887,12 +1071,12 @@ export default function Board() {
               </div>
 
               {/* Category Select */}
-              <div className="form-control">
+              <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-medium">카테고리</span>
                 </label>
                 <select
-                  className="select select-bordered rounded-lg focus:select-primary"
+                  className="select select-bordered rounded-lg focus:select-primary w-full"
                   value={newPostCategory}
                   onChange={(e) => setNewPostCategory(e.target.value as 'ANNOUNCEMENT' | 'FREE')}
                 >
@@ -902,23 +1086,20 @@ export default function Board() {
               </div>
 
               {/* Color Select */}
-              <div className="form-control">
+              <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text font-medium">색상</span>
                 </label>
                 <select
-                  className="select select-bordered rounded-lg focus:select-primary"
+                  className="select select-bordered rounded-lg focus:select-primary w-full"
                   value={newPostColor}
-                  onChange={(e) => setNewPostColor(e.target.value as ColorOption)}
+                  onChange={(e) => setNewPostColor(e.target.value as BoardColor)}
                 >
                   <option value="BLUE">파란색</option>
                   <option value="RED">빨간색</option>
                   <option value="PURPLE">보라색</option>
                   <option value="GREEN">초록색</option>
-                  <option value="YELLOW">노란색</option>
-                  <option value="ORANGE">주황색</option>
-                  <option value="PINK">분홍색</option>
-                  <option value="GRAY">회색</option>
+                  <option value="ORANGE">오렌지색</option>
                 </select>
               </div>
             </div>
@@ -946,6 +1127,37 @@ export default function Board() {
         onConfirm={confirmDeletePost}
         onCancel={cancelDeletePost}
       />
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="modal modal-open">
+          <div className="modal-box rounded-lg max-w-md animate-fade-in-up shadow-2xl border-2 border-red-200">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-bold text-lg text-red-800">오류 발생</h3>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={closeErrorModal}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-700 whitespace-pre-wrap">{errorMessage}</p>
+            </div>
+
+            <div className="modal-action">
+              <button 
+                className="btn btn-primary btn-sm rounded-lg"
+                onClick={closeErrorModal}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={closeErrorModal}></div>
+        </div>
+      )}
     </div>
   )
 }

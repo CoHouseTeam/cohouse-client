@@ -59,7 +59,7 @@ export interface ApiPost {
   preview: string
   groupId: number
   memberId: number
-  color: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'YELLOW' | 'ORANGE' | 'PINK' | 'GRAY'
+  color: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'ORANGE'
   createdAt: string
   updatedAt: string
 }
@@ -89,12 +89,14 @@ export interface CreatePostRequest {
   type: 'ANNOUNCEMENT' | 'FREE'
   title: string
   content: string
-  color: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'YELLOW' | 'ORANGE' | 'PINK' | 'GRAY'
+  color: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'ORANGE'
 }
 
 export interface UpdatePostRequest {
   title?: string
   content?: string
+  type?: 'ANNOUNCEMENT' | 'FREE'
+  color?: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'ORANGE'
   images?: string[]
 }
 
@@ -165,7 +167,7 @@ export interface NicknameModalProps {
 }
 
 // 📰 Board Types
-export type BoardColor = 'RED' | 'BLUE' | 'GRAY' | 'ORANGE' | 'GREEN' | 'PURPLE' | 'YELLOW' | 'PINK'
+export type BoardColor = 'RED' | 'BLUE' | 'GREEN' | 'PURPLE' | 'ORANGE'
 
 export interface BoardPost {
   id: number

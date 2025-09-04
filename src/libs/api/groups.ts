@@ -13,15 +13,23 @@ export async function fetchMyGroups() {
     
     // 응답 데이터 검증
     if (!response.data) {
-      throw new Error('그룹 정보가 없습니다.')
+      return []
     }
     
     return response.data
   } catch (error: any) {
-    console.error('❌ 그룹 정보 조회 실패:', error)
+    // 404 에러는 그룹이 없는 정상적인 상황이므로 빈 배열 반환
+    if (error.response?.status === 404) {
+      return []
+    }
+    
+    // 401 에러는 인증 문제
     if (error.response?.status === 401) {
+      console.error('❌ 인증이 필요합니다. 로그인해주세요.')
       throw new Error('인증이 필요합니다. 로그인해주세요.')
     }
+    
+    // 기타 에러는 그대로 throw
     throw error
   }
 }
@@ -33,7 +41,7 @@ export async function fetchMyRole(): Promise<MyRoleResponse> {
 }
 
 // 현재 사용자가 속한 그룹의 ID를 가져오는 함수
-export async function getCurrentGroupId(): Promise<number> {
+export async function getCurrentGroupId(): Promise<number | null> {
   try {
     console.log('🔍 getCurrentGroupId 호출됨')
     const groupData = await fetchMyGroups()
@@ -56,9 +64,17 @@ export async function getCurrentGroupId(): Promise<number> {
       }
     }
     
-    throw new Error('그룹 정보를 찾을 수 없습니다.')
+    // 그룹이 없는 경우 null 반환 (에러가 아님)
+    console.log('ℹ️ 그룹에 속하지 않음')
+    return null
   } catch (error: any) {
-    console.error('❌ 현재 그룹 ID 가져오기 실패:', error)
+    // 404 에러는 그룹이 없는 정상적인 상황이므로 null 반환
+    if (error.response?.status === 404) {
+      console.log('ℹ️ 그룹이 없음 (404)')
+      return null
+    }
+    
+    // 기타 에러는 그대로 throw
     throw error
   }
 }
@@ -100,7 +116,6 @@ export async function fetchGroupMembers(groupId: number) {
     console.log('✅ 그룹 멤버 정보 조회 성공:', response.data)
     return response.data
   } catch (error) {
-    console.error('❌ 그룹 멤버 정보 조회 실패:', error)
     throw error
   }
 }

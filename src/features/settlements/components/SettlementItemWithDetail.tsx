@@ -36,7 +36,7 @@ type Props = {
 export default function SettlementItemWithDetail({ initial, viewerId }: Props) {
   const { data, error } = useSettlementDetail(initial.id)
 
-  if (error) return <ErrorCard />
+  if (error) return <ErrorCard message="정산 상세 정보를 불러오는 중 오류가 발생했습니다." />
 
   // 상세 오기 전엔 DTO 스텁으로 먼저 렌더, 도착하면 자동 교체
   const item: Settlement = data ?? toSettlementStub(initial)

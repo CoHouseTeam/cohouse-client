@@ -1,27 +1,73 @@
 import React from 'react'
 import { useRef, useState, useEffect } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Menu, Bell, Share2, Copy, Check, LogOut } from 'lucide-react'
+import { Menu, Bell, Share2, Copy, Check, LogOut, User, ChevronDown } from 'lucide-react'
 import { logout } from '../libs/utils/auth'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth as useAuthContext } from '../contexts/AuthContext'
+import { useAuth } from '../libs/hooks/useAuth'
 import { createGroupInvitation, getCurrentGroupId } from '../libs/api/groups'
+import { withdrawUser } from '../libs/api/profile'
+import NotificationSidebar from './NotificationSidebar'
+import { useNotifications } from '../libs/hooks/useNotifications'
+import ConfirmModal from '../features/common/ConfirmModal'
 
 type NavBarProps = {
-  unreadCount?: number // optional for the bell dot
   children?: React.ReactNode
 }
 
-export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
+export default function NavBar({ children }: NavBarProps) {
   const drawerToggleRef = useRef<HTMLInputElement>(null)
   const [showShareDropdown, setShowShareDropdown] = useState(false)
   const [showCopiedToast, setShowCopiedToast] = useState(false)
-  
+  const [showNotificationSidebar, setShowNotificationSidebar] = useState(false)
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [showWithdrawSuccessModal, setShowWithdrawSuccessModal] = useState(false)
   // Context에서 인증 상태 가져오기
-  const { isAuthenticated: isLoggedIn, refreshAuthState } = useAuth()
+  const { isAuthenticated: isLoggedIn, refreshAuthState } = useAuthContext()
+  
+  // 권한 정보 가져오기
+  const { permissions } = useAuth()
+  
+  // 알림 관련 훅 사용
+  const { unreadCount } = useNotifications()
   
   const handleLogout = async () => {
     await logout() // 백엔드 API 호출 후 토큰 제거 및 리다이렉트
     refreshAuthState() // 인증 상태 새로고침
+  }
+
+  // 회원 탈퇴 확인 모달 열기
+  const handleWithdrawClick = () => {
+    setShowWithdrawModal(true)
+  }
+
+  // 회원 탈퇴 처리
+  const handleWithdraw = async () => {
+    try {
+      await withdrawUser()
+      setShowWithdrawModal(false)
+      setShowWithdrawSuccessModal(true)
+    } catch (error) {
+      console.error('회원 탈퇴 실패:', error)
+      alert('회원 탈퇴에 실패했습니다. 다시 시도해주세요.')
+    }
+  }
+
+  // 회원 탈퇴 완료 후 처리
+  const handleWithdrawSuccess = async () => {
+    setShowWithdrawSuccessModal(false)
+    await logout()
+    refreshAuthState()
+  }
+
+  // 알림 사이드바 열기
+  const handleNotificationClick = () => {
+    setShowNotificationSidebar(true)
+  }
+
+  // 알림 사이드바 닫기
+  const handleNotificationClose = () => {
+    setShowNotificationSidebar(false)
   }
 
   const closeDrawer = () => {
@@ -32,6 +78,13 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
     try {
       // 동적으로 현재 그룹 ID를 가져오기
       const groupId = await getCurrentGroupId()
+      
+      // 그룹이 없는 경우 처리
+      if (!groupId) {
+        alert('그룹에 속해있지 않습니다.')
+        return
+      }
+      
       const invitationData = await createGroupInvitation(groupId)
       const inviteCode = invitationData.inviteCode
       
@@ -52,6 +105,13 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
       // 폴백: 구식 브라우저 지원
       try {
         const groupId = await getCurrentGroupId()
+        
+        // 그룹이 없는 경우 처리
+        if (!groupId) {
+          alert('그룹에 속해있지 않습니다.')
+          return
+        }
+        
         const invitationData = await createGroupInvitation(groupId)
         const inviteCode = invitationData.inviteCode
         
@@ -117,11 +177,21 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
     }
   }, [])
 
+
+
   const commonLinks = [
-    { to: '/tasks', label: '할 일' },
-    { to: '/settlements', label: '정산하기' },
-    { to: '/board', label: '보드 게시판' },
+    { to: '/tasks', label: '할 일', requireGroup: true },
+    { to: '/settlements', label: '정산하기', requireGroup: true },
+    { to: '/board', label: '보드 게시판', requireGroup: true },
   ]
+
+  // 권한에 따라 메뉴 항목 필터링
+  const filteredCommonLinks = commonLinks.filter(link => {
+    if (link.requireGroup) {
+      return permissions.canAccessFeatures
+    }
+    return true
+  })
 
   return (
     <div className="drawer">
@@ -146,7 +216,7 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
           {/* center: desktop horizontal menu */}
           <div className="navbar-center hidden lg:flex">
             <ul className="menu menu-horizontal px-1">
-              {commonLinks.map(({ to, label }) => (
+              {filteredCommonLinks.map(({ to, label }) => (
                 <li key={to}>
                   <NavLink to={to} className={({ isActive }) => `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`}>
                     {label}
@@ -163,11 +233,13 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
                   </NavLink>
                 </li>
               ) : (
-                <li>
-                  <NavLink to="/mypage" className={({ isActive }) => `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`}>
-                    마이페이지
-                  </NavLink>
-                </li>
+                permissions.canAccessFeatures && (
+                  <li>
+                    <NavLink to="/mypage" className={({ isActive }) => `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`}>
+                      마이페이지
+                    </NavLink>
+                  </li>
+                )
               )}
             </ul>
           </div>
@@ -177,7 +249,11 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
             
             {isLoggedIn ? (
               <>
-                <button className="btn btn-ghost btn-square rounded-lg" aria-label="Notifications">
+                <button 
+                  className="btn btn-ghost btn-square rounded-lg" 
+                  aria-label="Notifications"
+                  onClick={handleNotificationClick}
+                >
                   <div className="indicator">
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
@@ -188,38 +264,78 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
                   </div>
                 </button>
 
-                <div className="dropdown dropdown-end">
+                {/* 공유 버튼 - 그룹장만 표시 */}
+                {permissions.canShareGroup && (
+                  <div className="dropdown dropdown-end">
+                    <button
+                      className="btn btn-ghost btn-square rounded-lg"
+                      aria-label="Share"
+                      onClick={() => setShowShareDropdown(!showShareDropdown)}
+                    >
+                      <Share2 className="w-5 h-5" />
+                    </button>
+                    
+                    {showShareDropdown && (
+                      <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-2">
+                        <li>
+                          <button
+                            onClick={handleShare}
+                            className="flex items-center gap-2"
+                          >
+                            <Copy className="w-4 h-4" />
+                            초대 코드 복사하기
+                          </button>
+                        </li>
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                {/* 그룹이 있는 사용자: 로그아웃 버튼 */}
+                {permissions.canAccessFeatures && (
                   <button
-                    className="btn btn-ghost btn-square rounded-lg"
-                    aria-label="Share"
-                    onClick={() => setShowShareDropdown(!showShareDropdown)}
+                    className="btn btn-ghost btn-sm rounded-lg"
+                    onClick={handleLogout}
+                    aria-label="Logout"
                   >
-                    <Share2 className="w-5 h-5" />
+                    <LogOut size={16} />
+                    로그아웃
                   </button>
-                  
-                  {showShareDropdown && (
-                    <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-2">
+                )}
+
+                {/* 그룹이 없는 사용자: 사용자 관리 드롭다운 */}
+                {!permissions.canAccessFeatures && (
+                  <div className="dropdown dropdown-end">
+                    <button
+                      className="btn btn-ghost btn-sm rounded-lg"
+                      aria-label="User Management"
+                    >
+                      <User size={16} />
+                      <ChevronDown size={14} />
+                    </button>
+                    
+                    <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-48 mt-2">
                       <li>
                         <button
-                          onClick={handleShare}
+                          onClick={handleLogout}
                           className="flex items-center gap-2"
                         >
-                          <Copy className="w-4 h-4" />
-                          초대 코드 복사하기
+                          <LogOut size={16} />
+                          로그아웃
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={handleWithdrawClick}
+                          className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                        >
+                          <User size={16} />
+                          회원 탈퇴
                         </button>
                       </li>
                     </ul>
-                  )}
-                </div>
-
-                  <button
-                    className="btn btn-ghost btn-sm rounded-lg"
-                  onClick={handleLogout}
-                    aria-label="Logout"
-                  >
-                  <LogOut size={16} />
-                    로그아웃
-                  </button>
+                  </div>
+                )}
               </>
             ) : (
               <Link to="/login" className="btn btn-custom btn-sm rounded-lg">로그인</Link>
@@ -236,8 +352,9 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
 
         <aside className="w-72 bg-base-100 min-h-full border-r relative z-[99999]">
           <div className="px-6 pt-6 pb-3 text-lg font-semibold">CoHouse</div>
+          
           <ul className="menu p-2">
-            {commonLinks.map(({ to, label }) => (
+            {filteredCommonLinks.map(({ to, label }) => (
               <li key={to}>
                 <NavLink to={to} onClick={closeDrawer} className="rounded-lg">{label}</NavLink>
               </li>
@@ -251,18 +368,31 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
               </li>
             ) : (
               <>
+                {permissions.canAccessFeatures && (
+                  <li>
+                    <NavLink to="/mypage" onClick={closeDrawer} className="rounded-lg">마이페이지</NavLink>
+                  </li>
+                )}
                 <li>
-                  <NavLink to="/mypage" onClick={closeDrawer} className="rounded-lg">마이페이지</NavLink>
-                </li>
-                <li>
-                                  <button 
-                  onClick={async () => { closeDrawer(); await handleLogout(); }} 
-                  className="rounded-lg w-full text-left flex items-center gap-2"
-                >
+                  <button 
+                    onClick={async () => { closeDrawer(); await handleLogout(); }} 
+                    className="rounded-lg w-full text-left flex items-center gap-2"
+                  >
                     <LogOut size={16} />
                     로그아웃
                   </button>
-              </li>
+                </li>
+                {!permissions.canAccessFeatures && (
+                  <li>
+                    <button 
+                      onClick={async () => { closeDrawer(); handleWithdrawClick(); }} 
+                      className="rounded-lg w-full text-left flex items-center gap-2 text-red-600 hover:text-red-700"
+                    >
+                      <User size={16} />
+                      회원 탈퇴
+                    </button>
+                  </li>
+                )}
               </>
             )}
           </ul>
@@ -278,6 +408,34 @@ export default function NavBar({ unreadCount = 0, children }: NavBarProps) {
           </div>
         </div>
       )}
+
+      {/* 알림 사이드바 */}
+      <NotificationSidebar
+        isOpen={showNotificationSidebar}
+        onClose={handleNotificationClose}
+      />
+
+      {/* 회원 탈퇴 확인 모달 */}
+      <ConfirmModal
+        open={showWithdrawModal}
+        title="회원 탈퇴"
+        message="정말로 회원 탈퇴를 하시겠습니까?"
+        confirmText="탈퇴"
+        cancelText="취소"
+        onConfirm={handleWithdraw}
+        onCancel={() => setShowWithdrawModal(false)}
+      />
+
+      {/* 회원 탈퇴 완료 모달 */}
+      <ConfirmModal
+        open={showWithdrawSuccessModal}
+        title="회원 탈퇴 완료"
+        message="회원 탈퇴가 완료되었습니다!"
+        confirmText="확인"
+        cancelText=""
+        onConfirm={handleWithdrawSuccess}
+        onCancel={handleWithdrawSuccess}
+      />
     </div>
   )
 }

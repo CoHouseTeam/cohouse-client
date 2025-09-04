@@ -11,7 +11,7 @@ export default function OngoingSettlements({ groupId }: OngoingSettlementsProps)
   const { data, isLoading, error } = useGroupSettlements(groupId || 0)
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorCard />
+  if (error) return <ErrorCard message="정산 정보를 불러오는 중 오류가 발생했습니다." />
 
   const ongoing = Array.isArray(data) ? data.filter((s) => s.status === 'PENDING') : []
   const isEmpty = ongoing.length === 0
