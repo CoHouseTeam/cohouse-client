@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import DaySelectModal from './DaySelectModal'
 import { ChevronRight, PlusCircleFill } from 'react-bootstrap-icons'
-import { Assignment, TaskTableProps, Template } from '../../../types/tasks'
-import { members } from '../../../mocks/db/tasks'
+import { Assignment, GroupMember, TaskTableProps, Template } from '../../../types/tasks'
 import { daysKr, toEngDay } from '../../../libs/utils/dayMapping'
 import {
   createTaskTemplate,
@@ -14,23 +13,26 @@ import { fetchMyGroups } from '../../../libs/api/groups'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
 
-const getMemberAvatar = (groupMemberId: number) => members[groupMemberId]?.profileImageUrl || ''
+//테스트 위해 임시 프로필 사진
+function getMemberAvatar(
+  groupMemberId: number | number[],
+  groupMembers: GroupMember[],
+  defaultImage: string = '/src/assets/icons/defaultImage.svg'
+) {
+  const memberId = Array.isArray(groupMemberId) ? groupMemberId[0] : groupMemberId
+  const member = groupMembers.find((m) => m.memberId === memberId)
+  return member?.profileImageUrl || defaultImage
+}
 
-const initialEmptyTemplates: Template[] = [
-  { templateId: -1, groupId: -1, category: '', createdAt: '', updatedAt: '' },
-  { templateId: -2, groupId: -1, category: '', createdAt: '', updatedAt: '' },
-  { templateId: -3, groupId: -1, category: '', createdAt: '', updatedAt: '' },
-]
-
-const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
+const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
   const [openModal, setOpenModal] = useState<number | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [editValues, setEditValues] = useState<Record<number, string>>({})
   const [groupId, setGroupId] = useState<number | null>(null)
 
-  // 그룹 ID를 최초에 받아오기
+  // 그룹 ID 불러오기
   useEffect(() => {
-    const loadGroupId = async () => {
+    async function loadGroup() {
       try {
         const data = await fetchMyGroups()
         setGroupId(data.groupId ?? data.id ?? null)
@@ -39,10 +41,10 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
         setGroupId(null)
       }
     }
-    loadGroupId()
+    loadGroup()
   }, [])
 
-  // 그룹ID 받아온 후에 템플릿 조회
+  // 그룹ID가 정해지면 템플릿 불러오기
   useEffect(() => {
     if (groupId !== null) {
       fetchTemplates(groupId)
@@ -52,13 +54,13 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
   const fetchTemplates = async (gid: number) => {
     try {
       const data = await getTaskTemplates(gid)
-      if (Array.isArray(data) && data.length === 0) {
-        setTemplates(initialEmptyTemplates.map((t) => ({ ...t, groupId: gid })))
-      } else {
+      if (Array.isArray(data)) {
         setTemplates(data)
+      } else {
+        setTemplates([])
       }
     } catch (error) {
-      setTemplates(initialEmptyTemplates.map((t) => ({ ...t, groupId: gid })))
+      setTemplates([])
     }
   }
 
@@ -116,9 +118,26 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
   }
 
   const findAssignmentForCell = (templateId: number, dayIdx: number): Assignment | undefined => {
-    const korDay = daysKr[dayIdx]
-    const engDay = toEngDay(korDay)
-    return assignments.find((a) => a.templateId === templateId && a.dayOfWeek === engDay)
+    const korDay = daysKr[dayIdx] // '일', '월', ...
+    const engDay = toEngDay(korDay) // 'SUNDAY', 'MONDAY', ...
+
+    return assignments.find((a) => {
+      if (!a.date) return false
+
+      const dateObj = new Date(a.date)
+      const dayMap: Record<number, string> = {
+        0: 'SUNDAY',
+        1: 'MONDAY',
+        2: 'TUESDAY',
+        3: 'WEDNESDAY',
+        4: 'THURSDAY',
+        5: 'FRIDAY',
+        6: 'SATURDAY',
+      }
+      const assignmentDay = dayMap[dateObj.getDay()] || ''
+
+      return a.templateId === templateId && assignmentDay === engDay
+    })
   }
 
   const handleDeleteTemplate = async (templateId: number) => {
@@ -152,7 +171,6 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
             ))}
           </tr>
         </thead>
-
         <tbody>
           {Array.isArray(templates) &&
             templates.map((template, rowIdx) => (
@@ -206,7 +224,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
                   const assignment = findAssignmentForCell(template.templateId, dayIdx)
                   const avatarUrl =
                     assignment?.groupMemberId !== undefined
-                      ? getMemberAvatar(assignment.groupMemberId)
+                      ? getMemberAvatar(assignment.groupMemberId, groupMembers)
                       : ''
                   return (
                     <td
@@ -244,7 +262,6 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
           </tr>
         </tbody>
       </table>
-
       {templates.map((template, idx) => (
         <button
           key={template.templateId}
@@ -252,19 +269,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments }) => {
           onClick={() => handleDeleteTemplate(template.templateId)}
           aria-label="템플릿 삭제"
           title="템플릿 삭제"
-          className={`
-    absolute
-    -right-2
-    text-red-500
-    cursor-pointer
-    border-none
-    bg-transparent
-    p-0
-    select-none
-    z-10
-    leading-none
-    text-lg
-  `}
+          className={`absolute -right-2 text-red-500 cursor-pointer border-none bg-transparent p-0 select-none z-10 leading-none text-lg`}
           style={{
             top: `${45 + idx * 40}px`,
           }}

@@ -1,6 +1,12 @@
 import api from './axios'
 import { TASK_ENDPOINTS } from './endpoints'
-import { Template, RepeatDay, Assignment, AssignmentBody } from '../../types/tasks'
+import {
+  Template,
+  RepeatDay,
+  Assignment,
+  AssignmentBody,
+  OverrideRequestBody,
+} from '../../types/tasks'
 
 // 할일 템플릿 목록 조회
 export async function getTaskTemplates(groupId: number): Promise<Template[]> {
@@ -72,8 +78,8 @@ export async function updateAssignment(
 }
 
 // 담당자 변경 요청 생성
-export async function createOverrideRequest(assignmentId: number, receiverId: number) {
-  const response = await api.post(TASK_ENDPOINTS.OVERRIDE_REQUEST(assignmentId), { receiverId })
+export async function createOverrideRequest(data: OverrideRequestBody) {
+  const response = await api.post(TASK_ENDPOINTS.OVERRIDE_REQUEST(data.assignmentId), data)
   return response.data
 }
 
@@ -98,5 +104,17 @@ export async function getOverrideRequestHistories(
   params?: { memberId?: number }
 ) {
   const response = await api.get(TASK_ENDPOINTS.OVERRIDE_HISTORIES(requestId), { params })
+  return response.data
+}
+
+// 미이행 내역 조회 (전체/일주일)
+export async function getUncompletedHistories(params: { groupId: number; memberId?: number }) {
+  const response = await api.get(TASK_ENDPOINTS.UNCOMPLETED_HISTORIES, { params })
+  return response.data
+}
+
+// 멤버별 히스토리
+export async function MemberAssignmentsHistories(params: { groupId: number; memberId?: number }) {
+  const response = await api.get(TASK_ENDPOINTS.MEMBER_HISTORIES, { params })
   return response.data
 }

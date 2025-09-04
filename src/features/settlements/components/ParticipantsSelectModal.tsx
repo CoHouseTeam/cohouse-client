@@ -1,10 +1,11 @@
 import { XCircle } from 'react-bootstrap-icons'
 import settlementIcon from '../../../assets/icons/settlementIcon.svg'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
-import { GroupMembers } from '../../../mocks/db/groupMembers'
-import { users } from '../../../mocks/db/users'
 import { UIParticipant } from '../utils/participants'
+import { useGroupMembers } from '../../../libs/hooks/useGroupMembers'
+import LoadingSpinner from '../../common/LoadingSpinner'
+import ErrorCard from '../../common/ErrorCard'
 
 interface Props {
   onClose: () => void
@@ -15,23 +16,10 @@ interface Props {
 export default function ParticipantsSelectModal({ onClose, onSelect, groupId }: Props) {
   const [checked, setChecked] = useState<Record<number, boolean>>({})
 
-  // groupId에 해당하는 groupMember 정보 추출(users 정보 이용)
-  const list = useMemo<UIParticipant[]>(() => {
-    const inGroup = GroupMembers.filter((gm) => gm.groupId === groupId && gm.status === 'ACTIVE')
+  const { data: list = [], isLoading, isError } = useGroupMembers(groupId)
 
-    return inGroup.map((gm) => {
-      const user = users.find((u) => u.id === gm.memberId)
-
-      return {
-        memberId: gm.memberId,
-        memberName: user?.name ?? `멤버 ${gm.memberId}`,
-        avatar: user?.profileImageUrl,
-        shareAmount: undefined,
-        status: undefined,
-        settlementParticipantId: undefined,
-      }
-    })
-  }, [groupId])
+  if (isLoading) return <LoadingSpinner />
+  if (isError) return <ErrorCard />
 
   // 전체 선택 여부
   const allChecked = list.length > 0 && list.every((m) => checked[m.memberId])
@@ -101,7 +89,7 @@ export default function ParticipantsSelectModal({ onClose, onSelect, groupId }: 
                     />
                     <div className="flex gap-4 items-center border rounded-lg shadow-sm w-full h-14 pl-3">
                       <img
-                        src={m.avatar ?? settlementIcon}
+                        src={m.profileImageUrl ?? settlementIcon}
                         alt={`${m.memberName}의 프로필`}
                         className="w-9 h-9 rounded-full"
                       />

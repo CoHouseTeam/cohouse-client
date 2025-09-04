@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
+import { createPortal } from 'react-dom'
 
 type ImageViewerProps = {
   open: boolean
-  src: string // blob: 또는 https: 이미지 URL
+  src: string
   alt?: string
   onClose: () => void
   downloadable?: boolean
@@ -16,7 +17,7 @@ export default function ImageViewer({
   alt = '이미지 미리보기',
   onClose,
 }: ImageViewerProps) {
-  if (!open) return null
+  const isOpen = open && !!src // ← 표시 여부만 플래그로
 
   // ESC로 닫기
   useEffect(() => {
@@ -27,7 +28,9 @@ export default function ImageViewer({
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  return (
+  if (!isOpen) return null
+
+  const node = (
     <div
       className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center"
       role="dialog"
@@ -55,4 +58,6 @@ export default function ImageViewer({
       </div>
     </div>
   )
+
+  return createPortal(node, document.body)
 }
