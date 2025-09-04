@@ -1,17 +1,14 @@
-import {
-  Settlement,
-  SettlementParticipant,
-  PaymentHistoryItem,
-  SettlementCategory,
-} from '../../types/settlement'
+import { Settlement, PaymentHistoryItem, SettlementCategory } from '../../types/settlement'
 
 /* ─────────────────────────────────────────────
    1) 멤버(표시용) & 그룹 멤버 ID 매핑
    ───────────────────────────────────────────── */
 export const members = {
-  1: { name: '최꿀꿀', profileUrl: '/avatars/u1.png' },
-  2: { name: '이댕댕', profileUrl: '/avatars/u2.png' },
-  3: { name: '김냥냥', profileUrl: '/avatars/u3.png' },
+  1: { name: '홍길동', profileUrl: '/avatars/u1.png' },
+  2: { name: '김지민', profileUrl: '/avatars/u2.png' },
+  3: { name: '이서연', profileUrl: '/avatars/u3.png' },
+  4: { name: '박준호', profileUrl: '/avatars/u4.png' },
+  5: { name: '최민지', profileUrl: '/avatars/u5.png' },
 } as const
 // ↑ UI에서 표시용으로만 참고(네임/아바타). API 타입에는 영향 없음
 
@@ -30,136 +27,133 @@ export function toCategory(input: string): SettlementCategory {
 }
 
 /* ─────────────────────────────────────────────
-   3) 참여자 목록
-   ───────────────────────────────────────────── */
-const p_ongoing: SettlementParticipant[] = [
-  {
-    id: 101,
-    group_member_id: 1,
-    per_person_amount: 200000,
-    status: 'PAID',
-    paidAt: '2025-08-13T01:00:00.000Z',
-  },
-  { id: 102, group_member_id: 2, per_person_amount: 200000, status: 'PENDING', paidAt: null },
-  {
-    id: 103,
-    group_member_id: 3,
-    per_person_amount: 200000,
-    status: 'PAID',
-    paidAt: '2025-08-13T01:15:00.000Z',
-  },
-]
-
-const p_completed_chicken: SettlementParticipant[] = [
-  {
-    id: 201,
-    group_member_id: 1,
-    per_person_amount: 12500,
-    status: 'PAID',
-    paidAt: '2025-08-08T13:00:00.000Z',
-  },
-  { id: 202, group_member_id: 2, per_person_amount: 12500, status: 'PAID', paidAt: null },
-  {
-    id: 203,
-    group_member_id: 3,
-    per_person_amount: 12500,
-    status: 'PAID',
-    paidAt: '2025-08-08T13:32:00.000Z',
-  },
-]
-
-const p_completed_lifestyle: SettlementParticipant[] = [
-  { id: 301, group_member_id: 1, per_person_amount: 26500, status: 'PAID', paidAt: null }, // 결제자
-  {
-    id: 302,
-    group_member_id: 2,
-    per_person_amount: 26500,
-    status: 'PAID',
-    paidAt: '2025-08-03T09:15:00.000Z',
-  },
-  {
-    id: 303,
-    group_member_id: 3,
-    per_person_amount: 26500,
-    status: 'PAID',
-    paidAt: '2025-08-03T09:16:00.000Z',
-  },
-]
-
-/* ─────────────────────────────────────────────
-   4) 정산(상세) 목록
+   3) 정산 등록 후 받아오는 정산 정보(목록)
+   - 명세서 예시 데이터로 구성
+   - participants: id / memberId / memberName / shareAmount / status
    ───────────────────────────────────────────── */
 export const settlements: Settlement[] = [
   {
-    id: 1,
-    payerId: 1, // 결제자: 그룹 멤버 ID
+    id: 9,
     category: 'FOOD',
-    title: '회식비 정산',
-    description: '삼겹살 + 후식',
-    total_amount: 600000,
-    status: 'PENDING',
-    imageUrl: '/receipts/2025-08-13-01.png',
-    createdAt: '2025-08-13T00:00:00.000Z',
-    completedAt: null,
-    participants: p_ongoing,
-  },
-  {
-    id: 2,
+    title: '마라탕 배달비4',
+    description: '저녁 식사 비용',
+    settlementAmount: 44500,
+    status: 'COMPLETED',
+    imageUrl:
+      'https://cohouse-bucket.s3.ap-northeast-2.amazonaws.com/groups/1/settlements/8/receipt/0e8d76d5-756b-4221-9d7a-d59ec184a283_pizza.jpg',
     payerId: 2,
-    category: 'FOOD',
-    title: '치킨 배달 정산',
-    description: null,
-    total_amount: 37500,
-    status: 'COMPLETED',
-    imageUrl: '/receipts/2025-08-08-13.png',
-    createdAt: '2025-08-08T12:00:00.000Z',
-    completedAt: '2025-08-09T10:00:00.000Z',
-    participants: p_completed_chicken,
+    payerName: members[1].name,
+    platformSupportAmount: 0,
+    equalDistribution: true,
+    participants: [
+      { id: 30, memberId: 1, memberName: members[1].name, shareAmount: 8900, status: 'PAID' },
+      { id: 31, memberId: 2, memberName: members[2].name, shareAmount: 8900, status: 'PAID' },
+      { id: 32, memberId: 3, memberName: members[3].name, shareAmount: 8900, status: 'PAID' },
+      { id: 33, memberId: 4, memberName: members[4].name, shareAmount: 8900, status: 'PAID' },
+      { id: 34, memberId: 5, memberName: members[5].name, shareAmount: 8900, status: 'PAID' },
+    ],
+    createdAt: '2025-08-19T19:53:15.560542Z',
+    updatedAt: '2025-08-21T22:07:47.543158Z',
   },
   {
-    id: 3,
-    payerId: 1,
-    category: 'DAILY_SUPPLIES',
-    title: '생활용품 공동구매 정산',
-    description: null,
-    total_amount: 79500,
+    id: 8,
+    category: 'FOOD',
+    title: '마라탕 배달비3',
+    description: '저녁 식사 비용',
+    settlementAmount: 44500,
     status: 'COMPLETED',
+    imageUrl:
+      'https://cohouse-bucket.s3.ap-northeast-2.amazonaws.com/groups/1/settlements/8/receipt/0e8d76d5-756b-4221-9d7a-d59ec184a283_pizza.jpg',
+    payerId: 1,
+    payerName: members[1].name,
+    platformSupportAmount: 0,
+    equalDistribution: true,
+    participants: [
+      { id: 30, memberId: 1, memberName: members[1].name, shareAmount: 8900, status: 'PAID' },
+      { id: 31, memberId: 2, memberName: members[2].name, shareAmount: 8900, status: 'PAID' },
+      { id: 32, memberId: 3, memberName: members[3].name, shareAmount: 8900, status: 'PAID' },
+      { id: 33, memberId: 4, memberName: members[4].name, shareAmount: 8900, status: 'PAID' },
+      { id: 34, memberId: 5, memberName: members[5].name, shareAmount: 8900, status: 'PAID' },
+    ],
+    createdAt: '2025-08-19T19:53:15.560542Z',
+    updatedAt: '2025-08-21T22:07:47.543158Z',
+  },
+  {
+    id: 7,
+    category: 'FOOD',
+    title: '마라탕 배달비2',
+    description: '저녁 식사 비용2',
+    settlementAmount: 80000,
+    status: 'PENDING',
     imageUrl: null,
-    createdAt: '2025-08-01T15:00:00.000Z',
-    completedAt: '2025-08-03T09:30:00.000Z',
-    participants: p_completed_lifestyle,
+    payerId: 1,
+    payerName: members[1].name,
+    platformSupportAmount: 0,
+    equalDistribution: true,
+    participants: [
+      { id: 25, memberId: 1, memberName: members[1].name, shareAmount: 16000, status: 'PAID' },
+      { id: 26, memberId: 2, memberName: members[2].name, shareAmount: 16000, status: 'PENDING' },
+      { id: 27, memberId: 3, memberName: members[3].name, shareAmount: 16000, status: 'PENDING' },
+      { id: 28, memberId: 4, memberName: members[4].name, shareAmount: 16000, status: 'PENDING' },
+      { id: 29, memberId: 5, memberName: members[5].name, shareAmount: 16000, status: 'PENDING' },
+    ],
+    createdAt: '2025-08-19T14:32:34.538712Z',
+    updatedAt: '2025-08-19T14:32:34.538712Z',
+  },
+  {
+    id: 6,
+    category: 'FOOD',
+    title: '마라탕 배달비',
+    description: '저녁 식사 비용',
+    settlementAmount: 60000,
+    status: 'CANCELED',
+    imageUrl: null,
+    payerId: 2,
+    payerName: members[2].name,
+    platformSupportAmount: 0,
+    equalDistribution: true,
+    // 명세서 예시: 일부는 CANCELED, 나머지는 REFUNDED
+    participants: [
+      { id: 21, memberId: 1, memberName: members[1].name, shareAmount: 15000, status: 'CANCELED' },
+      { id: 22, memberId: 2, memberName: members[2].name, shareAmount: 15000, status: 'REFUNDED' },
+      { id: 23, memberId: 3, memberName: members[3].name, shareAmount: 15000, status: 'REFUNDED' },
+      { id: 24, memberId: 4, memberName: members[4].name, shareAmount: 15000, status: 'REFUNDED' },
+    ],
+    createdAt: '2025-08-18T20:39:46.746652Z',
+    updatedAt: '2025-08-18T20:52:39.475619Z',
   },
 ]
 
 /* ─────────────────────────────────────────────
-   5) 내 송금 히스토리 
+   4) 나의 송금 내역(히스토리)
+   - transferAt 사용 (명세서)
    ───────────────────────────────────────────── */
 export const myPaymentHistory: PaymentHistoryItem[] = [
   {
-    paymentHistoryId: 11,
-    settlementId: 2, // 치킨 배달 정산 (id:2, payerId:2)
-    senderId: 1, // 보낸 사람: 1
-    receiverId: 2, // 받는 사람: 결제자 2
-    amount: 12500,
-    status: 'PAID', // 송금 완료
-    createdAt: '2025-08-08T13:00:00.000Z',
-  },
-  {
-    paymentHistoryId: 13,
-    settlementId: 3, // 생활용품 (id:3, payerId:1)
-    senderId: 1,
-    receiverId: 3, // 결제자 1
-    amount: 26500,
-    status: 'REFUNDED', // 송금 취소
-    createdAt: '2025-08-03T09:16:00.000Z',
-  },
-  {
-    paymentHistoryId: 14,
-    settlementId: 1, // 회식비 (id:1, payerId:1)
+    paymentHistoryId: 4,
+    settlementId: 6,
     senderId: 3,
-    receiverId: 1, // 결제자 1
-    amount: 200000,
-    status: 'FAILED', // 송금 실패 (이후 2025-08-13에 성공 이력 존재)
-    createdAt: '2025-08-04T11:20:00.000Z',
+    receiverId: 2,
+    amount: 15000,
+    status: 'PAID',
+    transferAt: '2025-08-18T20:40:02.306575Z',
+  },
+  {
+    paymentHistoryId: 8,
+    settlementId: 6,
+    senderId: 1,
+    receiverId: 2,
+    amount: 15000,
+    status: 'REFUNDED',
+    transferAt: '2025-08-18T20:52:39.436124Z',
+  },
+  {
+    paymentHistoryId: 11,
+    settlementId: 8,
+    senderId: 2,
+    receiverId: 1,
+    amount: 8900,
+    status: 'PAID',
+    transferAt: '2025-08-19T20:27:18.951895Z',
   },
 ]

@@ -1,18 +1,18 @@
 import { Suspense } from 'react'
 import { Routes } from './app/routes'
 import AppLayout from './layouts/AppLayout'
+import LoadingSpinner from './features/common/LoadingSpinner'
+import { AuthProvider } from './contexts/AuthContext'
 
 function App() {
   return (
-    <AppLayout>
-      <Suspense fallback={
-        <div className="flex justify-center items-center h-64">
-          <span className="loading loading-spinner loading-lg"></span>
-        </div>
-      }>
-        <Routes />
-      </Suspense>
-    </AppLayout>
+    <AuthProvider>
+      <AppLayout>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes />
+        </Suspense>
+      </AppLayout>
+    </AuthProvider>
   )
 }
 

@@ -1,70 +1,72 @@
 import React from 'react'
-
-type Member = {
-  name: string
-  role: string
-  avatar: string
-}
-
-type Group = {
-  date: string
-  members: Member[]
-}
+import { Group, ModalProps } from '../../../types/main.ts'
+import { XCircleFill } from 'react-bootstrap-icons'
 
 const pendingData: Group[] = [
   {
     date: '2025.08.03(일)',
     members: [
-      { name: '분리수거', role: '그룹원1', avatar: '/' },
-      { name: '빨래', role: '그룹원2', avatar: '/' },
+      { task: '분리수거', name: '그룹원1', profileUrl: '/' },
+      { task: '빨래', name: '그룹원2', profileUrl: '/' },
     ],
   },
   {
     date: '2025.08.05(월)',
-    members: [{ name: '치킨 배달 정산', role: '그룹원3', avatar: '/' }],
+    members: [{ task: '치킨 배달 정산', name: '그룹원3', profileUrl: '/' }],
+  },
+  {
+    date: '2025.08.08(금)',
+    members: [
+      { task: '치킨 배달 정산', name: '그룹원3', profileUrl: '/' },
+      { task: '분리수거', name: '그룹원1', profileUrl: '/' },
+      { task: '설거지', name: '그룹원2', profileUrl: '/' },
+    ],
   },
 ]
 
-interface UncompletedTasksModalProps {
-  onClose: () => void
-}
-
-const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({ onClose }) => {
+const UncompletedTasksModal: React.FC<ModalProps> = ({ onClose }) => {
   return (
-    <div className="modal modal-open">
+    <dialog open className="modal">
       <div className="modal-box max-w-xs max-h-[90vh] overflow-y-auto relative">
         <button
+          className="btn btn-xs btn-circle btn-ghost absolute right-4 top-4 z-50"
           onClick={onClose}
-          className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
           aria-label="닫기"
+          type="button"
         >
-          ✕
+          <XCircleFill className="text-xl text-gray-400" />
         </button>
 
-        <h3 className="font-bold text-lg text-center mb-4">미이행 내역</h3>
+        <h3 className="font-bold text-[24px] text-center mb-6">미이행 내역</h3>
 
         {pendingData.map((group) => (
-          <div key={group.date} className="mb-4">
-            <div className="text-sm font-semibold text-gray-800 mb-2">{group.date}</div>
-            <div className="card bg-base-200 shadow-sm">
-              <div className="card-body p-4">
-                {group.members.map((m) => (
-                  <div key={m.name} className="flex items-center mb-3 last:mb-0">
-                    <img src={m.avatar} alt={m.name} className="w-8 h-8 rounded-full border mr-3" />
-                    <div>
-                      <div className="font-semibold">{m.name}</div>
-                      <div className="text-xs text-gray-500">{m.role}</div>
-                    </div>
+          <div key={group.date} className="mb-6">
+            <div className="text-[15px] font-bold mb-2 text-gray-800">{group.date}</div>
+            <div className="bg-white border border-[#5C5C5C] rounded-lg px-4 py-3">
+              {group.members.map((m) => (
+                <div key={m.task + m.name} className="flex items-center mb-3 last:mb-0">
+                  <img
+                    src={m.profileUrl}
+                    alt={m.task}
+                    className="w-8 h-8 rounded-full border mr-3 bg-gray-100 object-cover"
+                  />
+                  <div>
+                    <div className="text-[14px]">{m.task}</div>
+                    <div className="text-xs text-gray-500">{m.name}</div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="modal-backdrop" onClick={onClose}></div>
-    </div>
+      <form
+        method="dialog"
+        className="modal-backdrop fixed inset-0 bg-black/40"
+        onClick={onClose}
+      ></form>
+    </dialog>
   )
 }
 

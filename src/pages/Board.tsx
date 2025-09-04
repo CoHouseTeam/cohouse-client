@@ -1,5 +1,6 @@
-import { Heart, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import ConfirmModal from '../features/common/ConfirmModal'
+import { Heart, X, ChevronDown, ChevronUp } from 'lucide-react'
 
 // 게시글 타입 정의
 interface Post {
@@ -12,183 +13,235 @@ interface Post {
   isPinned: boolean
   color: string
   category: 'notice' | 'free' // 공지사항 또는 자유게시판
+  likedBy: string[] // 좋아요를 누른 사용자 목록
 }
+
+// 사용자 타입 정의
+interface User {
+  id: string
+  name: string
+  profileImage: string
+}
+
 
 export default function Board() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [activeTab, setActiveTab] = useState<'notice' | 'free'>('notice')
-  const postsPerPage = 8
+  const [postsPerPage, setPostsPerPage] = useState(4)
+  // 반응형 페이지네이션: 모바일 4개, 웹(>=lg) 16개
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)')
+    const updatePostsPerPage = () => setPostsPerPage(mql.matches ? 16 : 4)
+    updatePostsPerPage()
+    if (mql.addEventListener) {
+      mql.addEventListener('change', updatePostsPerPage)
+      return () => mql.removeEventListener('change', updatePostsPerPage)
+    } else {
+      // Safari
+      // @ts-ignore
+      mql.addListener(updatePostsPerPage)
+      return () => {
+        // @ts-ignore
+        mql.removeListener(updatePostsPerPage)
+      }
+    }
+  }, [])
+  const [showLikeUsers, setShowLikeUsers] = useState(false)
+  const [showNewPostModal, setShowNewPostModal] = useState(false)
+  const [newPostTitle, setNewPostTitle] = useState('')
+  const [newPostContent, setNewPostContent] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
   // 게시글 데이터 (실제로는 API에서 가져올 데이터)
-  const posts: Post[] = [
+  const [posts, setPosts] = useState<Post[]>([
     {
       id: 1,
-      title: '월간 관리비 납부 안내',
-      content: '2024년 1월 관리비 납부 기한이 1월 25일까지입니다. 늦지 않게 납부해 주시기 바랍니다. 관리비는 각 세대별로 차등 적용되며, 공동시설 이용료와 기본 관리비로 구성되어 있습니다. 납부 방법은 온라인 뱅킹, 자동이체, 현금 납부 등이 가능합니다. 문의사항이 있으시면 관리사무소로 연락해 주세요.',
+      title: '공동주택 관리 규정 안내',
+      content: '안녕하세요. 공동주택 관리 규정에 대해 안내드립니다. 모든 주민분들께서 참고해 주시기 바랍니다.',
       author: '관리자',
       date: '2024-01-15',
       likes: 12,
       isPinned: true,
-      color: 'bg-blue-100 border-blue-200 text-blue-800',
-      category: 'notice'
+      color: 'border-blue-200 bg-blue-50',
+      category: 'notice',
+      likedBy: ['user1', 'user2', 'user3']
     },
     {
       id: 2,
-      title: '엘리베이터 점검 안내',
-      content: '1월 20일 오전 9시부터 12시까지 엘리베이터 점검이 예정되어 있습니다. 점검 시간 동안 엘리베이터 이용이 제한될 수 있으니 참고하시기 바랍니다. 점검 내용은 승강기 안전장치, 제어장치, 도어 시스템 등을 포함합니다. 점검 완료 후 정상 운행을 재개할 예정입니다.',
+      title: '엘리베이터 점검 공지',
+      content: '내일 오전 9시부터 12시까지 엘리베이터 점검이 있을 예정입니다. 이용에 참고해 주세요.',
       author: '관리자',
-      date: '2024-01-12',
+      date: '2024-01-14',
       likes: 8,
       isPinned: true,
-      color: 'bg-orange-100 border-orange-200 text-orange-800',
-      category: 'notice'
+      color: 'border-yellow-200 bg-yellow-50',
+      category: 'notice',
+      likedBy: ['user1', 'user4']
     },
     {
       id: 3,
-      title: '분기별 입주민 회의 안내',
-      content: '2024년 1분기 입주민 회의가 1월 30일 오후 7시에 예정되어 있습니다. 많은 참여 부탁드립니다. 회의 안건은 관리비 현황, 공동시설 개선사항, 입주민 건의사항 등이 포함됩니다. 회의 참석을 원하시는 분은 사전에 관리사무소로 신청해 주시기 바랍니다.',
+      title: '주차장 이용 규정 변경',
+      content: '주차장 이용 규정이 변경되었습니다. 자세한 내용은 첨부된 파일을 참고해 주세요.',
       author: '관리자',
-      date: '2024-01-10',
+      date: '2024-01-13',
       likes: 15,
       isPinned: false,
-      color: 'bg-green-100 border-green-200 text-green-800',
-      category: 'notice'
+      color: 'border-green-200 bg-green-50',
+      category: 'notice',
+      likedBy: ['user1', 'user2', 'user5', 'user6']
     },
     {
       id: 4,
-      title: '공동주택 소식지 발행',
-      content: '2024년 1월호 공동주택 소식지가 발행되었습니다. 로비에서 확인하실 수 있습니다. 이번 호에는 입주민 인터뷰, 공동시설 이용 안내, 계절별 관리 팁 등이 실려 있습니다. 소식지에 기고를 원하시는 분은 관리사무소로 연락해 주세요.',
+      title: '커뮤니티 공간 이용 안내',
+      content: '커뮤니티 공간 이용 시간과 규정에 대해 안내드립니다.',
       author: '관리자',
-      date: '2024-01-08',
+      date: '2024-01-12',
       likes: 6,
       isPinned: false,
-      color: 'bg-purple-100 border-purple-200 text-purple-800',
-      category: 'notice'
+      color: 'border-purple-200 bg-purple-50',
+      category: 'notice',
+      likedBy: ['user3', 'user7']
     },
     {
       id: 5,
-      title: '주차장 공사 완료 안내',
-      content: '지하주차장 리모델링 공사가 완료되었습니다. 이용에 참고하시기 바랍니다. 공사 내용은 바닥 보수, 조명 개선, 환기 시스템 업그레이드 등이 포함되었습니다. 새로운 주차 시스템이 적용되어 더욱 편리하게 이용하실 수 있습니다.',
+      title: '분리수거 정책 변경',
+      content: '분리수거 정책이 변경되었습니다. 새로운 분리수거 가이드를 참고해 주세요.',
       author: '관리자',
-      date: '2024-01-05',
-      likes: 23,
+      date: '2024-01-11',
+      likes: 20,
       isPinned: false,
-      color: 'bg-teal-100 border-teal-200 text-teal-800',
-      category: 'notice'
+      color: 'border-orange-200 bg-orange-50',
+      category: 'notice',
+      likedBy: ['user1', 'user2', 'user3', 'user4', 'user5']
     },
     {
       id: 6,
-      title: '입주민 건의사항 접수',
-      content: '입주민 여러분의 소중한 의견을 기다립니다. 건의사항은 관리사무소로 접수해 주세요. 건의사항 접수 방법은 온라인 게시판, 이메일, 전화, 직접 방문 등이 가능합니다. 접수된 건의사항은 검토 후 적절한 조치를 취하도록 하겠습니다.',
-      author: '관리자',
-      date: '2024-01-03',
-      likes: 18,
+      title: '안녕하세요! 이사왔습니다',
+      content: '안녕하세요! 101동 502호로 이사온 김철수입니다. 앞으로 잘 부탁드립니다!',
+      author: '김철수',
+      date: '2024-01-10',
+      likes: 5,
       isPinned: false,
-      color: 'bg-pink-100 border-pink-200 text-pink-800',
-      category: 'notice'
+      color: 'border-pink-200 bg-pink-50',
+      category: 'free',
+      likedBy: ['user1', 'user8']
     },
     {
       id: 7,
-      title: '분리수거 정책 변경',
-      content: '2024년부터 분리수거 정책이 변경되었습니다. 자세한 내용은 안내문을 참고하세요. 주요 변경사항은 플라스틱 분리수거 세분화, 음식물쓰레기 배출 방법 개선 등입니다. 새로운 분리수거 방법을 숙지하시고 적극 협조해 주시기 바랍니다.',
-      author: '관리자',
-      date: '2024-01-01',
-      likes: 31,
+      title: '주차 문제에 대한 건의',
+      content: '주차장이 너무 좁아서 불편합니다. 개선 방안을 논의해보면 좋겠습니다.',
+      author: '이영희',
+      date: '2024-01-09',
+      likes: 18,
       isPinned: false,
-      color: 'bg-indigo-100 border-indigo-200 text-indigo-800',
-      category: 'notice'
+      color: 'border-red-200 bg-red-50',
+      category: 'free',
+      likedBy: ['user1', 'user2', 'user3', 'user4', 'user9']
     },
     {
       id: 8,
-      title: '공동시설 이용 시간',
-      content: '헬스장, 독서실 등 공동시설의 이용 시간이 조정되었습니다. 헬스장은 오전 6시부터 오후 10시까지, 독서실은 오전 9시부터 오후 9시까지 이용 가능합니다. 이용 시 시설 이용 규칙을 준수해 주시기 바랍니다.',
-      author: '관리자',
-      date: '2023-12-28',
-      likes: 11,
+      title: '커뮤니티 공간 개선 제안',
+      content: '커뮤니티 공간에 더 많은 편의시설을 추가하면 좋겠습니다.',
+      author: '박민수',
+      date: '2024-01-08',
+      likes: 7,
       isPinned: false,
-      color: 'bg-amber-100 border-amber-200 text-amber-800',
-      category: 'notice'
+      color: 'border-indigo-200 bg-indigo-50',
+      category: 'free',
+      likedBy: ['user1', 'user5', 'user10']
     },
     {
       id: 9,
-      title: '안전점검 실시 안내',
-      content: '월 1회 정기 안전점검이 실시됩니다. 소화기, 비상구, 안전장치 등을 점검하니 협조해 주시기 바랍니다. 점검 시간은 오전 10시부터 오후 4시까지이며, 점검 중에는 일시적으로 출입이 제한될 수 있습니다.',
-      author: '관리자',
-      date: '2023-12-25',
-      likes: 7,
+      title: '반려동물 산책 시간 조정',
+      content: '반려동물 산책 시간을 조정해서 다른 주민들과 충돌을 피하고 싶습니다.',
+      author: '최지영',
+      date: '2024-01-07',
+      likes: 9,
       isPinned: false,
-      color: 'bg-red-100 border-red-200 text-red-800',
-      category: 'notice'
+      color: 'border-teal-200 bg-teal-50',
+      category: 'free',
+      likedBy: ['user2', 'user6', 'user11']
     },
     {
       id: 10,
-      title: '입주민 동호회 모집',
-      content: '다양한 입주민 동호회를 모집합니다. 독서회, 등산회, 요리회, 운동회 등 관심 있는 분들의 많은 참여를 기다립니다. 동호회 활동을 통해 이웃과의 소통과 친목을 도모할 수 있습니다.',
-      author: '관리자',
-      date: '2023-12-20',
-      likes: 25,
+      title: '공동구매 제안',
+      content: '생활용품 공동구매를 진행하면 좋겠습니다. 관심 있는 분들 연락주세요.',
+      author: '정수진',
+      date: '2024-01-06',
+      likes: 14,
       isPinned: false,
-      color: 'bg-emerald-100 border-emerald-200 text-emerald-800',
-      category: 'notice'
+      color: 'border-cyan-200 bg-cyan-50',
+      category: 'free',
+      likedBy: ['user1', 'user3', 'user7', 'user12']
     },
-    // 자유게시판 게시글들
     {
       id: 11,
-      title: '헬스장 운동 파트너 구합니다',
-      content: '헬스장에서 함께 운동할 파트너를 구합니다. 초보자도 환영합니다. 주로 저녁 7-9시에 운동하고 싶은데 혼자 하기보다는 함께 하면 더 재미있을 것 같아요. 관심 있으신 분은 연락주세요!',
-      author: '101호 김철수',
-      date: '2024-01-14',
-      likes: 8,
+      title: '건물 외벽 도색 공사 안내',
+      content: '건물 외벽 도색 공사가 예정되어 있습니다. 공사 기간 동안 불편을 드려 죄송합니다.',
+      author: '관리자',
+      date: '2024-01-05',
+      likes: 3,
       isPinned: false,
-      color: 'bg-cyan-100 border-cyan-200 text-cyan-800',
-      category: 'free'
+      color: 'border-gray-200 bg-gray-50',
+      category: 'notice',
+      likedBy: ['user1']
     },
     {
       id: 12,
-      title: '분실물 찾습니다',
-      content: '어제 저녁에 로비에서 검은색 지갑을 분실했습니다. 혹시 발견하신 분이 계시면 연락 부탁드립니다. 지갑 안에 신분증과 카드가 들어있어서 급합니다. 보상도 드리겠습니다.',
-      author: '205호 이영희',
-      date: '2024-01-13',
-      likes: 5,
+      title: '소음 관련 민원',
+      content: '밤늦은 시간 소음이 심해서 불편합니다. 모두가 조용한 환경에서 생활할 수 있도록 협조해 주세요.',
+      author: '한미영',
+      date: '2024-01-04',
+      likes: 11,
       isPinned: false,
-      color: 'bg-rose-100 border-rose-200 text-rose-800',
-      category: 'free'
+      color: 'border-amber-200 bg-amber-50',
+      category: 'free',
+      likedBy: ['user2', 'user4', 'user8', 'user13']
     },
     {
       id: 13,
-      title: '독서모임 참여하실 분',
-      content: '월 2회 독서모임을 시작하려고 합니다. 매주 토요일 오후 2시에 독서실에서 만나서 책 이야기를 나누고 싶어요. 현재 3명이 참여하고 있고, 더 많은 분들의 참여를 기다립니다.',
-      author: '302호 박민수',
-      date: '2024-01-12',
-      likes: 12,
+      title: '공동주택 보안 강화',
+      content: '보안을 강화하기 위해 CCTV 설치를 검토하고 있습니다.',
+      author: '관리자',
+      date: '2024-01-03',
+      likes: 16,
       isPinned: false,
-      color: 'bg-violet-100 border-violet-200 text-violet-800',
-      category: 'free'
+      color: 'border-slate-200 bg-slate-50',
+      category: 'notice',
+      likedBy: ['user1', 'user2', 'user3', 'user5', 'user9']
     },
     {
       id: 14,
-      title: '주차장 공간 양도',
-      content: '저희 세대는 차량을 팔아서 주차장 공간이 비게 되었습니다. 혹시 주차 공간이 필요하신 분이 계시면 양도해드릴 수 있습니다. 연락 부탁드립니다.',
-      author: '401호 최지영',
-      date: '2024-01-11',
-      likes: 15,
+      title: '정원 가꾸기 모임',
+      content: '정원 가꾸기 모임을 만들고 싶습니다. 관심 있는 분들 연락주세요.',
+      author: '송미라',
+      date: '2024-01-02',
+      likes: 8,
       isPinned: false,
-      color: 'bg-slate-100 border-slate-200 text-slate-800',
-      category: 'free'
+      color: 'border-emerald-200 bg-emerald-50',
+      category: 'free',
+      likedBy: ['user1', 'user6', 'user10', 'user14']
     },
     {
       id: 15,
-      title: '반려동물 산책 친구',
-      content: '강아지와 함께 산책할 친구를 구합니다. 저희 강아지는 골든리트리버 2살이고, 아주 순합니다. 주로 저녁 6시에 산책하는데 함께 하실 분 있으시면 좋겠어요.',
-      author: '503호 정수진',
-      date: '2024-01-13',
-      likes: 9,
+      title: '재활용품 수거 일정 변경',
+      content: '재활용품 수거 일정이 변경되었습니다. 새로운 일정을 확인해 주세요.',
+      author: '관리자',
+      date: '2024-01-01',
+      likes: 4,
       isPinned: false,
-      color: 'bg-yellow-100 border-yellow-200 text-yellow-800',
-      category: 'free'
+      color: 'border-lime-200 bg-lime-50',
+      category: 'notice',
+      likedBy: ['user2', 'user7']
     }
-  ]
+  ])
+
+  // 현재 사용자 (실제로는 로그인된 사용자 정보)
+  // 좋아요는 사용자 ID로, 작성자 비교는 사용자 이름으로 처리
+  const currentUserId = 'user1'
+  const currentUserName = '김철수'
 
   // 현재 탭에 해당하는 게시글만 필터링
   const filteredPosts = posts.filter(post => post.category === activeTab)
@@ -214,47 +267,190 @@ export default function Board() {
   // 게시글 클릭 함수
   const handlePostClick = (post: Post) => {
     setSelectedPost(post)
+    setShowLikeUsers(false)
   }
 
   // 모달 닫기 함수
   const closeModal = () => {
     setSelectedPost(null)
+    setShowLikeUsers(false)
+  }
+
+  // 좋아요 토글 함수
+  const handleLikeToggle = (postId: number) => {
+    setPosts(prevPosts => 
+      prevPosts.map(post => {
+        if (post.id === postId) {
+          const isLiked = post.likedBy.includes(currentUserId)
+          console.log(`Post ${postId}: isLiked = ${isLiked}, currentUser = ${currentUserId}, likedBy = ${post.likedBy}`)
+          
+          if (isLiked) {
+            // 좋아요 취소
+            const updatedPost = {
+              ...post,
+              likes: post.likes - 1,
+              likedBy: post.likedBy.filter(userId => userId !== currentUserId)
+            }
+            console.log('좋아요 취소:', updatedPost)
+            
+            // 선택된 게시글도 업데이트
+            if (selectedPost && selectedPost.id === postId) {
+              setSelectedPost(updatedPost)
+            }
+            
+            return updatedPost
+          } else {
+            // 좋아요 추가
+            const updatedPost = {
+              ...post,
+              likes: post.likes + 1,
+              likedBy: [...post.likedBy, currentUserId]
+            }
+            console.log('좋아요 추가:', updatedPost)
+            
+            // 선택된 게시글도 업데이트
+            if (selectedPost && selectedPost.id === postId) {
+              setSelectedPost(updatedPost)
+            }
+            
+            return updatedPost
+          }
+        }
+        return post
+      })
+    )
+  }
+
+  // 삭제 확인 모달 열기
+  const requestDeletePost = (postId: number) => {
+    setPendingDeleteId(postId)
+    setShowConfirm(true)
+  }
+
+  // 삭제 확정 처리
+  const confirmDeletePost = () => {
+    if (pendingDeleteId == null) return
+    setPosts(prev => prev.filter(p => p.id !== pendingDeleteId))
+    setShowConfirm(false)
+    setPendingDeleteId(null)
+    closeModal()
+  }
+
+  // 삭제 취소 처리
+  const cancelDeletePost = () => {
+    setShowConfirm(false)
+    setPendingDeleteId(null)
+  }
+
+  // 좋아요 사용자 목록 토글
+  const toggleLikeUsers = () => {
+    setShowLikeUsers(!showLikeUsers)
+  }
+
+  // 새 글 작성 모달 열기
+  const openNewPostModal = () => {
+    setShowNewPostModal(true)
+  }
+
+  // 새 글 작성 모달 닫기
+  const closeNewPostModal = () => {
+    setShowNewPostModal(false)
+    setNewPostTitle('')
+    setNewPostContent('')
+  }
+
+  // 새 글 작성 제출
+  const handleNewPostSubmit = () => {
+    if (!newPostTitle.trim() || !newPostContent.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.')
+      return
+    }
+
+    const newPost: Post = {
+      id: Math.max(...posts.map(p => p.id)) + 1,
+      title: newPostTitle,
+      content: newPostContent,
+      author: currentUserName,
+      date: new Date().toISOString().split('T')[0],
+      likes: 0,
+      isPinned: false,
+      color: 'border-gray-200 bg-gray-50',
+      category: activeTab,
+      likedBy: []
+    }
+
+    setPosts(prevPosts => [newPost, ...prevPosts])
+    closeNewPostModal()
+  }
+
+  // 좋아요 사용자 목록 (실제로는 API에서 가져올 데이터)
+  const likeUsers: User[] = [
+    { id: 'user1', name: '김철수', profileImage: '' },
+    { id: 'user2', name: '이영희', profileImage: '' },
+    { id: 'user3', name: '박민수', profileImage: '' },
+    { id: 'user4', name: '최지영', profileImage: '' },
+    { id: 'user5', name: '정수진', profileImage: '' }
+  ]
+
+  // 사용자 이니셜 생성 함수
+  const getUserInitial = (name: string) => {
+    return name.charAt(0)
+  }
+
+  // 사용자 아바타 색상 생성 함수
+  const getUserAvatarColor = (name: string) => {
+    const colors = [
+      'bg-blue-500',
+      'bg-red-500', 
+      'bg-green-500',
+      'bg-yellow-500',
+      'bg-purple-500',
+      'bg-pink-500',
+      'bg-indigo-500',
+      'bg-teal-500'
+    ]
+    const index = name.charCodeAt(0) % colors.length
+    return colors[index]
   }
 
   return (
     <div className="space-y-6">
-      {/* 헤더 */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-neutral">게시판</h1>
+          <h1 className="text-3xl font-bold">게시판</h1>
         </div>
-        <button className="btn btn-primary btn-sm sm:btn-md">
+        <button 
+          className="btn btn-custom btn-primary btn-sm sm:btn-md rounded-lg"
+          onClick={openNewPostModal}
+        >
           <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          새 글 작성
-        </button>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            새 글 작성
+          </button>
       </div>
 
       {/* Tab Navigation */}
-      <div className="tabs tabs-boxed">
-        <button 
-          className={`tab ${activeTab === 'notice' ? 'tab-active' : ''}`}
+      <div className="tabs tabs-boxed rounded-lg">
+        <button
+          className={`tab rounded-lg ${activeTab === 'notice' ? 'tab-active' : ''}`}
           onClick={() => handleTabChange('notice')}
         >
           공지사항
         </button>
-        <button 
-          className={`tab ${activeTab === 'free' ? 'tab-active' : ''}`}
+        <button
+          className={`tab rounded-lg ${activeTab === 'free' ? 'tab-active' : ''}`}
           onClick={() => handleTabChange('free')}
         >
           자유게시판
         </button>
       </div>
 
-      {/* 게시판 그리드 */}
+      {/* Board Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
         {currentPosts.map((post) => {
+          const isLiked = post.likedBy.includes(currentUserId)
           return (
             <div
               key={post.id}
@@ -263,52 +459,52 @@ export default function Board() {
               }`}
               onClick={() => handlePostClick(post)}
             >
-              {/* 고정 표시 */}
+              {/* Pinned indicator */}
               {post.isPinned && (
                 <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs px-2 py-1 rounded-full font-bold">
                   고정
                 </div>
               )}
 
-              {/* 날짜 */}
+              {/* Date */}
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs opacity-70">{post.date}</span>
               </div>
 
-              {/* 제목 */}
+              {/* Title */}
               <h3 className="font-bold text-sm sm:text-base mb-2 group-hover:text-opacity-80 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                 {post.title}
               </h3>
 
-              {/* 내용 미리보기 */}
+              {/* Content preview */}
               <p className="text-xs sm:text-sm opacity-70 mb-3 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
                 {post.content}
               </p>
 
-              {/* 작성자 */}
+              {/* Author */}
               <p className="text-xs opacity-60 mb-3">작성자: {post.author}</p>
 
-              {/* 통계 */}
+              {/* Stats */}
               <div className="flex items-center justify-end text-xs opacity-60">
                 <div className="flex items-center gap-1">
-                  <Heart className="w-3 h-3" />
+                  <Heart className={`w-3 h-3 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                   <span>{post.likes}</span>
                 </div>
               </div>
 
-              {/* 호버 효과 */}
+              {/* Hover effect */}
               <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-200"></div>
             </div>
           )
         })}
-      </div>
+            </div>
 
-      {/* 페이지네이션 */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center mt-8">
           <div className="join">
-            <button 
-              className="join-item btn btn-sm" 
+            <button
+              className="join-item btn btn-sm rounded-tl-lg rounded-bl-lg"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
             >
@@ -323,8 +519,8 @@ export default function Board() {
                 {page}
               </button>
             ))}
-            <button 
-              className="join-item btn btn-sm" 
+            <button
+              className="join-item btn btn-sm rounded-tr-lg rounded-br-lg"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
@@ -334,46 +530,100 @@ export default function Board() {
         </div>
       )}
 
-      {/* 게시글 상세보기 모달 */}
+      {/* Post Detail Modal */}
       {selectedPost && (
         <div className="modal modal-open">
-          <div className="modal-box max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="modal-box rounded-lg max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-4">
               <h3 className="font-bold text-xl">{selectedPost.title}</h3>
-              <button 
+              <button
                 className="btn btn-sm btn-circle btn-ghost"
                 onClick={closeModal}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="space-y-4">
-              {/* 메타 정보 */}
+              {/* Meta info */}
               <div className="flex flex-wrap gap-4 text-sm text-base-content/70">
                 <span>작성자: {selectedPost.author}</span>
                 <span>작성일: {selectedPost.date}</span>
                 <span>카테고리: {selectedPost.category === 'notice' ? '공지사항' : '자유게시판'}</span>
               </div>
 
-              {/* 내용 */}
+              {/* Content */}
               <div className="prose max-w-none">
                 <p className="whitespace-pre-wrap leading-relaxed">
                   {selectedPost.content}
                 </p>
-              </div>
+        </div>
 
-              {/* 통계 */}
+              {/* Stats */}
               <div className="flex items-center gap-6 pt-4 border-t">
                 <div className="flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-red-500" />
-                  <span className="font-semibold">{selectedPost.likes}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleLikeToggle(selectedPost.id)
+                    }}
+                    className="btn btn-ghost btn-sm p-2"
+                  >
+                    <Heart 
+                      className={`w-5 h-5 ${selectedPost.likedBy.includes(currentUserId) ? 'fill-red-500 text-red-500' : ''}`} 
+                    />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleLikeUsers()
+                    }}
+                    className="flex items-center gap-1 hover:text-primary"
+                  >
+                    <span className="font-semibold">{selectedPost.likes}</span>
+                    {showLikeUsers ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
+
+                             {/* Like Users Dropdown */}
+               {showLikeUsers && selectedPost.likes > 0 && (
+                 <div className="border-t pt-4">
+                   <h4 className="font-semibold mb-3">좋아요를 누른 사용자</h4>
+                   <div className="space-y-2 max-h-40 overflow-y-auto">
+                     {likeUsers.slice(0, selectedPost.likes).map((user) => (
+                       <div key={user.id} className="flex items-center gap-3 p-2 bg-base-100 rounded-lg">
+                         <div className="avatar">
+                           <div className={`w-8 h-8 rounded-full ${getUserAvatarColor(user.name)} flex items-center justify-center text-white text-sm font-semibold`}>
+                             {getUserInitial(user.name)}
+                           </div>
+                         </div>
+                         <span className="font-medium">{user.name}</span>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               )}
             </div>
 
             <div className="modal-action">
-              <button className="btn btn-primary" onClick={closeModal}>
+              {selectedPost.author === currentUserName && (
+                <button
+                  className="btn btn-sm rounded-lg"
+                  style={{ backgroundColor: '#dc2626', color: 'white', border: 'none' }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    requestDeletePost(selectedPost.id)
+                  }}
+                >
+                  삭제
+                </button>
+              )}
+              <button 
+                className="btn btn-sm rounded-lg"
+                style={{ backgroundColor: '#000000', color: 'white', border: 'none' }}
+                onClick={closeModal}
+              >
                 닫기
               </button>
             </div>
@@ -381,6 +631,72 @@ export default function Board() {
           <div className="modal-backdrop" onClick={closeModal}></div>
         </div>
       )}
+
+      {/* New Post Modal */}
+      {showNewPostModal && (
+        <div className="modal modal-open">
+          <div className="modal-box rounded-lg max-w-2xl">
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="font-bold text-xl">새 글 작성</h3>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={closeNewPostModal}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Title Input */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">제목</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="제목을 입력하세요"
+                  className="input input-bordered rounded-lg focus:input-primary"
+                  value={newPostTitle}
+                  onChange={(e) => setNewPostTitle(e.target.value)}
+                />
+        </div>
+
+              {/* Content Input */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">내용</span>
+                </label>
+                <textarea
+                  placeholder="내용을 입력하세요"
+                  className="textarea textarea-bordered rounded-lg focus:textarea-primary h-32"
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="modal-action">
+              <button className="btn btn-ghost btn-sm rounded-lg" onClick={closeNewPostModal}>
+                취소
+              </button>
+              <button className="btn btn-primary btn-sm rounded-lg" onClick={handleNewPostSubmit}>
+                완료
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={closeNewPostModal}></div>
+        </div>
+      )}
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        open={showConfirm}
+        title="삭제 확인"
+        message="정말 이 게시글을 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={confirmDeletePost}
+        onCancel={cancelDeletePost}
+      />
     </div>
   )
 }
