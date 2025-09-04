@@ -30,7 +30,7 @@ export default function NavBar({ children }: NavBarProps) {
   
   // 알림 관련 훅 사용
   const { unreadCount } = useNotifications()
-  
+
   const handleLogout = async () => {
     await logout() // 백엔드 API 호출 후 토큰 제거 및 리다이렉트
     refreshAuthState() // 인증 상태 새로고침
@@ -87,15 +87,15 @@ export default function NavBar({ children }: NavBarProps) {
       
       const invitationData = await createGroupInvitation(groupId)
       const inviteCode = invitationData.inviteCode
-      
+
       // 전체 초대 URL 생성
       const inviteUrl = `${window.location.origin}/invite?code=${inviteCode}`
-      
+
       // 초대 URL을 클립보드에 복사
       await navigator.clipboard.writeText(inviteUrl)
       setShowCopiedToast(true)
       setShowShareDropdown(false)
-      
+
       // 3초 후 토스트 숨기기
       setTimeout(() => {
         setShowCopiedToast(false)
@@ -114,20 +114,20 @@ export default function NavBar({ children }: NavBarProps) {
         
         const invitationData = await createGroupInvitation(groupId)
         const inviteCode = invitationData.inviteCode
-        
+
         // 전체 초대 URL 생성
         const inviteUrl = `${window.location.origin}/invite?code=${inviteCode}`
-        
+
         const textArea = document.createElement('textarea')
         textArea.value = inviteUrl
         document.body.appendChild(textArea)
         textArea.select()
         document.execCommand('copy')
         document.body.removeChild(textArea)
-        
+
         setShowCopiedToast(true)
         setShowShareDropdown(false)
-        
+
         setTimeout(() => {
           setShowCopiedToast(false)
         }, 3000)
@@ -161,12 +161,14 @@ export default function NavBar({ children }: NavBarProps) {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element
       const drawerToggle = document.getElementById('app-drawer') as HTMLInputElement
-      
+
       // 사이드 메뉴가 열려있고, 클릭한 요소가 사이드 메뉴가 아닌 경우
-      if (drawerToggle?.checked && 
-          !target.closest('.drawer-side') && 
-          !target.closest('[for="app-drawer"]') &&
-          !target.closest('.drawer-overlay')) {
+      if (
+        drawerToggle?.checked &&
+        !target.closest('.drawer-side') &&
+        !target.closest('[for="app-drawer"]') &&
+        !target.closest('.drawer-overlay')
+      ) {
         drawerToggle.checked = false
       }
     }
@@ -210,7 +212,9 @@ export default function NavBar({ children }: NavBarProps) {
             >
               <Menu className="w-5 h-5" />
             </label>
-            <Link to="/" className="btn btn-ghost text-xl rounded-lg">CoHouse</Link>
+            <Link to="/" className="btn btn-ghost text-xl rounded-lg">
+              CoHouse
+            </Link>
           </div>
 
           {/* center: desktop horizontal menu */}
@@ -218,7 +222,12 @@ export default function NavBar({ children }: NavBarProps) {
             <ul className="menu menu-horizontal px-1">
               {filteredCommonLinks.map(({ to, label }) => (
                 <li key={to}>
-                  <NavLink to={to} className={({ isActive }) => `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`}>
+                  <NavLink
+                    to={to}
+                    className={({ isActive }) =>
+                      `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`
+                    }
+                  >
                     {label}
                   </NavLink>
                 </li>
@@ -228,7 +237,12 @@ export default function NavBar({ children }: NavBarProps) {
 
               {!isLoggedIn ? (
                 <li>
-                  <NavLink to="/login" className={({ isActive }) => `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`}>
+                  <NavLink
+                    to="/login"
+                    className={({ isActive }) =>
+                      `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`
+                    }
+                  >
                     로그인
                   </NavLink>
                 </li>
@@ -246,7 +260,6 @@ export default function NavBar({ children }: NavBarProps) {
 
           {/* right: icons / login button */}
           <div className="navbar-end gap-1">
-            
             {isLoggedIn ? (
               <>
                 <button 
@@ -257,7 +270,10 @@ export default function NavBar({ children }: NavBarProps) {
                   <div className="indicator">
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
-                      <span className="indicator-item badge bg-red-500 text-white badge-xs rounded-lg text-xs relative z-0" aria-label={`${unreadCount} unread`}>
+                      <span
+                        className="indicator-item badge bg-red-500 text-white badge-xs rounded-lg text-xs relative z-0"
+                        aria-label={`${unreadCount} unread`}
+                      >
                         {unreadCount}
                       </span>
                     )}
@@ -338,7 +354,9 @@ export default function NavBar({ children }: NavBarProps) {
                 )}
               </>
             ) : (
-              <Link to="/login" className="btn btn-custom btn-sm rounded-lg">로그인</Link>
+              <Link to="/login" className="btn btn-custom btn-sm rounded-lg">
+                로그인
+              </Link>
             )}
           </div>
         </div>
@@ -346,9 +364,13 @@ export default function NavBar({ children }: NavBarProps) {
       </div>
 
       {/* Drawer side panel */}
-      <div className="drawer-side">
+      <div className="drawer-side absolute">
         {/* Clicking the overlay closes the drawer */}
-        <label htmlFor="app-drawer" className="z-[70] drawer-overlay" aria-label="Close menu"></label>
+        <label
+          htmlFor="app-drawer"
+          className="z-[70] drawer-overlay"
+          aria-label="Close menu"
+        ></label>
 
         <aside className="w-72 bg-base-100 min-h-full border-r relative z-[99999]">
           <div className="px-6 pt-6 pb-3 text-lg font-semibold">CoHouse</div>
@@ -356,15 +378,21 @@ export default function NavBar({ children }: NavBarProps) {
           <ul className="menu p-2">
             {filteredCommonLinks.map(({ to, label }) => (
               <li key={to}>
-                <NavLink to={to} onClick={closeDrawer} className="rounded-lg">{label}</NavLink>
+                <NavLink to={to} onClick={closeDrawer} className="rounded-lg">
+                  {label}
+                </NavLink>
               </li>
             ))}
 
-            <li><div className="divider my-3"></div></li>
+            <li>
+              <div className="divider my-3"></div>
+            </li>
 
             {!isLoggedIn ? (
               <li>
-                <NavLink to="/login" onClick={closeDrawer} className="rounded-lg">로그인/회원가입</NavLink>
+                <NavLink to="/login" onClick={closeDrawer} className="rounded-lg">
+                  로그인/회원가입
+                </NavLink>
               </li>
             ) : (
               <>
@@ -398,7 +426,7 @@ export default function NavBar({ children }: NavBarProps) {
           </ul>
         </aside>
       </div>
-      
+
       {/* 복사 완료 토스트 */}
       {showCopiedToast && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">

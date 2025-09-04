@@ -61,3 +61,9 @@ export async function updateAlertTime(hour: number, minute: number): Promise<Pro
 export async function withdrawUser(): Promise<void> {
   await api.delete(AUTH_ENDPOINTS.WITHDRAW)
 }
+
+// 내 멤버 ID 조회
+export async function getMyMemberId(): Promise<number> {
+  const response = await api.get(PROFILE_ENDPOINTS.GET_MY_ID)
+  return response.data.memberId
+}

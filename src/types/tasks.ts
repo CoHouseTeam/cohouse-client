@@ -21,8 +21,8 @@ export interface Template {
 export interface ExchangeModalProps {
   open: boolean
   members: Member[]
-  selected: number | null
-  onSelect: (idx: number | null) => void
+  selected: number[]
+  onSelect: (selected: number[]) => void
   onRequest: () => void
   onClose: () => void
 }
@@ -48,11 +48,15 @@ export interface DaySelectModalProps {
 //POST 요청으로 받는
 export interface AssignmentBody {
   groupId: number
-  groupMemberId?: number
+  groupMemberId?: number[]
   templateId: number
+  randomEnabled: boolean
+  fixedAssigneeId?: number
+  get_compatAssigneeId?: number
+  get_compatCandidateIds?: number[]
+  get_compatAssignType?: string
   date: string
   status?: string
-  dayOfWeek: string
   repeatType?: string
   updatedAt?: string
 }
@@ -68,6 +72,7 @@ export interface Assignment {
   repeatType?: string
   createdAt?: string
   updatedAt?: string
+  category: string
 }
 
 export interface RandomProps {
@@ -77,18 +82,19 @@ export interface RandomProps {
 
 export interface TaskTableProps {
   assignments: Assignment[]
+  groupMembers: GroupMember[]
+  isLeader: boolean
 }
 
 export interface TaskHistory {
   date: string
   task: string
-  status: '완료' | '미완료'
+  status: 'COMPLETED' | 'PENDING'
 }
 
 export interface HistoryModalProps {
   open: boolean
   onClose: () => void
-  items: TaskHistory[]
 }
 
 export interface GroupMember {
@@ -105,4 +111,13 @@ export interface GroupMember {
 
 export interface MyRoleResponse {
   isLeader: boolean
+}
+
+// 교환 요청
+export interface OverrideRequestBody {
+  assignmentId: number
+  targetId: number
+  targetIds: number[]
+  requesterId: number
+  swapAssignmentId: number
 }

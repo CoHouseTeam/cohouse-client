@@ -12,6 +12,29 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
 }) => {
   if (!open) return null
 
+  // 전체선택 체크 여부: 모든 멤버 선택 시 true, 아닐 경우 false
+  const allSelected =
+    Array.isArray(selected) && members.length > 0 && selected.length === members.length
+
+  // 전체선택 토글 함수
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      onSelect([]) // 모두 선택 해제
+    } else {
+      onSelect(members.map((_, idx) => idx)) // 모두 선택
+    }
+  }
+
+  // 개별 멤버 선택 토글
+  const toggleSelect = (idx: number) => {
+    if (!Array.isArray(selected)) return
+    if (selected.includes(idx)) {
+      onSelect(selected.filter((i) => i !== idx))
+    } else {
+      onSelect([...selected, idx])
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-xl p-6 w-80 relative">
@@ -26,11 +49,10 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
         <div className="space-y-2 mb-5 mt-2">
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
-              type="radio"
-              name="group"
-              checked={selected === null}
-              onChange={() => onSelect(null)}
-              className="radio radio-sm"
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleSelectAll}
+              className="checkbox checkbox-sm"
             />
             <span className="text-sm">전체선택</span>
           </label>
@@ -41,11 +63,10 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
                 className="flex items-center space-x-3 p-3 bg-base-100 rounded-lg cursor-pointer border mt-2"
               >
                 <input
-                  type="radio"
-                  name="group"
-                  checked={selected === idx}
-                  onChange={() => onSelect(idx)}
-                  className="radio radio-sm"
+                  type="checkbox"
+                  checked={Array.isArray(selected) ? selected.includes(idx) : false}
+                  onChange={() => toggleSelect(idx)}
+                  className="checkbox checkbox-sm"
                 />
                 <img
                   src={member.profileImageUrl}

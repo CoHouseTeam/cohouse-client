@@ -11,14 +11,15 @@ interface AppState {
   setUser: (user: User | null) => void
 }
 
-interface CalendarState {
-  selectedDate: Date
-  setSelectedDate: (date: Date) => void
-}
-
 interface GroupState {
   hasGroups: boolean
   setHasGroups: (val: boolean) => void
+  myMemberId: number | null
+  setMyMemberId: (id: number | null) => void
+  groupId: number | null
+  setGroupId: (id: number | null) => void
+  groupName: string | null
+  setGroupName: (id: string | null) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -26,14 +27,15 @@ export const useAppStore = create<AppState>((set) => ({
   setUser: (user) => set({ user }),
 }))
 
-export const useCalendarStore = create<CalendarState>((set) => ({
-  selectedDate: new Date(),
-  setSelectedDate: (date) => set({ selectedDate: date }),
-}))
-
 export const useGroupStore = create<GroupState>((set) => ({
   hasGroups: false,
   setHasGroups: (val) => set({ hasGroups: val }),
+  myMemberId: null,
+  setMyMemberId: (id) => set({ myMemberId: id }),
+  groupId: null,
+  setGroupId: (id) => set({ groupId: id }),
+  groupName: null,
+  setGroupName: (name) => set({ groupName: name }),
 }))
 
 // useGroupStore와 useAuth 훅을 동기화하는 함수

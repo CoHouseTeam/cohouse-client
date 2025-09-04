@@ -16,7 +16,7 @@ export const GROUP_ENDPOINTS = {
   CREATE: '/api/groups',
   JOIN: '/api/groups/join',
   MY_GROUPS: '/api/groups/me',
-  MY_ROLE: '/api/groups/{groupId}/me/role',
+  MY_ROLE: (groupId: number) => `/api/groups/${groupId}/me/role`,
 
   // 그룹별 상세
   DETAIL: (groupId: number) => `/api/groups/${groupId}`,
@@ -61,6 +61,8 @@ export const TASK_ENDPOINTS = {
   UPDATE_ASSIGNMENT: (assignmentId: number) => `/api/tasks/assignments/${assignmentId}`,
   ASSIGNMENT_HISTORIES: (assignmentId: number) =>
     `/api/tasks/assignments/${assignmentId}/histories`,
+  MEMBER_HISTORIES: `/api/tasks/assignments/histories`,
+  UNCOMPLETED_HISTORIES: `/api/tasks/assignments/uncompleted`,
 
   // 대신하기 요청
   OVERRIDE_REQUEST: (assignmentId: number) =>
@@ -82,12 +84,15 @@ export const SETTLEMENT_ENDPOINTS = {
   DELETE: (settlementId: number) => `api/settlements/${settlementId}`,
   PARTICIPANTS: (settlementId: number) => `api/settlements/${settlementId}/participants`,
   PAYMENT: (settlementId: number) => `api/settlements/${settlementId}/payment`,
-  PAYMENT_DONE: (settlementId: number) => `api/settlements/${settlementId}/payment-done`,
+  PAYMENT_DONE: (settlementId: number) => `api/settlements/${settlementId}/payment`,
 
   // 영수증 관리
   RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
   UPDATE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
   DELETE_RECEIPT: (settlementId: number) => `api/settlements/${settlementId}/receipt`,
+
+  // 영수증 OCR 미리보기(정산 생성 전, 전역 엔드포인트)
+  RECEIPT_OCR: 'api/settlements/ocr/receipt',
 } as const
 
 // Profile endpoints
@@ -97,6 +102,7 @@ export const PROFILE_ENDPOINTS = {
   UPLOAD_IMAGE: '/api/members/profile/profile-image', // PUT: 프로필 이미지 업로드
   DELETE_IMAGE: '/api/members/profile/profile-image', // DELETE: 프로필 이미지 삭제
   UPDATE_ALERT_TIME: '/api/members/profile/alert-time', // PUT: 알림 시간 수정
+  GET_MY_ID: '/api/members/me/id', //GET: 내 Member ID 조회
 } as const
 
 // Tasks endpoints
