@@ -1,6 +1,6 @@
 import api from './axios'
 import { POST_ENDPOINTS } from './endpoints'
-import type { Post, CreatePostRequest, UpdatePostRequest, PostLikeResponse, LikeStatusResponse, LikeCountResponse } from '../../types/main'
+import type { Post, CreatePostRequest, UpdatePostRequest, PostLikeResponse, LikeStatusResponse, LikeCountResponse, ToggleLikeResponse } from '../../types/main'
 
 // 📰 Post API Functions
 
@@ -50,7 +50,7 @@ export const getPostLikes = async (postId: number): Promise<PostLikeResponse> =>
 }
 
 // 게시글 좋아요/좋아요 취소
-export const togglePostLike = async (postId: number): Promise<{ isLiked: boolean }> => {
+export const togglePostLike = async (postId: number): Promise<ToggleLikeResponse> => {
   const response = await api.post(POST_ENDPOINTS.LIKE(postId))
   return response.data
 }

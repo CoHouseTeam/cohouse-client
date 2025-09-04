@@ -180,7 +180,7 @@ export default function PaymentsHistory() {
   const error = isFilterOn ? (allError ? new Error(allError) : null) : (serverError as Error | null)
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorCard />
+  if (error) return <ErrorCard message="결제 내역을 불러오는 중 오류가 발생했습니다." />
 
   const isEmpty = isFilterOn ? filtered.length === 0 : (serverPage?.content?.length ?? 0) === 0
 

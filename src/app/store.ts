@@ -37,3 +37,8 @@ export const useGroupStore = create<GroupState>((set) => ({
   groupName: null,
   setGroupName: (name) => set({ groupName: name }),
 }))
+
+// useGroupStore와 useAuth 훅을 동기화하는 함수
+export const syncGroupStoreWithAuth = (hasGroups: boolean) => {
+  useGroupStore.getState().setHasGroups(hasGroups)
+}

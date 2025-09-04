@@ -1,247 +1,128 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import CalendarBox from '../features/mainpage/components/CalendarBox'
 import CalendarDateDetails from '../features/mainpage/components/CalendarDateDetail'
 import TodoListBox from '../features/mainpage/components/TodoListBox'
 import GroupBox from '../features/mainpage/components/GroupBox'
-import { useCalendarStore } from '../app/tasksStore'
+import { useCalendarStore } from '../app/store'
+import { useGroupStore } from '../app/store'
 import { fetchMyGroups } from '../libs/api/groups'
 import { isAuthenticated } from '../libs/utils/auth'
-import { getAssignments } from '../libs/api/tasks'
-import { Assignment } from '../types/tasks'
-import { useGroupStore } from '../app/store'
-import { getMyMemberId, getProfile } from '../libs/api/profile'
-import { AxiosError } from 'axios'
+import LoadingSpinner from '../features/common/LoadingSpinner'
+import ErrorCard from '../features/common/ErrorCard'
+import { useAuth } from '../libs/hooks/useAuth'
+
+const eventData: { [date: string]: string[] } = {
+  '2025-08-04': ['빨래', '설거지', '치킨 배달 정산'],
+  '2025-08-05': [],
+}
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
+  const dateKey = selectedDate.toISOString().slice(0, 10)
 
-  const dateKey = useMemo(() => {
-    const d = selectedDate
-    const year = d.getFullYear()
-    const month = String(d.getMonth() + 1).padStart(2, '0') // 월 2자리
-    const day = String(d.getDate()).padStart(2, '0') // 일 2자리
-    return `${year}-${month}-${day}`
-  }, [selectedDate])
-
-  const todayKey = useMemo(() => {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  }, [])
-
-  // 그룹 및 사용자 상태
   const hasGroups = useGroupStore((state) => state.hasGroups)
   const setHasGroups = useGroupStore((state) => state.setHasGroups)
-  const setMyMemberId = useGroupStore((state) => state.setMyMemberId)
-  const myMemberId = useGroupStore((state) => state.myMemberId)
+  const { permissions, refreshPermissions } = useAuth()
 
-  const [loadingGroup, setLoadingGroup] = useState(false)
-  const [errorGroup, setErrorGroup] = useState('')
-
-  const [loadingAssignments, setLoadingAssignments] = useState(false)
-  const [errorAssignments, setErrorAssignments] = useState('')
-
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [userAuthenticated, setUserAuthenticated] = useState(false)
-  const [groupId, setGroupId] = useState<number | null>(null)
 
-  const [userName, setUserName] = useState('')
-  const [myAssignments, setMyAssignments] = useState<string[]>([])
-  const [assignments, setAssignments] = useState<Assignment[]>([])
-
-  const assignmentDates: string[] = assignments
-    .filter((a) => {
-      // 본인에게 할당된 업무만 필터
-      if (Array.isArray(a.groupMemberId)) {
-        return a.groupMemberId.includes(myMemberId)
-      } else {
-        return a.groupMemberId === myMemberId
-      }
-    })
-    .map((a) => a.date?.slice(0, 10))
-    .filter((d): d is string => !!d)
-    .filter((d, i, arr) => arr.indexOf(d) === i) // 중복 제거
-
-  // 인증 상태 설정
   useEffect(() => {
     setUserAuthenticated(isAuthenticated())
-  }, [])
-
-  // 사용자 프로필 불러오기
-  useEffect(() => {
-    async function fetchUserProfile() {
-      try {
-        const profile = await getProfile()
-        setUserName(profile.name || '')
-      } catch {
-        setUserName('')
+    
+    // 네이버/구글 로그인 후 localStorage 인증 상태 확인
+    const isAuthFromStorage = localStorage.getItem('isAuthenticated') === 'true'
+    if (isAuthFromStorage) {
+      setUserAuthenticated(true)
+      // 소셜 로그인 후 권한 새로고침
+      refreshPermissions()
+    }
+    
+    // localStorage 변경 감지
+    const handleStorageChange = () => {
+      const isAuth = localStorage.getItem('isAuthenticated') === 'true'
+      if (isAuth) {
+        setUserAuthenticated(true)
+        // 소셜 로그인 후 권한 새로고침
+        refreshPermissions()
       }
     }
-    fetchUserProfile()
-  }, [])
-
-  // 나의 멤버 ID 불러오기
-  useEffect(() => {
-    async function fetchMemberId() {
-      try {
-        const id = await getMyMemberId()
-        setMyMemberId(id)
-      } catch {
-        setMyMemberId(null)
-      }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
+    // 주기적 체크 제거 (무한 루프 방지)
+    // 필요시 수동으로 체크하거나 이벤트 기반으로 처리
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
     }
-    fetchMemberId()
-  }, [setMyMemberId])
+  }, [refreshPermissions]) // refreshPermissions 의존성 추가
 
-  // 그룹 및 그룹 멤버 정보 불러오기
-  const loadGroupData = useCallback(async () => {
-    if (!userAuthenticated) {
-      setErrorGroup('')
-      setHasGroups(false)
-      setGroupId(null)
-      setMyMemberId(null)
-      return
-    }
+  // 로그인 상태가 변경될 때마다 권한 새로고침 제거 (무한 루프 방지)
+  // 권한은 useAuth에서 자동으로 관리됨
 
-    setLoadingGroup(true)
-    setErrorGroup('')
+  const loadGroups = useCallback(async () => {
+    setLoading(true)
+    setError('')
     try {
-      const myGroupData = await fetchMyGroups()
-
-      if (!myGroupData || !myGroupData.id) {
-        // 그룹 정보가 없으면 상태 초기화
-        setHasGroups(false)
-        setGroupId(null)
-        setMyMemberId(null)
-        return
+      const groups = await fetchMyGroups()
+      const hasGroup = Array.isArray(groups) ? groups.length > 0 : groups != null
+      setHasGroups(hasGroup)
+      
+      // 그룹 정보 조회 성공 시 권한 새로고침 제거 (무한 루프 방지)
+      // 권한은 이미 useAuth에서 관리되고 있음
+      
+      // 그룹이 없는 경우 에러가 아닌 정상적인 상황
+      if (!hasGroup) {
+        setError('') // 에러 메시지 제거
       }
-
-      setHasGroups(true)
-      setGroupId(myGroupData.id)
-
-      // 그룹 멤버 세팅
-      const currentUserMemberId = await getMyMemberId()
-      if (!currentUserMemberId) {
-        setMyMemberId(null)
-      } else {
-        setMyMemberId(currentUserMemberId)
-      }
-    } catch (e) {
-      const error = e as AxiosError
-      if (error.response?.status === 404) {
+    } catch (e: any) {
+      console.log('그룹 정보를 불러오는 중 오류가 발생했습니다:', e)
+      
+      // 404 에러는 그룹이 없는 것이므로 에러가 아님
+      if (e.response?.status === 404) {
+        setError('') // 에러 메시지 제거
         setHasGroups(false)
-        setGroupId(null)
-        setMyMemberId(null)
-        setErrorGroup('')
       } else {
-        setErrorGroup('그룹 정보를 불러오는 중 오류가 발생했습니다.')
+        setError('그룹 정보가 없습니다.')
         setHasGroups(false)
-        setGroupId(null)
-        setMyMemberId(null)
       }
     } finally {
-      setLoadingGroup(false)
+      setLoading(false)
     }
-  }, [userAuthenticated, setHasGroups, setMyMemberId])
+  }, [setHasGroups]) // refreshPermissions 의존성 제거
 
   useEffect(() => {
-    loadGroupData()
-  }, [loadGroupData])
-
-  // 오늘 할 일
-  const todayAssignments = useMemo(
-    () =>
-      assignments
-        .filter((a) => {
-          const assignmentDate = a.date ? a.date.slice(0, 10) : ''
-          let isAssignedToUser = false
-          if (Array.isArray(a.groupMemberId)) {
-            isAssignedToUser = a.groupMemberId.includes(myMemberId)
-          } else {
-            isAssignedToUser = a.groupMemberId === myMemberId
-          }
-          return assignmentDate === todayKey && isAssignedToUser
-        })
-        .map((a) => ({
-          assignmentId: a.assignmentId,
-          category: a.category,
-          checked: false,
-          status: a.status,
-        })),
-    [assignments, myMemberId, todayKey]
-  )
-
-  // 할당된 업무 조회 및 필터링
-  useEffect(() => {
-    async function loadAssignments() {
-      if (!groupId) {
-        setAssignments([])
-        setMyAssignments([])
-        setErrorAssignments('')
-        setLoadingAssignments(false)
-        return
-      }
-
-      setLoadingAssignments(true)
-      setErrorAssignments('')
-
-      try {
-        const data: Assignment[] = await getAssignments({ groupId })
-        setAssignments(Array.isArray(data) ? data : [])
-
-        if (myMemberId) {
-          const todayStr = dateKey
-          const filtered = data.filter((a) => {
-            const assignmentDate = a.date ? a.date.slice(0, 10) : ''
-            let isAssignedToUser = false
-            if (Array.isArray(a.groupMemberId)) {
-              isAssignedToUser = a.groupMemberId.includes(myMemberId)
-            } else {
-              isAssignedToUser = a.groupMemberId === myMemberId
-            }
-            return assignmentDate === todayStr && isAssignedToUser
-          })
-          setMyAssignments(filtered.map((a) => a.category || '할 일'))
-        } else {
-          setMyAssignments([])
-        }
-      } catch (e) {
-        setErrorAssignments('업무 내역을 불러오는 중 오류가 발생했습니다.')
-        setAssignments([])
-        setMyAssignments([])
-      } finally {
-        setLoadingAssignments(false)
-      }
-    }
-
-    if (userAuthenticated && groupId) {
-      loadAssignments()
+    if (userAuthenticated) {
+      loadGroups()
     } else {
-      setAssignments([])
-      setMyAssignments([])
+      setHasGroups(false)
+      setLoading(false)
     }
-  }, [userAuthenticated, groupId, myMemberId, dateKey])
+  }, [userAuthenticated, loadGroups]) // loadGroups 의존성 추가
+
+  // useAuth의 권한과 useGroupStore 동기화
+  useEffect(() => {
+    if (permissions.canAccessFeatures !== hasGroups) {
+      setHasGroups(permissions.canAccessFeatures)
+    }
+  }, [permissions.canAccessFeatures, hasGroups]) // setHasGroups 의존성 제거
 
   return (
     <div className="space-y-6">
-      <p>{userName ? `${userName}님 반가워요!` : '반가워요!'}</p>
-
-      {loadingGroup && <div>그룹 정보를 불러오는 중...</div>}
-      {errorGroup && <div className="text-red-600">{errorGroup}</div>}
-
-      {!loadingGroup && !errorGroup && (!hasGroups ? <GroupBox /> : null)}
-
-      {loadingAssignments && <div>업무 내역을 불러오는 중...</div>}
-      {errorAssignments && <div className="text-red-600">{errorAssignments}</div>}
-
-      {!loadingGroup && !errorGroup && !loadingAssignments && !errorAssignments && hasGroups && (
-        <TodoListBox todos={todayAssignments} groupId={groupId} memberId={myMemberId} />
+      {loading && <LoadingSpinner message="그룹 정보 불러오는 중..." />}
+      
+      {error && <ErrorCard message={error} />}
+      
+      {!loading && hasGroups && userAuthenticated && (
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">반가워요!</h3>
       )}
 
-      <CalendarBox
-        onDateSelect={setSelectedDate}
-        value={selectedDate}
-        scheduledDates={assignmentDates}
-      />
-      <CalendarDateDetails selectedDate={selectedDate} events={myAssignments} />
+      {!loading && (hasGroups ? <TodoListBox /> : <GroupBox />)}
+
+      <CalendarBox onDateSelect={setSelectedDate} value={selectedDate} />
+      <CalendarDateDetails selectedDate={selectedDate} events={eventData[dateKey] || []} />
     </div>
   )
 }

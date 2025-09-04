@@ -1,5 +1,5 @@
 import api from './axios'
-import { PROFILE_ENDPOINTS } from './endpoints'
+import { PROFILE_ENDPOINTS, AUTH_ENDPOINTS } from './endpoints'
 
 export type Profile = {
   id: number
@@ -57,8 +57,13 @@ export async function updateAlertTime(hour: number, minute: number): Promise<Pro
   return data
 }
 
+// 회원 탈퇴
+export async function withdrawUser(): Promise<void> {
+  await api.delete(AUTH_ENDPOINTS.WITHDRAW)
+
 // 내 멤버 ID 조회
 export async function getMyMemberId(): Promise<number> {
   const response = await api.get(PROFILE_ENDPOINTS.GET_MY_ID)
   return response.data.memberId
+
 }

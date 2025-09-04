@@ -123,7 +123,7 @@ export const PAYMENT_ENDPOINTS = {
 // 📰 Post endpoints
 export const POST_ENDPOINTS = {
   // 기본 CRUD
-  CREATE: 'api/posts',
+  CREATE: '/api/posts',
   GET_BY_ID: (postId: number) => `api/posts/${postId}`,
   UPDATE: (postId: number) => `api/posts/${postId}`,
   DELETE: (postId: number) => `api/posts/${postId}`,
