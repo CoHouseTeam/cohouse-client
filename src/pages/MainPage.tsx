@@ -15,10 +15,6 @@ import { useGroupStore } from '../app/store'
 import { getProfile } from '../libs/api/profile'
 import { AxiosError } from 'axios'
 
-const eventData: { [date: string]: string[] } = {
-  '2025-08-04': ['빨래', '설거지', '치킨 배달 정산'],
-  '2025-08-05': [],
-}
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
@@ -228,7 +224,9 @@ const MainPage = () => {
       {errorGroup && <ErrorCard message={errorGroup} />}
       
       {!loadingGroup && hasGroups && userAuthenticated && (
-          <h3 className="text-lg font-semibold text-blue-800 mb-2">반가워요!</h3>
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">
+            반가워요, {userName || '사용자'}님!
+          </h3>
       )}
 
       {!loadingGroup && !errorGroup && (!hasGroups ? <GroupBox /> : null)}

@@ -45,6 +45,7 @@ export default function Board() {
     isLiked: boolean;
     likeUsers: PostLikeResponse | null;
   } | null>(null)
+  const [postLikeCounts, setPostLikeCounts] = useState<Record<number, number>>({})
 
   // 동적으로 그룹 ID를 가져오기 위한 상태
   const [groupId, setGroupId] = useState<number | null>(null)
@@ -136,8 +137,31 @@ export default function Board() {
     setError(null)
 
     fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE' })
-      .then((data) => {
-        if (mounted) setPageData(data)
+      .then(async (data) => {
+        if (mounted) {
+          setPageData(data)
+          
+          // 각 게시글의 좋아요 수 가져오기
+          const likeCountPromises = data.content.map(async (post) => {
+            try {
+              const likeCount = await fetchPostLikesCount(post.id)
+              return { postId: post.id, count: likeCount.count }
+            } catch (error) {
+              console.error(`게시글 ${post.id}의 좋아요 수 가져오기 실패:`, error)
+              return { postId: post.id, count: 0 }
+            }
+          })
+          
+          const likeCounts = await Promise.all(likeCountPromises)
+          const likeCountMap = likeCounts.reduce((acc, { postId, count }) => {
+            acc[postId] = count
+            return acc
+          }, {} as Record<number, number>)
+          
+          if (mounted) {
+            setPostLikeCounts(likeCountMap)
+          }
+        }
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .catch((e: any) => {
@@ -322,6 +346,13 @@ export default function Board() {
           likeUsers: likeUsers
         } : null)
       }
+      
+      // 목록의 좋아요 수도 업데이트
+      const updatedLikeCount = await fetchPostLikesCount(postId)
+      setPostLikeCounts(prev => ({
+        ...prev,
+        [postId]: updatedLikeCount.count
+      }))
     } catch (error) {
       console.error('좋아요 토글 실패:', error)
     }
@@ -750,7 +781,7 @@ export default function Board() {
                   <div className="flex items-center justify-end text-xs opacity-60">
                     <div className="flex items-center gap-1">
                       <Heart className="w-3 h-3" />
-                      <span>0</span>
+                      <span>{postLikeCounts[post.id] || 0}</span>
                     </div>
                   </div>
 

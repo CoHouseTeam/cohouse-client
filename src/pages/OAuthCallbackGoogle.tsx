@@ -2,9 +2,11 @@ import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import api from '../libs/api/axios'
 import { setTokens } from '../libs/utils/auth'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function OAuthCallbackGoogle() {
   const [params] = useSearchParams()
+  const { refreshAuthState } = useAuth()
 
   useEffect(() => {
     (async () => {
@@ -47,6 +49,9 @@ export default function OAuthCallbackGoogle() {
           accessToken: localStorage.getItem('accessToken'),
           authMethod: localStorage.getItem('authMethod')
         })
+        
+        // 인증 상태 새로고침
+        refreshAuthState()
         
         // 강제로 메인페이지로 이동
         console.log('[GoogleAuth] Login successful, redirecting to main page...')

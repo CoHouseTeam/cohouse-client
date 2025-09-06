@@ -79,8 +79,8 @@ export const useAuth = () => {
             }
           } catch (groupError) {
             console.log('그룹 멤버 정보 가져오기 실패:', groupError)
-            // 그룹 멤버 정보를 가져올 수 없어도 그룹 ID는 있으므로 계속 진행
-            // 그룹 ID가 있다면 기본적으로 그룹 멤버로 간주
+            // 그룹 멤버 정보를 가져올 수 없어도 그룹 ID가 있으면 멤버로 간주
+            // 사용자가 로그인했고 그룹 ID가 있다면 무조건 멤버로 처리
             isGroupMember = true
             isGroupLeader = false
           }
@@ -103,7 +103,8 @@ export const useAuth = () => {
       const hasGroup = !!currentGroupId
       const canCreateAnnouncement = hasGroup // 그룹에 속한 모든 멤버가 공지사항 탭을 볼 수 있음
       const canShareGroup = isGroupLeader // 그룹장만 공유 가능
-      const canAccessFeatures = hasGroup // 그룹 ID가 있으면 기능 접근 가능
+      // 그룹 멤버 정보가 있으면 무조건 모든 메뉴 접근 가능
+      const canAccessFeatures = isGroupMember || hasGroup
 
       console.log('🔍 최종 권한 설정:', {
         hasGroup,
@@ -162,16 +163,38 @@ export const useAuth = () => {
       const token = getAccessToken()
       if (token && !permissions.isAuthenticated) {
         // 토큰이 새로 추가되었을 때 권한 새로고침
+        console.log('🔄 토큰 감지됨, 권한 새로고침 시작')
         checkAuthAndPermissions()
       }
     }
 
-    // 초기 체크만 수행
+    // 초기 체크
     checkTokenChange()
 
-    // 주기적 체크는 제거 (무한 루프 방지)
-    // 필요시 수동으로 refreshPermissions 호출
-  }, []) // permissions.isAuthenticated 의존성 제거
+    // localStorage 변경 감지 (OAuth 로그인 후 토큰 저장 감지)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'accessToken' && e.newValue && !permissions.isAuthenticated) {
+        console.log('🔄 localStorage에서 토큰 변경 감지, 권한 새로고침')
+        checkAuthAndPermissions()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+
+    // 주기적 체크 (OAuth 로그인 후 즉시 반영을 위해)
+    const interval = setInterval(() => {
+      const token = getAccessToken()
+      if (token && !permissions.isAuthenticated) {
+        console.log('🔄 주기적 체크에서 토큰 감지, 권한 새로고침')
+        checkAuthAndPermissions()
+      }
+    }, 1000) // 1초마다 체크
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [permissions.isAuthenticated]) // permissions.isAuthenticated 의존성 추가
 
   return {
     permissions,

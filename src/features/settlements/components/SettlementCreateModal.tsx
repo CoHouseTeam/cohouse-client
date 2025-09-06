@@ -297,7 +297,7 @@ export default function SettlementCreateModal(props: Props) {
   }
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorCard />
+  if (error) return <ErrorCard message="정산 정보를 불러오는 중 오류가 발생했습니다." />
 
   return (
     <>

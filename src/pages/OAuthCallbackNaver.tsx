@@ -55,6 +55,9 @@ export default function OAuthCallbackNaver() {
           authMethod: localStorage.getItem('authMethod')
         })
         
+        // 인증 상태 새로고침
+        refreshAuthState()
+        
         // 강제로 메인페이지로 이동
         console.log('[NaverAuth] Login successful, redirecting to main page...')
         window.location.href = '/'
