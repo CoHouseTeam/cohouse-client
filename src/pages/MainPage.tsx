@@ -1,164 +1,61 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useMemo } from 'react'
 import CalendarBox from '../features/mainpage/components/CalendarBox'
 import CalendarDateDetails from '../features/mainpage/components/CalendarDateDetail'
 import TodoListBox from '../features/mainpage/components/TodoListBox'
 import GroupBox from '../features/mainpage/components/GroupBox'
 import { useCalendarStore } from '../app/tasksStore'
-import { fetchMyGroups } from '../libs/api/groups'
-import { isAuthenticated } from '../libs/utils/auth'
-import { getAssignments } from '../libs/api/tasks'
-import { Assignment } from '../types/tasks'
+import { useTaskStore } from '../app/tasksStore'
 import { useGroupStore } from '../app/store'
-import { getMyMemberId, getProfile } from '../libs/api/profile'
-import { AxiosError } from 'axios'
+import { useUserProfile } from '../libs/hooks/mainpage/useUserProfile'
+import { useGroupData } from '../libs/hooks/mainpage/useGroupData'
+import { formatDateKey } from '../libs/utils/dateKey'
+import LoadingSpinner from '../features/common/LoadingSpinner'
+import { getAssignments } from '../libs/api/tasks'
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
-
-  const dateKey = useMemo(() => {
-    const d = selectedDate
-    const year = d.getFullYear()
-    const month = String(d.getMonth() + 1).padStart(2, '0') // 월 2자리
-    const day = String(d.getDate()).padStart(2, '0') // 일 2자리
-    return `${year}-${month}-${day}`
-  }, [selectedDate])
-
-  const todayKey = useMemo(() => {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  }, [])
-
-  // 그룹 및 사용자 상태
-  const hasGroups = useGroupStore((state) => state.hasGroups)
-  const setHasGroups = useGroupStore((state) => state.setHasGroups)
-  const setMyMemberId = useGroupStore((state) => state.setMyMemberId)
+  const { userAuthenticated, userName } = useUserProfile()
+  const { loadingGroup, errorGroup, hasGroups, groupId } = useGroupData(userAuthenticated)
   const myMemberId = useGroupStore((state) => state.myMemberId)
 
-  const [loadingGroup, setLoadingGroup] = useState(false)
-  const [errorGroup, setErrorGroup] = useState('')
+  const assignments = useTaskStore((state) => state.assignments)
+  const setAssignments = useTaskStore((state) => state.setAssignments)
+  const loadingAssignments = useTaskStore((state) => state.loadingAssignments)
+  const setLoadingAssignments = useTaskStore((state) => state.setLoadingAssignments)
+  const errorAssignments = useTaskStore((state) => state.errorAssignments)
+  const setErrorAssignments = useTaskStore((state) => state.setErrorAssignments)
+  const myAssignments = useTaskStore((state) => state.myAssignments)
+  const setMyAssignments = useTaskStore((state) => state.setMyAssignments)
 
-  const [loadingAssignments, setLoadingAssignments] = useState(false)
-  const [errorAssignments, setErrorAssignments] = useState('')
+  const dateKey = useMemo(() => formatDateKey(selectedDate), [selectedDate])
+  const todayKey = useMemo(() => formatDateKey(new Date()), [])
 
-  const [userAuthenticated, setUserAuthenticated] = useState(false)
-  const [groupId, setGroupId] = useState<number | null>(null)
-
-  const [userName, setUserName] = useState('')
-  const [myAssignments, setMyAssignments] = useState<string[]>([])
-  const [assignments, setAssignments] = useState<Assignment[]>([])
-
-  const assignmentDates: string[] = assignments
-    .filter((a) => {
-      // 본인에게 할당된 업무만 필터
-      if (Array.isArray(a.groupMemberId)) {
-        return a.groupMemberId.includes(myMemberId)
-      } else {
-        return a.groupMemberId === myMemberId
-      }
-    })
-    .map((a) => a.date?.slice(0, 10))
-    .filter((d): d is string => !!d)
-    .filter((d, i, arr) => arr.indexOf(d) === i) // 중복 제거
-
-  // 인증 상태 설정
-  useEffect(() => {
-    setUserAuthenticated(isAuthenticated())
-  }, [])
-
-  // 사용자 프로필 불러오기
-  useEffect(() => {
-    async function fetchUserProfile() {
-      try {
-        const profile = await getProfile()
-        setUserName(profile.name || '')
-      } catch {
-        setUserName('')
-      }
+  const isAssignedToUser = (assignment: (typeof assignments)[number], memberId: number | null) => {
+    if (!memberId) return false
+    if (Array.isArray(assignment.groupMemberId)) {
+      return assignment.groupMemberId.includes(memberId)
     }
-    fetchUserProfile()
-  }, [])
+    return assignment.groupMemberId === memberId
+  }
 
-  // 나의 멤버 ID 불러오기
-  useEffect(() => {
-    async function fetchMemberId() {
-      try {
-        const id = await getMyMemberId()
-        setMyMemberId(id)
-      } catch {
-        setMyMemberId(null)
-      }
-    }
-    fetchMemberId()
-  }, [setMyMemberId])
+  const assignmentDates = useMemo(() => {
+    return Array.from(
+      new Set(
+        assignments
+          .filter((a) => isAssignedToUser(a, myMemberId))
+          .map((a) => (a.date ? formatDateKey(new Date(a.date)) : ''))
+          .filter(Boolean)
+      )
+    )
+  }, [assignments, myMemberId])
 
-  // 그룹 및 그룹 멤버 정보 불러오기
-  const loadGroupData = useCallback(async () => {
-    if (!userAuthenticated) {
-      setErrorGroup('')
-      setHasGroups(false)
-      setGroupId(null)
-      setMyMemberId(null)
-      return
-    }
-
-    setLoadingGroup(true)
-    setErrorGroup('')
-    try {
-      const myGroupData = await fetchMyGroups()
-
-      if (!myGroupData || !myGroupData.id) {
-        // 그룹 정보가 없으면 상태 초기화
-        setHasGroups(false)
-        setGroupId(null)
-        setMyMemberId(null)
-        return
-      }
-
-      setHasGroups(true)
-      setGroupId(myGroupData.id)
-
-      // 그룹 멤버 세팅
-      const currentUserMemberId = await getMyMemberId()
-      if (!currentUserMemberId) {
-        setMyMemberId(null)
-      } else {
-        setMyMemberId(currentUserMemberId)
-      }
-    } catch (e) {
-      const error = e as AxiosError
-      if (error.response?.status === 404) {
-        setHasGroups(false)
-        setGroupId(null)
-        setMyMemberId(null)
-        setErrorGroup('')
-      } else {
-        setErrorGroup('그룹 정보를 불러오는 중 오류가 발생했습니다.')
-        setHasGroups(false)
-        setGroupId(null)
-        setMyMemberId(null)
-      }
-    } finally {
-      setLoadingGroup(false)
-    }
-  }, [userAuthenticated, setHasGroups, setMyMemberId])
-
-  useEffect(() => {
-    loadGroupData()
-  }, [loadGroupData])
-
-  // 오늘 할 일
   const todayAssignments = useMemo(
     () =>
       assignments
         .filter((a) => {
-          const assignmentDate = a.date ? a.date.slice(0, 10) : ''
-          let isAssignedToUser = false
-          if (Array.isArray(a.groupMemberId)) {
-            isAssignedToUser = a.groupMemberId.includes(myMemberId)
-          } else {
-            isAssignedToUser = a.groupMemberId === myMemberId
-          }
-          return assignmentDate === todayKey && isAssignedToUser
+          if (!a.date) return false
+          const assignmentDate = formatDateKey(new Date(a.date))
+          return isAssignedToUser(a, myMemberId) && assignmentDate === todayKey
         })
         .map((a) => ({
           assignmentId: a.assignmentId,
@@ -169,44 +66,39 @@ const MainPage = () => {
     [assignments, myMemberId, todayKey]
   )
 
-  // 할당된 업무 조회 및 필터링
   useEffect(() => {
     async function loadAssignments() {
       if (!groupId) {
         setAssignments([])
         setMyAssignments([])
-        setErrorAssignments('')
         setLoadingAssignments(false)
+        setErrorAssignments('')
         return
       }
-
       setLoadingAssignments(true)
       setErrorAssignments('')
 
       try {
-        const data: Assignment[] = await getAssignments({ groupId })
-        setAssignments(Array.isArray(data) ? data : [])
+        const data = await getAssignments({ groupId })
+        const assignmentList = Array.isArray(data) ? data : []
+        setAssignments(assignmentList)
 
+        // 오늘 날짜 할 일 카테고리만 추출해서 저장
         if (myMemberId) {
-          const todayStr = dateKey
-          const filtered = data.filter((a) => {
-            const assignmentDate = a.date ? a.date.slice(0, 10) : ''
-            let isAssignedToUser = false
-            if (Array.isArray(a.groupMemberId)) {
-              isAssignedToUser = a.groupMemberId.includes(myMemberId)
-            } else {
-              isAssignedToUser = a.groupMemberId === myMemberId
-            }
-            return assignmentDate === todayStr && isAssignedToUser
-          })
-          setMyAssignments(filtered.map((a) => a.category || '할 일'))
+          const filteredCategories = assignmentList
+            .filter((a) => {
+              if (!a.date) return false
+              return isAssignedToUser(a, myMemberId) && formatDateKey(new Date(a.date)) === dateKey
+            })
+            .map((a) => a.category || '할 일')
+          setMyAssignments(filteredCategories)
         } else {
           setMyAssignments([])
         }
-      } catch (e) {
-        setErrorAssignments('업무 내역을 불러오는 중 오류가 발생했습니다.')
+      } catch {
         setAssignments([])
         setMyAssignments([])
+        setErrorAssignments('업무 내역을 불러오는 중 오류가 발생했습니다.')
       } finally {
         setLoadingAssignments(false)
       }
@@ -217,31 +109,50 @@ const MainPage = () => {
     } else {
       setAssignments([])
       setMyAssignments([])
+      setLoadingAssignments(false)
+      setErrorAssignments('')
     }
-  }, [userAuthenticated, groupId, myMemberId, dateKey])
+  }, [
+    userAuthenticated,
+    groupId,
+    myMemberId,
+    dateKey,
+    setAssignments,
+    setErrorAssignments,
+    setLoadingAssignments,
+    setMyAssignments,
+  ])
 
   return (
     <div className="space-y-6">
       <p>{userName ? `${userName}님 반가워요!` : '반가워요!'}</p>
 
-      {loadingGroup && <div>그룹 정보를 불러오는 중...</div>}
+      {loadingGroup && <LoadingSpinner />}
       {errorGroup && <div className="text-red-600">{errorGroup}</div>}
 
-      {!loadingGroup && !errorGroup && (!hasGroups ? <GroupBox /> : null)}
+      {!loadingGroup && !errorGroup && (
+        <>
+          {!hasGroups ? (
+            <GroupBox />
+          ) : (
+            <>
+              {loadingAssignments && <LoadingSpinner />}
+              {errorAssignments && <div className="text-red-600">{errorAssignments}</div>}
 
-      {loadingAssignments && <div>업무 내역을 불러오는 중...</div>}
-      {errorAssignments && <div className="text-red-600">{errorAssignments}</div>}
+              {!loadingAssignments && !errorAssignments && (
+                <TodoListBox todos={todayAssignments} groupId={groupId} memberId={myMemberId} />
+              )}
 
-      {!loadingGroup && !errorGroup && !loadingAssignments && !errorAssignments && hasGroups && (
-        <TodoListBox todos={todayAssignments} groupId={groupId} memberId={myMemberId} />
+              <CalendarBox
+                onDateSelect={setSelectedDate}
+                value={selectedDate}
+                scheduledDates={assignmentDates}
+              />
+              <CalendarDateDetails selectedDate={selectedDate} events={myAssignments} />
+            </>
+          )}
+        </>
       )}
-
-      <CalendarBox
-        onDateSelect={setSelectedDate}
-        value={selectedDate}
-        scheduledDates={assignmentDates}
-      />
-      <CalendarDateDetails selectedDate={selectedDate} events={myAssignments} />
     </div>
   )
 }
