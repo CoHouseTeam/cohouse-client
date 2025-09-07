@@ -10,8 +10,8 @@ import { useUserProfile } from '../libs/hooks/mainpage/useUserProfile'
 import { useGroupData } from '../libs/hooks/mainpage/useGroupData'
 import { formatDateKey } from '../libs/utils/dateKey'
 import LoadingSpinner from '../features/common/LoadingSpinner'
-import { getAssignments } from '../libs/api/tasks'
 import { announcementsSummary } from '../libs/api'
+import { MemberAssignmentsHistories } from '../libs/api/tasks'
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
@@ -48,13 +48,10 @@ const MainPage = () => {
   const assignmentDates = useMemo(() => {
     return Array.from(
       new Set(
-        assignments
-          .filter((a) => isAssignedToUser(a, myMemberId))
-          .map((a) => (a.date ? formatDateKey(new Date(a.date)) : ''))
-          .filter(Boolean)
+        assignments.map((a) => (a.date ? formatDateKey(new Date(a.date)) : '')).filter(Boolean)
       )
     )
-  }, [assignments, myMemberId])
+  }, [assignments])
 
   const announcementSelectedDate = useMemo(() => {
     if (!announcements || announcements.length === 0) return []
@@ -80,7 +77,7 @@ const MainPage = () => {
 
   useEffect(() => {
     async function loadAssignments() {
-      if (!groupId) {
+      if (!groupId || !myMemberId) {
         setAssignments([])
         setMyAssignments([])
         setLoadingAssignments(false)
@@ -91,22 +88,19 @@ const MainPage = () => {
       setErrorAssignments('')
 
       try {
-        const data = await getAssignments({ groupId })
+        // 내 업무 내역 조회 API 호출로 변경
+        const data = await MemberAssignmentsHistories({ groupId, memberId: myMemberId })
         const assignmentList = Array.isArray(data) ? data : []
         setAssignments(assignmentList)
 
         // 오늘 날짜 할 일 카테고리만 추출해서 저장
-        if (myMemberId) {
-          const filteredCategories = assignmentList
-            .filter((a) => {
-              if (!a.date) return false
-              return isAssignedToUser(a, myMemberId) && formatDateKey(new Date(a.date)) === dateKey
-            })
-            .map((a) => a.category || '할 일')
-          setMyAssignments(filteredCategories)
-        } else {
-          setMyAssignments([])
-        }
+        const filteredCategories = assignmentList
+          .filter((a) => {
+            if (!a.date) return false
+            return isAssignedToUser(a, myMemberId) && formatDateKey(new Date(a.date)) === dateKey
+          })
+          .map((a) => a.category || '할 일')
+        setMyAssignments(filteredCategories)
       } catch {
         setAssignments([])
         setMyAssignments([])
@@ -116,7 +110,7 @@ const MainPage = () => {
       }
     }
 
-    if (userAuthenticated && groupId) {
+    if (userAuthenticated && groupId && myMemberId) {
       loadAssignments()
     } else {
       setAssignments([])
