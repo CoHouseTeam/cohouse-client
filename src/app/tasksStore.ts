@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { Assignment, GroupMember, RepeatDay, Template } from '../types/tasks'
+import { AnnouncementSummary } from '../types/main'
 
 interface CalendarState {
   selectedDate: Date
@@ -102,4 +103,22 @@ export const useTaskStore = create<TaskState>((set) => ({
 
   error: '',
   setError: (error) => set({ error }),
+}))
+
+interface AnnouncementState {
+  announcements: AnnouncementSummary[]
+  setAnnouncements: (announcements: AnnouncementSummary[]) => void
+  loadingAnnouncements: boolean
+  setLoadingAnnouncements: (loading: boolean) => void
+  errorAnnouncements: string
+  setErrorAnnouncements: (error: string) => void
+}
+
+export const useAnnouncementStore = create<AnnouncementState>((set) => ({
+  announcements: [],
+  setAnnouncements: (announcements) => set({ announcements }),
+  loadingAnnouncements: false,
+  setLoadingAnnouncements: (loading) => set({ loadingAnnouncements: loading }),
+  errorAnnouncements: '',
+  setErrorAnnouncements: (error) => set({ errorAnnouncements: error }),
 }))

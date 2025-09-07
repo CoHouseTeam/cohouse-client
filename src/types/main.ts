@@ -27,7 +27,7 @@ export interface Group {
 }
 
 export interface UncompletedGroup {
-  date: string // 예: '2025.08.03(일)'
+  date: string
   members: Array<{
     task: string
     name: string
@@ -49,6 +49,11 @@ export interface UncompletedTasksModalProps {
   onClose: () => void
   groupId: number | null
   memberId?: number | null
+}
+
+export interface AnnouncementSummary {
+  title: string
+  date: string
 }
 
 // 📰 Post Types

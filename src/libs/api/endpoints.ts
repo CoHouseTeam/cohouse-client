@@ -132,7 +132,7 @@ export const POST_ENDPOINTS = {
   GET_BY_GROUP: (groupId: number) => `api/posts/${groupId}`,
 
   // 공지 리스트 (메인 페이지 조회 목적)
-  ANNOUNCEMENTS_SUM: (groupId: number) => `api/posts/${groupId}/announcements/summary`,
+  ANNOUNCEMENTS_SUM: (groupId: number) => `/api/posts/groups/${groupId}/announcements/summary`,
 
   LIKES: (postId: number) => `api/posts/${postId}/likes`,
   LIKE: (postId: number) => `api/posts/${postId}/likes`,

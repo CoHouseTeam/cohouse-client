@@ -3,7 +3,7 @@ import CalendarBox from '../features/mainpage/components/CalendarBox'
 import CalendarDateDetails from '../features/mainpage/components/CalendarDateDetail'
 import TodoListBox from '../features/mainpage/components/TodoListBox'
 import GroupBox from '../features/mainpage/components/GroupBox'
-import { useCalendarStore } from '../app/tasksStore'
+import { useAnnouncementStore, useCalendarStore } from '../app/tasksStore'
 import { useTaskStore } from '../app/tasksStore'
 import { useGroupStore } from '../app/store'
 import { useUserProfile } from '../libs/hooks/mainpage/useUserProfile'
@@ -11,6 +11,7 @@ import { useGroupData } from '../libs/hooks/mainpage/useGroupData'
 import { formatDateKey } from '../libs/utils/dateKey'
 import LoadingSpinner from '../features/common/LoadingSpinner'
 import { getAssignments } from '../libs/api/tasks'
+import { announcementsSummary } from '../libs/api'
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
@@ -26,6 +27,12 @@ const MainPage = () => {
   const setErrorAssignments = useTaskStore((state) => state.setErrorAssignments)
   const myAssignments = useTaskStore((state) => state.myAssignments)
   const setMyAssignments = useTaskStore((state) => state.setMyAssignments)
+
+  const setAnnouncements = useAnnouncementStore((state) => state.setAnnouncements)
+  const setLoadingAnnouncements = useAnnouncementStore((state) => state.setLoadingAnnouncements)
+  const setErrorAnnouncements = useAnnouncementStore((state) => state.setErrorAnnouncements)
+  const announcements = useAnnouncementStore((state) => state.announcements)
+  const announcementDates = announcements.map((a) => a.date)
 
   const dateKey = useMemo(() => formatDateKey(selectedDate), [selectedDate])
   const todayKey = useMemo(() => formatDateKey(new Date()), [])
@@ -48,6 +55,11 @@ const MainPage = () => {
       )
     )
   }, [assignments, myMemberId])
+
+  const announcementSelectedDate = useMemo(() => {
+    if (!announcements || announcements.length === 0) return []
+    return announcements.filter((a) => a.date === formatDateKey(selectedDate)).map((a) => a.title)
+  }, [announcements, selectedDate])
 
   const todayAssignments = useMemo(
     () =>
@@ -123,6 +135,19 @@ const MainPage = () => {
     setMyAssignments,
   ])
 
+  useEffect(() => {
+    if (!groupId) return
+    setLoadingAnnouncements(true)
+    setErrorAnnouncements('')
+
+    announcementsSummary(groupId)
+      .then((data) => {
+        setAnnouncements(Array.isArray(data) ? data : [])
+      })
+      .catch(() => setErrorAnnouncements('공지사항을 불러오는 중 오류가 발생했습니다.'))
+      .finally(() => setLoadingAnnouncements(false))
+  }, [groupId])
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold text-blue-800 mb-2">
@@ -149,8 +174,12 @@ const MainPage = () => {
                 onDateSelect={setSelectedDate}
                 value={selectedDate}
                 scheduledDates={assignmentDates}
+                announcementDates={announcementDates}
               />
-              <CalendarDateDetails selectedDate={selectedDate} events={myAssignments} />
+              <CalendarDateDetails
+                selectedDate={selectedDate}
+                events={[...myAssignments, ...announcementSelectedDate]}
+              />
             </>
           )}
         </>

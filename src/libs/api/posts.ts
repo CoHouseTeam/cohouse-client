@@ -76,7 +76,7 @@ export const getPostLikeCount = async (postId: number): Promise<LikeCountRespons
 }
 
 // 공지 리스트 조회
-export const announcementsSummery = async (groupId: number) => {
+export const announcementsSummary = async (groupId: number) => {
   const response = await api.get(POST_ENDPOINTS.ANNOUNCEMENTS_SUM(groupId))
-  return await response.data
+  return response.data
 }
