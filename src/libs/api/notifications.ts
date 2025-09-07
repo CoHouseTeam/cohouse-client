@@ -32,19 +32,27 @@ export const createNotification = async (data: CreateNotificationRequest, isAppA
     
     console.log('✅ 알림 생성 성공:', response.data)
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { 
+      response?: { 
+        status?: number; 
+        data?: { message?: string; error?: string }; 
+        headers?: unknown 
+      }; 
+      config?: unknown 
+    }
     console.error('❌ 알림 생성 실패 상세 정보:')
     console.error('에러 객체:', error)
-    console.error('응답 상태:', error.response?.status)
-    console.error('응답 데이터:', error.response?.data)
-    console.error('응답 헤더:', error.response?.headers)
-    console.error('요청 설정:', error.config)
+    console.error('응답 상태:', err.response?.status)
+    console.error('응답 데이터:', err.response?.data)
+    console.error('응답 헤더:', err.response?.headers)
+    console.error('요청 설정:', err.config)
     
     // 서버에서 반환한 구체적인 에러 메시지가 있다면 사용
-    if (error.response?.data?.message) {
-      throw new Error(`알림 생성 실패: ${error.response.data.message}`)
-    } else if (error.response?.data?.error) {
-      throw new Error(`알림 생성 실패: ${error.response.data.error}`)
+    if (err.response?.data?.message) {
+      throw new Error(`알림 생성 실패: ${err.response.data.message}`)
+    } else if (err.response?.data?.error) {
+      throw new Error(`알림 생성 실패: ${err.response.data.error}`)
     } else {
       throw error
     }

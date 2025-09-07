@@ -49,7 +49,7 @@ export default function Board() {
 
   // 동적으로 그룹 ID를 가져오기 위한 상태
   const [groupId, setGroupId] = useState<number | null>(null)
-  const [groupMembers, setGroupMembers] = useState<any[]>([])
+  const [groupMembers, setGroupMembers] = useState<Array<{ memberId: number; nickname: string; name?: string; email?: string; isLeader?: boolean }>>([])
   const [currentMemberId, setCurrentMemberId] = useState<number | null>(null)
   const size = 10
 
@@ -163,9 +163,9 @@ export default function Board() {
           }
         }
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .catch((e: any) => {
-        if (mounted) setError(e?.message ?? 'Failed to load posts')
+      .catch((e: unknown) => {
+        const error = e as { message?: string }
+        if (mounted) setError(error?.message ?? 'Failed to load posts')
       })
       .finally(() => mounted && setLoading(false))
 
@@ -410,13 +410,13 @@ export default function Board() {
       closeEditModal()
       closeModal()
       console.log('🔒 모달 닫기 완료')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const error = e as { response?: { status?: number; data?: unknown; headers?: unknown } }
       console.error('❌ [updatePost] FAILED', {
         error: e,
-        status: e?.response?.status,
-        data: e?.response?.data,
-        headers: e?.response?.headers
+        status: error?.response?.status,
+        data: error?.response?.data,
+        headers: error?.response?.headers
       })
       alert('게시글 수정에 실패했습니다.')
     } finally {
@@ -574,34 +574,48 @@ export default function Board() {
       
       closeNewPostModal()
       console.log('🔒 모달 닫기 완료')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const error = e as { 
+        response?: { 
+          status?: number; 
+          statusText?: string; 
+          data?: { 
+            message?: string; 
+            error?: string; 
+            detail?: string; 
+            errors?: Record<string, string | string[]> 
+          }; 
+          headers?: unknown 
+        }; 
+        config?: unknown; 
+        message?: string 
+      }
       console.error('❌ [createPost] FAILED', {
         error: e,
-        status: e?.response?.status,
-        statusText: e?.response?.statusText,
-        data: e?.response?.data,
-        headers: e?.response?.headers,
-        config: e?.config,
-        message: e?.message
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data,
+        headers: error?.response?.headers,
+        config: error?.config,
+        message: error?.message
       })
       
       // API 에러 메시지 표시
       let errorMessage = '게시글 작성에 실패했습니다.'
-      if (e?.response?.data?.message) {
-        errorMessage = `게시글 작성 실패: ${e.response.data.message}`
-      } else if (e?.response?.data?.error) {
-        errorMessage = `게시글 작성 실패: ${e.response.data.error}`
-      } else if (e?.response?.data?.detail) {
-        errorMessage = `게시글 작성 실패: ${e.response.data.detail}`
-      } else if (e?.response?.data?.errors) {
+      if (error?.response?.data?.message) {
+        errorMessage = `게시글 작성 실패: ${error.response.data.message}`
+      } else if (error?.response?.data?.error) {
+        errorMessage = `게시글 작성 실패: ${error.response.data.error}`
+      } else if (error?.response?.data?.detail) {
+        errorMessage = `게시글 작성 실패: ${error.response.data.detail}`
+      } else if (error?.response?.data?.errors) {
         // 필드별 오류 메시지가 있는 경우
-        const fieldErrors = Object.entries(e.response.data.errors || {})
+        const fieldErrors = Object.entries(error.response.data.errors || {})
           .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
           .join('; ')
         errorMessage = `게시글 작성 실패: ${fieldErrors}`
-      } else if (e?.message) {
-        errorMessage = `게시글 작성 실패: ${e.message}`
+      } else if (error?.message) {
+        errorMessage = `게시글 작성 실패: ${error.message}`
       }
       
       console.error('🚨 사용자에게 표시할 에러 메시지:', errorMessage)

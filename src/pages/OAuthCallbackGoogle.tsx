@@ -56,11 +56,12 @@ export default function OAuthCallbackGoogle() {
         // 강제로 메인페이지로 이동
         console.log('[GoogleAuth] Login successful, redirecting to main page...')
         window.location.href = '/'
-      } catch (e: any) {
+      } catch (e: unknown) {
+        const error = e as { response?: { status?: number } }
         console.error('Error during Google social login:', e)
         
         // 백엔드 에러가 발생해도 구글 로그인은 성공했으므로 메인페이지로 이동
-        if (e?.response?.status === 500) {
+        if (error?.response?.status === 500) {
           console.log('[GoogleAuth] Backend error but Google login successful, redirecting to main page...')
           localStorage.setItem('isAuthenticated', 'true')
           localStorage.setItem('authMethod', 'google')

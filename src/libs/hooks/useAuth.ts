@@ -25,7 +25,7 @@ export const useAuth = () => {
   })
   const [loading, setLoading] = useState(true)
   const [groupId, setGroupId] = useState<number | null>(null)
-  const [groupMembers, setGroupMembers] = useState<any[]>([])
+  const [groupMembers, setGroupMembers] = useState<Array<{ memberId: number; nickname: string; name?: string; email?: string; isLeader?: boolean }>>([])
 
   const checkAuthAndPermissions = async () => {
     try {
@@ -51,7 +51,7 @@ export const useAuth = () => {
 
       // 2. 그룹 정보 확인
       let currentGroupId: number | null = null
-      let currentGroupMembers: any[] = []
+      let currentGroupMembers: Array<{ memberId: number; nickname: string; name?: string; email?: string; isLeader?: boolean }> = []
       let isGroupMember = false
       let isGroupLeader = false
 
@@ -85,9 +85,10 @@ export const useAuth = () => {
             isGroupLeader = false
           }
         }
-      } catch (groupError: any) {
+      } catch (groupError: unknown) {
+        const err = groupError as { response?: { status?: number } }
         // 404 에러는 그룹이 없는 것이므로 정상적인 상태로 처리
-        if (groupError.response?.status === 404) {
+        if (err.response?.status === 404) {
           console.log('사용자가 아직 그룹에 속하지 않음 (404)')
         } else {
           console.log('그룹 정보 가져오기 실패:', groupError)

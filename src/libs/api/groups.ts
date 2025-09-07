@@ -16,14 +16,15 @@ export async function fetchMyGroups() {
     }
     
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number } }
     // 404 에러는 그룹이 없는 정상적인 상황이므로 빈 배열 반환
-    if (error.response?.status === 404) {
+    if (err.response?.status === 404) {
       return []
     }
     
     // 401 에러는 인증 문제
-    if (error.response?.status === 401) {
+    if (err.response?.status === 401) {
       console.error('❌ 인증이 필요합니다. 로그인해주세요.')
       throw new Error('인증이 필요합니다. 로그인해주세요.')
     }
@@ -70,9 +71,10 @@ export async function getCurrentGroupId(): Promise<number | null> {
     // 그룹이 없는 경우 null 반환 (에러가 아님)
     console.log('ℹ️ 그룹에 속하지 않음')
     return null
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number } }
     // 404 에러는 그룹이 없는 정상적인 상황이므로 null 반환
-    if (error.response?.status === 404) {
+    if (err.response?.status === 404) {
       console.log('ℹ️ 그룹이 없음 (404)')
       return null
     }
@@ -115,11 +117,7 @@ export async function fetchGroupMembers(groupId: number) {
   console.log('🔍 fetchGroupMembers 호출됨')
   console.log('📡 요청 URL:', GROUP_ENDPOINTS.MEMBERS(groupId))
   
-  try {
-    const response = await api.get(GROUP_ENDPOINTS.MEMBERS(groupId))
-    console.log('✅ 그룹 멤버 정보 조회 성공:', response.data)
-    return response.data
-  } catch (error) {
-    throw error
-  }
+  const response = await api.get(GROUP_ENDPOINTS.MEMBERS(groupId))
+  console.log('✅ 그룹 멤버 정보 조회 성공:', response.data)
+  return response.data
 }
