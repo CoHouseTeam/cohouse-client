@@ -1,10 +1,10 @@
 import api from '../libs/api/axios';
-import type { BoardPost, PageResponse, PostLikes, PostLikesCount } from '../types/main';
+import type { BoardPost, BoardPostDetail, PageResponse, PostLikeResponse, LikeStatusResponse, LikeCountResponse } from '../types/main';
 
 function assertGroupUrl(url: string) {
   // Guard: prevent accidental /api/posts/{id} usage for lists
-  if (!url.includes('/api/posts/group/')) {
-    throw new Error('[ListFetchGuard] List endpoint MUST include /api/posts/group/{groupId}');
+  if (!url.includes('/api/posts/groups/')) {
+    throw new Error('[ListFetchGuard] List endpoint MUST include /api/posts/groups/{groupId}');
   }
 }
 
@@ -12,11 +12,9 @@ export async function fetchGroupPosts(params: {
   groupId: number;                // 동적으로 가져온 groupId
   type: 'FREE' | 'ANNOUNCEMENT';
   status?: 'ACTIVE' | 'INACTIVE';
-  page?: number;                  // default 1
-  size?: number;                  // default 10
 }) {
-  const { groupId, type, status = 'ACTIVE', page = 1, size = 10 } = params;
-  const url = `/api/posts/group/${groupId}?type=${type}&status=${status}&page=${page}&size=${size}`;
+  const { groupId, type, status = 'ACTIVE' } = params;
+  const url = `/api/posts/groups/${groupId}?type=${type}&status=${status}`;
   assertGroupUrl(url);
   const { data } = await api.get(url);
   return data as PageResponse<BoardPost>;
@@ -24,15 +22,20 @@ export async function fetchGroupPosts(params: {
 
 export async function fetchPost(postId: number) {
   const { data } = await api.get(`/api/posts/${postId}`);
-  return data as BoardPost;
+  return data as BoardPostDetail;
 }
 
 export async function fetchPostLikes(postId: number) {
   const { data } = await api.get(`/api/posts/${postId}/likes`);
-  return data as PostLikes;
+  return data as PostLikeResponse;
 }
 
 export async function fetchPostLikesCount(postId: number) {
   const { data } = await api.get(`/api/posts/${postId}/likes/count`);
-  return data as PostLikesCount;
+  return data as LikeCountResponse;
+}
+
+export async function fetchPostLikeStatus(postId: number) {
+  const { data } = await api.get(`/api/posts/${postId}/likes/status`);
+  return data as LikeStatusResponse;
 }

@@ -15,7 +15,7 @@ export default function OngoingSettlements({ groupId, viewerId }: OngoingSettlem
   const { data, isLoading, error } = useMySettlements()
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorCard />
+  if (error) return <ErrorCard message="정산 정보를 불러오는 중 오류가 발생했습니다." />
 
   const list: Settlement[] = Array.isArray(data)
     ? data

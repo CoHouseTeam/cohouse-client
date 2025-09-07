@@ -77,7 +77,7 @@ export interface ApiPost {
   preview: string
   groupId: number
   memberId: number
-  color: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'YELLOW' | 'ORANGE' | 'PINK' | 'GRAY'
+  color: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'ORANGE'
   createdAt: string
   updatedAt: string
 }
@@ -107,12 +107,14 @@ export interface CreatePostRequest {
   type: 'ANNOUNCEMENT' | 'FREE'
   title: string
   content: string
-  color: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'YELLOW' | 'ORANGE' | 'PINK' | 'GRAY'
+  color: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'ORANGE'
 }
 
 export interface UpdatePostRequest {
   title?: string
   content?: string
+  type?: 'ANNOUNCEMENT' | 'FREE'
+  color?: 'RED' | 'PURPLE' | 'BLUE' | 'GREEN' | 'ORANGE'
   images?: string[]
 }
 
@@ -140,27 +142,33 @@ export interface UnreadCountResponse {
   count: number
 }
 
-// ❤️ Post Like Types
-export interface PostLike {
-  id: number
-  postId: number
+// ❤️ Post Like Types (API 문서에 맞는 새로운 타입들)
+export interface PostLiker {
   memberId: number
-  memberName: string
-  memberProfileImage?: string
-  createdAt: string
+  displayName: string
+  avatarUrl: string
 }
 
 export interface PostLikeResponse {
-  likes: PostLike[]
+  postId: number
   totalCount: number
+  likers: PostLiker[]
 }
 
 export interface LikeStatusResponse {
-  isLiked: boolean
+  postId: number
+  liked: boolean
 }
 
 export interface LikeCountResponse {
+  postId: number
   count: number
+}
+
+export interface ToggleLikeResponse {
+  postId: number
+  likeCount: number
+  liked: boolean
 }
 
 export interface InviteModalProps {
@@ -177,7 +185,7 @@ export interface NicknameModalProps {
 }
 
 // 📰 Board Types
-export type BoardColor = 'RED' | 'BLUE' | 'GRAY' | 'ORANGE'
+export type BoardColor = 'RED' | 'BLUE' | 'GREEN' | 'PURPLE' | 'ORANGE'
 
 export interface BoardPost {
   id: number
@@ -191,6 +199,11 @@ export interface BoardPost {
   updatedAt: string
 }
 
+// 게시글 상세 정보 타입 (content 필드 포함)
+export interface BoardPostDetail extends BoardPost {
+  content?: string
+}
+
 export interface PageResponse<T> {
   content: T[]
   page: number // backend is 1-based in sample
@@ -198,15 +211,4 @@ export interface PageResponse<T> {
   totalElements: number
   totalPages: number
   last: boolean
-}
-
-export interface PostLikes {
-  postId: number
-  totalCount: number
-  likers: { memberId: number; displayName: string; avatarUrl: string }[]
-}
-
-export interface PostLikesCount {
-  postId: number
-  count: number
 }

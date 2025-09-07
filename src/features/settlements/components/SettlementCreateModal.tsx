@@ -286,18 +286,19 @@ export default function SettlementCreateModal(props: Props) {
 
       // 모달 닫기
       props.onClose()
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const error = e as { response?: { status?: number; data?: unknown }; message?: string }
       console.error(
         'Create settlement error:',
-        e?.response?.status,
-        e?.response?.data || e?.message
+        error?.response?.status,
+        error?.response?.data || error?.message
       )
       showAlert('정산 등록에 실패했어요. 다시 시도해 주세요.')
     }
   }
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorCard />
+  if (error) return <ErrorCard message="정산 정보를 불러오는 중 오류가 발생했습니다." />
 
   return (
     <>
