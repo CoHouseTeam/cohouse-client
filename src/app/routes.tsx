@@ -1,5 +1,6 @@
 import { Routes as RouterRoutes, Route } from 'react-router-dom'
 import { lazy } from 'react'
+import ProtectedRoute from '../components/ProtectedRoute'
 
 // Lazy load pages
 const Dashboard = lazy(() => import('../pages/Dashboard'))
@@ -17,29 +18,76 @@ const MainPage = lazy(() => import('../pages/MainPage'))
 const GroupComplete = lazy(() => import('../pages/GroupComplete'))
 const GroupInvite = lazy(() => import('../pages/GroupInvite'))
 const OAuthCallback = lazy(() => import('../pages/OAuthCallback'))
-const OAuthCallbackGoogle = lazy(() => import('../pages/OAuthCallbackGoogle'))
 const OAuthCallbackNaver = lazy(() => import('../pages/OAuthCallbackNaver'))
+const OAuthCallbackGoogle = lazy(() => import('../pages/OAuthCallbackGoogle'))
+
 
 export function Routes() {
   return (
     <RouterRoutes>
+      {/* 공개 라우트 - 로그인 불필요 */}
       <Route path="/" element={<MainPage />} />
-      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/oauth/callback" element={<OAuthCallback />} />
-      <Route path="/oauth/callback/google" element={<OAuthCallbackGoogle />} />
       <Route path="/oauth/callback/naver" element={<OAuthCallbackNaver />} />
-      <Route path="/settlements" element={<Settlements />} />
-      <Route path="/settlements/history" element={<SettlementHistory />} />
-      <Route path="/payments/history" element={<PaymentHistory />} />
-      <Route path="/tasks" element={<Tasks />} />
-      <Route path="/board" element={<Board />} />
-      <Route path="/mypage" element={<MyPage />} />
-      <Route path="/mypage/edit" element={<MyPgeEdit />} />
-      <Route path="/create-complete" element={<GroupComplete />} />
-      <Route path="/invite" element={<GroupInvite />} />
+      <Route path="/oauth/callback/google" element={<OAuthCallbackGoogle />} />
+      
+      {/* 인증 필요 라우트 - 로그인만 필요 */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute requireAuth={true}>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+      
+      {/* 그룹 참여 필요 라우트 - 로그인 + 그룹 참여 필요 */}
+      <Route path="/settlements" element={
+        <ProtectedRoute requireAuth={true} requireGroup={true}>
+          <Settlements />
+        </ProtectedRoute>
+      } />
+      <Route path="/settlements/history" element={
+        <ProtectedRoute requireAuth={true} requireGroup={true}>
+          <SettlementHistory />
+        </ProtectedRoute>
+      } />
+      <Route path="/payments/history" element={
+        <ProtectedRoute requireAuth={true} requireGroup={true}>
+          <PaymentHistory />
+        </ProtectedRoute>
+      } />
+      <Route path="/tasks" element={
+        <ProtectedRoute requireAuth={true} requireGroup={true}>
+          <Tasks />
+        </ProtectedRoute>
+      } />
+      <Route path="/board" element={
+        <ProtectedRoute requireAuth={true} requireGroup={true}>
+          <Board />
+        </ProtectedRoute>
+      } />
+      <Route path="/mypage" element={
+        <ProtectedRoute requireAuth={true} requireGroup={true}>
+          <MyPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/mypage/edit" element={
+        <ProtectedRoute requireAuth={true} requireGroup={true}>
+          <MyPgeEdit />
+        </ProtectedRoute>
+      } />
+      <Route path="/create-complete" element={
+        <ProtectedRoute requireAuth={true}>
+          <GroupComplete />
+        </ProtectedRoute>
+      } />
+      <Route path="/invite" element={
+        <ProtectedRoute requireAuth={true}>
+          <GroupInvite />
+        </ProtectedRoute>
+      } />
+
       <Route path="*" element={<NotFound />} />
     </RouterRoutes>
   )

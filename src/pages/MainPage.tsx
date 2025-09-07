@@ -6,14 +6,19 @@ import GroupBox from '../features/mainpage/components/GroupBox'
 import { useCalendarStore } from '../app/tasksStore'
 import { fetchMyGroups } from '../libs/api/groups'
 import { isAuthenticated } from '../libs/utils/auth'
+import LoadingSpinner from '../features/common/LoadingSpinner'
+import ErrorCard from '../features/common/ErrorCard'
+import { useAuth } from '../libs/hooks/useAuth'
 import { getAssignments } from '../libs/api/tasks'
 import { Assignment } from '../types/tasks'
 import { useGroupStore } from '../app/store'
-import { getMyMemberId, getProfile } from '../libs/api/profile'
+import { getProfile } from '../libs/api/profile'
 import { AxiosError } from 'axios'
+
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
+  const { permissions } = useAuth()
 
   const dateKey = useMemo(() => {
     const d = selectedDate
@@ -31,8 +36,6 @@ const MainPage = () => {
   // 그룹 및 사용자 상태
   const hasGroups = useGroupStore((state) => state.hasGroups)
   const setHasGroups = useGroupStore((state) => state.setHasGroups)
-  const setMyMemberId = useGroupStore((state) => state.setMyMemberId)
-  const myMemberId = useGroupStore((state) => state.myMemberId)
 
   const [loadingGroup, setLoadingGroup] = useState(false)
   const [errorGroup, setErrorGroup] = useState('')
@@ -46,19 +49,23 @@ const MainPage = () => {
   const [userName, setUserName] = useState('')
   const [myAssignments, setMyAssignments] = useState<string[]>([])
   const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [myMemberId, setMyMemberId] = useState<number | null>(null)
 
-  const assignmentDates: string[] = assignments
-    .filter((a) => {
-      // 본인에게 할당된 업무만 필터
-      if (Array.isArray(a.groupMemberId)) {
-        return a.groupMemberId.includes(myMemberId)
-      } else {
-        return a.groupMemberId === myMemberId
-      }
-    })
-    .map((a) => a.date?.slice(0, 10))
-    .filter((d): d is string => !!d)
-    .filter((d, i, arr) => arr.indexOf(d) === i) // 중복 제거
+  const assignmentDates: string[] = useMemo(() => {
+    if (!myMemberId) return []
+    
+    return assignments
+      .filter((a) => {
+        if (Array.isArray(a.groupMemberId)) {
+          return a.groupMemberId.includes(myMemberId)
+        } else {
+          return a.groupMemberId === myMemberId
+        }
+      })
+      .map((a) => a.date?.slice(0, 10))
+      .filter((d): d is string => !!d)
+      .filter((d, i, arr) => arr.indexOf(d) === i) // 중복 제거
+  }, [assignments, myMemberId])
 
   // 인증 상태 설정
   useEffect(() => {
@@ -77,19 +84,6 @@ const MainPage = () => {
     }
     fetchUserProfile()
   }, [])
-
-  // 나의 멤버 ID 불러오기
-  useEffect(() => {
-    async function fetchMemberId() {
-      try {
-        const id = await getMyMemberId()
-        setMyMemberId(id)
-      } catch {
-        setMyMemberId(null)
-      }
-    }
-    fetchMemberId()
-  }, [setMyMemberId])
 
   // 그룹 및 그룹 멤버 정보 불러오기
   const loadGroupData = useCallback(async () => {
@@ -118,11 +112,10 @@ const MainPage = () => {
       setGroupId(myGroupData.id)
 
       // 그룹 멤버 세팅
-      const currentUserMemberId = await getMyMemberId()
-      if (!currentUserMemberId) {
-        setMyMemberId(null)
+      if (myGroupData.memberId) {
+        setMyMemberId(myGroupData.memberId)
       } else {
-        setMyMemberId(currentUserMemberId)
+        setMyMemberId(null)
       }
     } catch (e) {
       const error = e as AxiosError
@@ -140,7 +133,7 @@ const MainPage = () => {
     } finally {
       setLoadingGroup(false)
     }
-  }, [userAuthenticated, setHasGroups, setMyMemberId])
+  }, [userAuthenticated, setHasGroups])
 
   useEffect(() => {
     loadGroupData()
@@ -212,20 +205,29 @@ const MainPage = () => {
       }
     }
 
-    if (userAuthenticated && groupId) {
+    if (groupId) {
       loadAssignments()
-    } else {
-      setAssignments([])
-      setMyAssignments([])
     }
-  }, [userAuthenticated, groupId, myMemberId, dateKey])
+  }, [groupId, myMemberId, dateKey])
+
+  // useAuth의 권한과 useGroupStore 동기화
+  useEffect(() => {
+    if (permissions?.canAccessFeatures !== hasGroups) {
+      setHasGroups(permissions?.canAccessFeatures || false)
+    }
+  }, [permissions?.canAccessFeatures, hasGroups, setHasGroups])
 
   return (
     <div className="space-y-6">
-      <p>{userName ? `${userName}님 반가워요!` : '반가워요!'}</p>
-
-      {loadingGroup && <div>그룹 정보를 불러오는 중...</div>}
-      {errorGroup && <div className="text-red-600">{errorGroup}</div>}
+      {loadingGroup && <LoadingSpinner message="그룹 정보 불러오는 중..." />}
+      
+      {errorGroup && <ErrorCard message={errorGroup} />}
+      
+      {!loadingGroup && hasGroups && userAuthenticated && (
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">
+            반가워요, {userName || '사용자'}님!
+          </h3>
+      )}
 
       {!loadingGroup && !errorGroup && (!hasGroups ? <GroupBox /> : null)}
 

@@ -13,7 +13,7 @@ export default function RecentSettlements({ groupId, viewerId }: RecentSettlemen
   const { data, isLoading, error } = useMySettlementHistory({ page: 0, size: 20 })
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorCard />
+  if (error) return <ErrorCard message="최근 정산 정보를 불러오는 중 오류가 발생했습니다." />
 
   const list = Array.isArray(data) ? data : []
 
