@@ -131,6 +131,9 @@ export const POST_ENDPOINTS = {
   // 그룹별 게시글 목록 (페이지네이션 및 필터링 지원)
   GET_BY_GROUP: (groupId: number) => `api/posts/${groupId}`,
 
+  // 공지 리스트 (메인 페이지 조회 목적)
+  ANNOUNCEMENTS_SUM: (groupId: number) => `api/posts/${groupId}/announcements/summary`,
+
   LIKES: (postId: number) => `api/posts/${postId}/likes`,
   LIKE: (postId: number) => `api/posts/${postId}/likes`,
   LIKE_STATUS: (postId: number) => `api/posts/${postId}/likes/status`,

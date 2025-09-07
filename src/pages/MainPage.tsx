@@ -125,7 +125,9 @@ const MainPage = () => {
 
   return (
     <div className="space-y-6">
-      <p>{userName ? `${userName}님 반가워요!` : '반가워요!'}</p>
+      <h3 className="text-lg font-semibold text-blue-800 mb-2">
+        반가워요, {userName || '사용자'}님!
+      </h3>
 
       {loadingGroup && <LoadingSpinner />}
       {errorGroup && <div className="text-red-600">{errorGroup}</div>}

@@ -1,6 +1,13 @@
 import api from './axios'
 import { POST_ENDPOINTS } from './endpoints'
-import type { Post, CreatePostRequest, UpdatePostRequest, PostLikeResponse, LikeStatusResponse, LikeCountResponse } from '../../types/main'
+import type {
+  Post,
+  CreatePostRequest,
+  UpdatePostRequest,
+  PostLikeResponse,
+  LikeStatusResponse,
+  LikeCountResponse,
+} from '../../types/main'
 
 // 📰 Post API Functions
 
@@ -37,7 +44,7 @@ export const getPostsByGroup = async (
     type?: 'ANNOUNCEMENT' | 'FREE'
     status?: 'ACTIVE' | 'DELETED'
   }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> => {
   const response = await api.get(POST_ENDPOINTS.GET_BY_GROUP(groupId), { params })
   return response.data
@@ -65,4 +72,10 @@ export const getPostLikeStatus = async (postId: number): Promise<LikeStatusRespo
 export const getPostLikeCount = async (postId: number): Promise<LikeCountResponse> => {
   const response = await api.get(POST_ENDPOINTS.LIKE_COUNT(postId))
   return response.data
+}
+
+// 공지 리스트 조회
+export const announcementsSummery = async (groupId: number) => {
+  const response = await api.get(POST_ENDPOINTS.ANNOUNCEMENTS_SUM(groupId))
+  return await response.data
 }
