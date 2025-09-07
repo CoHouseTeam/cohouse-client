@@ -6,11 +6,13 @@ import { fetchGroupPosts, fetchPost, fetchPostLikesCount, fetchPostLikeStatus } 
 import { getCurrentGroupId, fetchGroupMembers } from '../libs/api/groups'
 import { getCurrentMemberId, getCurrentUser, getAccessToken } from '../libs/utils/auth'
 import { useAuth } from '../libs/hooks/useAuth'
+import { getProfile } from '../libs/api/profile'
 import type { BoardPost, BoardPostDetail, PageResponse, BoardColor, PostLikeResponse } from '../types/main'
 
 type TabKey = 'FREE' | 'ANNOUNCEMENT'
 
 export default function Board() {
+  const [userName, setUserName] = useState('')
   const { permissions } = useAuth()
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedPost, setSelectedPost] = useState<BoardPostDetail | null>(null)
@@ -61,20 +63,9 @@ export default function Board() {
       try {
         console.log('🔍 초기 데이터 가져오기 시작')
         
-        // 현재 사용자 ID 가져오기 (여러 방법 시도)
-        let memberId = getCurrentMemberId()
+        // 현재 사용자 ID 가져오기
+        const memberId = await getCurrentMemberId()
         console.log('🔍 getCurrentMemberId() 결과:', memberId)
-        
-        if (!memberId) {
-          // JWT 토큰에서 직접 추출 시도
-          const userFromToken = getCurrentUser()
-          if (userFromToken?.memberId) {
-            memberId = userFromToken.memberId
-            console.log('✅ JWT 토큰에서 memberId 추출 성공:', memberId)
-          } else {
-            console.log('⚠️ JWT 토큰에서도 memberId를 찾을 수 없습니다.')
-          }
-        }
         
         setCurrentMemberId(memberId)
         console.log('✅ 현재 사용자 ID 설정 완료:', memberId)
@@ -111,6 +102,12 @@ export default function Board() {
       try {
         const groupInfo = await fetchGroupMembers(groupId)
         console.log('✅ 그룹 멤버 정보 설정 완료:', groupInfo)
+        console.log('✅ 그룹 멤버 상세 정보:', groupInfo.map((member: any) => ({
+          id: member.id,
+          memberId: member.memberId,
+          nickname: member.nickname,
+          isLeader: member.isLeader
+        })))
         setGroupMembers(groupInfo)
       } catch (error) {
         console.error('❌ 그룹 멤버 정보 가져오기 실패:', error)
@@ -177,13 +174,44 @@ export default function Board() {
 
   // memberId로 닉네임을 찾는 함수
   const getNicknameByMemberId = (memberId: number) => {
+    console.log('🔍 getNicknameByMemberId 호출:', {
+      memberId,
+      groupMembersLength: groupMembers?.length || 0,
+      groupMembers: groupMembers
+    })
+    
     if (!groupMembers || groupMembers.length === 0) {
+      console.log('⚠️ groupMembers가 없음, 기본값 반환')
       return '작성자'
     }
     
     const member = groupMembers.find(m => m.memberId === memberId)
-    return member ? member.nickname : '작성자'
+    console.log('🔍 찾은 멤버:', {
+      member,
+      memberId,
+      found: !!member,
+      nickname: member?.nickname
+    })
+    
+    // nickname이 null이거나 빈 문자열인 경우 기본값 반환
+    const result = member && member.nickname ? member.nickname : '작성자'
+    console.log('✅ 최종 결과:', result)
+    return result
   }
+
+  
+  // 사용자 프로필 불러오기
+  useEffect(() => {
+    async function fetchUserProfile() {
+      try {
+        const profile = await getProfile()
+        setUserName(profile.name || '')
+      } catch {
+        setUserName('')
+      }
+    }
+    fetchUserProfile()
+  }, [])
 
   // 검색 필터링된 게시글 목록
   const filteredPosts = useMemo(() => {
@@ -195,9 +223,9 @@ export default function Board() {
       if (post.title.toLowerCase().includes(searchLower)) return true
       // 내용(preview) 검색
       if (post.preview.toLowerCase().includes(searchLower)) return true
-      // 작성자 검색 (닉네임으로 검색)
-      const authorNickname = getNicknameByMemberId(post.memberId)
-      if (authorNickname.toLowerCase().includes(searchLower)) return true
+      // 작성자 검색 (userName 또는 닉네임으로 검색)
+      const authorName = post.userName || getNicknameByMemberId(post.memberId)
+      if (authorName && authorName.toLowerCase().includes(searchLower)) return true
       return false
     })
   }, [posts, searchTerm, groupMembers])
@@ -211,36 +239,17 @@ export default function Board() {
     
     // 게시글 작성자 이름 가져오기
     const postAuthorName = getNicknameByMemberId(postMemberId)
-    
-    console.log('🔍 작성자 확인 상세:', {
-      currentMemberId,
-      tokenMemberId,
-      tokenName,
-      postMemberId,
-      postAuthorName,
-      hasToken: !!getAccessToken(),
-      userFromToken
-    })
+
     
     // JWT 토큰에서 추출한 ID 사용 (우선순위)
     if (tokenMemberId && tokenMemberId > 0) {
       const isAuthor = tokenMemberId === postMemberId
-      console.log('✅ JWT 토큰으로 작성자 확인:', {
-        tokenMemberId,
-        postMemberId,
-        isAuthor
-      })
       return isAuthor
     }
     
     // memberId가 없는 경우, JWT의 name과 게시글 작성자 이름 비교
     if (tokenName && postAuthorName && postAuthorName !== '작성자') {
       const isAuthorByName = tokenName === postAuthorName
-      console.log('✅ 이름으로 작성자 확인:', {
-        tokenName,
-        postAuthorName,
-        isAuthorByName
-      })
       return isAuthorByName
     }
     
@@ -249,11 +258,6 @@ export default function Board() {
       const member = groupMembers.find(m => m.memberId === postMemberId)
       if (member && member.nickname && member.nickname !== '작성자') {
         const isAuthorByMemberName = tokenName === member.nickname
-        console.log('✅ 그룹 멤버 정보로 작성자 확인:', {
-          tokenName,
-          memberNickname: member.nickname,
-          isAuthorByMemberName
-        })
         return isAuthorByMemberName
       }
     }
@@ -261,11 +265,6 @@ export default function Board() {
     // fallback: state의 currentMemberId 사용
     if (currentMemberId) {
       const isAuthor = currentMemberId === postMemberId
-      console.log('✅ State로 작성자 확인:', {
-        currentMemberId,
-        postMemberId,
-        isAuthor
-      })
       return isAuthor
     }
     
@@ -528,10 +527,13 @@ export default function Board() {
     console.log('🚀 새 글 작성 시작')
     setIsSubmitting(true)
     
+    console.log(userName)
+    
     // API 요청 데이터 준비 (catch 블록에서도 접근 가능하도록 try 블록 밖에 선언)
     const postData = {
       groupId: groupId,
       memberId: memberIdToUse,
+      userName: userName,
       type: newPostCategory,
       title: newPostTitle.trim(),
       content: newPostContent.trim(),
@@ -546,6 +548,7 @@ export default function Board() {
       }
 
       console.log('📤 전송할 데이터:', postData)
+      console.log('📤 userName 값:', userName)
 
       console.log('🚀 API 요청 시작:', {
         endpoint: 'POST /api/posts',
@@ -787,7 +790,7 @@ export default function Board() {
 
                   {/* Meta info */}
                   <div className="flex justify-between items-center text-xs text-base-content/60">
-                        <span>{getNicknameByMemberId(post.memberId)}</span>
+                        <span>{post.userName || getNicknameByMemberId(post.memberId)}</span>
                         <span>{new Date(post.createdAt).toISOString().split('T')[0]}</span>
                   </div>
 
@@ -858,14 +861,6 @@ export default function Board() {
                 {/* 수정/삭제 버튼 (작성자만 표시) */}
                 {(() => {
                   const isAuthor = isPostAuthor(selectedPost.memberId)
-                  console.log('🎯 모달에서 작성자 확인:', {
-                    selectedPostId: selectedPost.id,
-                    selectedPostMemberId: selectedPost.memberId,
-                    currentMemberId,
-                    isAuthor,
-                    currentUserFromAuth: getCurrentMemberId(),
-                    hasToken: !!getAccessToken()
-                  })
                   return isAuthor
                 })() && (
                   <>
@@ -903,9 +898,9 @@ export default function Board() {
             <div className="space-y-4">
               
               
-              {/* Meta info */}
-              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                    <span>작성자: {getNicknameByMemberId(selectedPost.memberId)}</span>
+                {/* Meta info */}
+                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <span>작성자: {selectedPost.userName || getNicknameByMemberId(selectedPost.memberId)} </span>
                     <span>작성일: {new Date(selectedPost.createdAt).toISOString().split('T')[0]}</span>
                     <span>카테고리: {selectedPost.type === 'ANNOUNCEMENT' ? '공지사항' : '자유게시판'}</span>
               </div>

@@ -164,7 +164,7 @@ export const useAuth = () => {
       const token = getAccessToken()
       if (token && !permissions.isAuthenticated) {
         // 토큰이 새로 추가되었을 때 권한 새로고침
-        console.log('🔄 토큰 감지됨, 권한 새로고침 시작')
+        // 토큰 감지됨, 권한 새로고침 시작
         checkAuthAndPermissions()
       }
     }
@@ -186,7 +186,7 @@ export const useAuth = () => {
     const interval = setInterval(() => {
       const token = getAccessToken()
       if (token && !permissions.isAuthenticated) {
-        console.log('🔄 주기적 체크에서 토큰 감지, 권한 새로고침')
+        // 주기적 체크에서 토큰 감지, 권한 새로고침
         checkAuthAndPermissions()
       }
     }, 1000) // 1초마다 체크

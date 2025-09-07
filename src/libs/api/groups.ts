@@ -3,12 +3,11 @@ import { GROUP_ENDPOINTS } from './endpoints'
 
 // 내가 속한 그룹 정보
 export async function fetchMyGroups() {
-  console.log('🔍 fetchMyGroups 호출됨')
-  console.log('📡 요청 URL:', GROUP_ENDPOINTS.MY_GROUPS)
+  // fetchMyGroups 호출
 
   try {
     const response = await api.get(GROUP_ENDPOINTS.MY_GROUPS)
-    console.log('✅ 그룹 정보 조회 성공:', response.data)
+    // 그룹 정보 조회 성공
     
     // 응답 데이터 검증
     if (!response.data) {
@@ -47,15 +46,15 @@ export async function fetchIsLeader(groupId: number): Promise<boolean> {
 // 현재 사용자가 속한 그룹의 ID를 가져오는 함수
 export async function getCurrentGroupId(): Promise<number | null> {
   try {
-    console.log('🔍 getCurrentGroupId 호출됨')
+    // getCurrentGroupId 호출
     const groupData = await fetchMyGroups()
     
     // 응답 데이터 구조 확인
-    console.log('📊 그룹 데이터 구조:', groupData)
+    // 그룹 데이터 구조 확인
     
     // 응답에서 그룹 ID를 반환
     if (groupData && groupData.id) {
-      console.log('✅ 현재 그룹 ID:', groupData.id)
+      // 현재 그룹 ID 확인
       return groupData.id
     }
     
@@ -112,12 +111,19 @@ export async function createGroupInvitation(groupId: number) {
 }
 
 // 해당 그룹 멤버 목록
-
 export async function fetchGroupMembers(groupId: number) {
-  console.log('🔍 fetchGroupMembers 호출됨')
-  console.log('📡 요청 URL:', GROUP_ENDPOINTS.MEMBERS(groupId))
+  // fetchGroupMembers 호출
   
   const response = await api.get(GROUP_ENDPOINTS.MEMBERS(groupId))
-  console.log('✅ 그룹 멤버 정보 조회 성공:', response.data)
+  // 그룹 멤버 정보 조회 성공
+  return response.data
+}
+
+// 현재 사용자의 그룹 멤버 정보 조회 (memberId 포함)
+export async function getMyGroupMemberInfo(groupId: number) {
+  // getMyGroupMemberInfo 호출
+  
+  const response = await api.put(GROUP_ENDPOINTS.UPDATE_MY_INFO(groupId), {})
+  // 내 그룹 멤버 정보 조회 성공
   return response.data
 }
