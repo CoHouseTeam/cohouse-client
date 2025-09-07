@@ -34,6 +34,30 @@ interface TaskState {
 
   groupId: number | null
   setGroupId: (id: number | null) => void
+
+  loadingAssignments: boolean
+  setLoadingAssignments: (loading: boolean) => void
+
+  errorAssignments: string
+  setErrorAssignments: (error: string) => void
+
+  myAssignments: string[]
+  setMyAssignments: (assignments: string[]) => void
+
+  repeat: boolean
+  setRepeat: (val: boolean) => void
+
+  showHistory: boolean
+  setShowHistory: (val: boolean) => void
+
+  exchangeSelected: number[]
+  setExchangeSelected: (selected: number[]) => void
+
+  modalOpen: boolean
+  setModalOpen: (open: boolean) => void
+
+  error: string
+  setError: (error: string) => void
 }
 
 export const useTaskStore = create<TaskState>((set) => ({
@@ -54,4 +78,28 @@ export const useTaskStore = create<TaskState>((set) => ({
 
   groupId: null,
   setGroupId: (id) => set({ groupId: id }),
+
+  loadingAssignments: false,
+  setLoadingAssignments: (loading) => set({ loadingAssignments: loading }),
+
+  errorAssignments: '',
+  setErrorAssignments: (error) => set({ errorAssignments: error }),
+
+  myAssignments: [],
+  setMyAssignments: (assignments) => set({ myAssignments: assignments }),
+
+  repeat: true,
+  setRepeat: (val) => set({ repeat: val }),
+
+  showHistory: false,
+  setShowHistory: (val) => set({ showHistory: val }),
+
+  exchangeSelected: [],
+  setExchangeSelected: (selected) => set({ exchangeSelected: selected }),
+
+  modalOpen: false,
+  setModalOpen: (open) => set({ modalOpen: open }),
+
+  error: '',
+  setError: (error) => set({ error }),
 }))
