@@ -14,7 +14,7 @@ import LoadingSpinner from '../features/common/LoadingSpinner'
 import ConfirmModal from '../features/common/ConfirmModal'
 import ImageViewer from '../features/common/ImageViewer'
 import { formatYYYYMMDDLocal, parseLocalYYYYMMDD } from '../libs/utils/date-local'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { isDefaultProfileUrl } from '../libs/utils/profile-image'
 
 registerLocale('ko', ko)
@@ -26,6 +26,9 @@ function formatBytes(n: number) {
   if (n < 1024 ** 2) return `${(n / 1024).toFixed(1)} KB`
   return `${(n / 1024 ** 2).toFixed(1)} MB`
 }
+
+type ApiErrorField = { field?: string; defaultMessage?: string; message?: string }
+type ApiErrorData = { message?: string; errors?: ApiErrorField[] }
 
 export default function MyPageEdit() {
   const [pwOpen, setPwOpen] = useState(false)
@@ -222,14 +225,12 @@ export default function MyPageEdit() {
       showAlert('저장되었습니다.')
     } catch (e: unknown) {
       if (axios.isAxiosError(e)) {
-        const d = e.response?.data as any
-        console.log('API Error:', e.response?.status, d, e.config?.data)
-        const fieldErrors = d?.errors
-          ?.map((er: any) => `${er.field ?? ''}: ${er.defaultMessage ?? er.message ?? ''}`)
+        const d = (e as AxiosError<ApiErrorData>).response?.data
+        const fieldMsg = d?.errors
+          ?.map((er) => `${er.field ?? ''}: ${er.defaultMessage ?? er.message ?? ''}`)
           .join('\n')
-        showAlert(fieldErrors || d?.message || '저장 중 오류가 발생했어요.')
+        showAlert(fieldMsg || d?.message || '요청 중 오류가 발생했어요.')
       } else {
-        console.error(e)
         showAlert('알 수 없는 오류가 발생했어요.')
       }
     }

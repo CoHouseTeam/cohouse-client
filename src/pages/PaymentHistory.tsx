@@ -22,6 +22,8 @@ import type {
 const CATEGORY_LIST = ['전체', '송금 완료', '송금 실패', '송금 취소'] as const
 type Category = (typeof CATEGORY_LIST)[number]
 
+type SettlementsData = Settlement[] | { content?: Settlement[] | null } | undefined | null
+
 // 카테고리 → 상태 매핑
 const CAT_TO_STATUSES: Record<Category, TransferStatus[]> = {
   전체: ['PENDING', 'PAID', 'REFUNDED', 'FAILED', 'CANCELED'],
@@ -56,15 +58,15 @@ export default function PaymentsHistory() {
   // 정산 제목 검색을 위한 정산 전체(또는 필요한 만큼)
   const { data: settlements = [] } = useMySettlements()
 
-  // 🔧 변경 1: settlements를 무조건 배열로 정규화 (페이지 객체/배열 모두 대응)
+  // settlements를 무조건 배열로 정규화 (페이지 객체/배열 모두 대응)
   const settlementsArray: Settlement[] = useMemo(() => {
-    const s: any = settlements
-    if (Array.isArray(s?.content)) return s.content as Settlement[]
-    if (Array.isArray(s)) return s as Settlement[]
-    return [] as Settlement[]
+    const s = settlements as SettlementsData
+    if (!s) return []
+    if (Array.isArray(s)) return s
+    return Array.isArray(s.content) ? s.content : []
   }, [settlements])
 
-  // 🔧 변경 2: 위에서 정규화한 배열로 Map 생성
+  // 위에서 정규화한 배열로 Map 생성
   const settlementMap = useMemo(
     () => new Map<number, Settlement>(settlementsArray.map((s) => [s.id, s] as const)),
     [settlementsArray]
