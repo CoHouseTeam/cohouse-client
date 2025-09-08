@@ -34,17 +34,18 @@ export interface Settlement {
 }
 
 // 정산 내역
-export type SettlementListItem = Pick<
-  Settlement,
-  | 'id'
-  | 'category'
-  | 'title'
-  | 'settlementAmount'
-  | 'status'
-  | 'createdAt'
-  | 'payerId'
-  | 'payerName'
->
+export interface SettlementListItem {
+  id: number
+
+  settlementId: number
+  title: string | null
+  category: SettlementCategory
+
+  totalAmount: number
+  status: SettlementStatus
+  payerName: string | null
+  createdAt: string
+}
 
 // 정산 등록
 // - 균등 분배 / 직접 분배 모두 지원

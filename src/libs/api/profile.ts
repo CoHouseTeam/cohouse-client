@@ -6,7 +6,7 @@ export type Profile = {
   email: string
   name: string
   gender: string
-  birthDate: string // "YYYY-MM-DD"
+  birthDate: string | null // "YYYY-MM-DD"
   profileImageUrl: string | null
   alertTime: {
     hour: number
@@ -20,6 +20,11 @@ export type Profile = {
 
 export type UploadImageResp = { imageUrl: string }
 
+export type UpdateProfileDto = Partial<{
+  birthDate: string // "YYYY-MM-DD"
+  gender: string // 스웨거에 'string'로 표기 (백엔드가 허용하는 값 사용)
+}>
+
 // 내 프로필 조회
 export async function getProfile(): Promise<Profile> {
   const { data } = await api.get<Profile>(PROFILE_ENDPOINTS.GET)
@@ -27,9 +32,7 @@ export async function getProfile(): Promise<Profile> {
 }
 
 // 프로필 정보 수정
-export async function updateProfile(
-  body: Partial<Pick<Profile, 'name' | 'email' | 'birthDate'>>
-): Promise<Profile> {
+export async function updateProfile(body: UpdateProfileDto): Promise<Profile> {
   const { data } = await api.put<Profile>(PROFILE_ENDPOINTS.UPDATE, body)
   return data
 }
@@ -64,6 +67,8 @@ export async function getMyMemberId(): Promise<number> {
 }
 
 // 비밀번호 변경
-export async function refreshPassword() {
-  const { data } = await api.post(AUTH_ENDPOINTS.REFRESH)
+export async function refreshPassword(token: string, newPassword: string) {
+  const { data } = await api.post(AUTH_ENDPOINTS.REFRESH, { token, newPassword })
+
+  return data
 }

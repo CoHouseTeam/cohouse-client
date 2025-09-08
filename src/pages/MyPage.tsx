@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Cake2, Gear, PersonCircle } from 'react-bootstrap-icons'
+import { Cake2, Gear } from 'react-bootstrap-icons'
 import { Link } from 'react-router-dom'
 import AlarmSettingModal from '../features/mypage/components/AlarmSettingModal'
 import { useProfile } from '../libs/hooks/mypage/useProfile'
@@ -39,14 +39,12 @@ export default function MyPage() {
                   <div className="pl-2">
                     {profileLoading ? (
                       <div className="skeleton w-16 h-16 rounded-full" />
-                    ) : me?.profileImageUrl ? (
+                    ) : (
                       <img
-                        src={me.profileImageUrl}
+                        src={me!.profileImageUrl!}
                         alt="프로필"
                         className="w-16 h-16 rounded-full object-cover border"
                       />
-                    ) : (
-                      <PersonCircle size={60} />
                     )}
                   </div>
 

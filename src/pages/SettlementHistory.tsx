@@ -203,7 +203,7 @@ export default function SettlementHistory() {
   }
 
   return (
-    <div className="space-y-6 w-full max-w-5xl mx-auto">
+    <div className="min-h-screen w-full max-w-5xl mx-auto flex flex-col">
       <div className="grid grid-cols-1 gap-6">
         <h1 className="text-2xl font-bold text-black">정산 히스토리</h1>
 
@@ -222,7 +222,7 @@ export default function SettlementHistory() {
           </label>
 
           {/* 카테고리 드롭다운 */}
-          <div className="relative flex-none w-32 sm:w-40 md:max-w-56">
+          <div className="relative flex-none w-32 sm:w-40 md:max-w-56 mb-3">
             <div
               onClick={() => setOpen(!open)}
               role="button"
@@ -262,40 +262,38 @@ export default function SettlementHistory() {
         </div>
       </div>
 
-      {/* 빈 상태 */}
-      {isEmpty ? (
-        <div className="flex flex-col justify-center text-center mt-4">
-          <img
-            src="/src/assets/icons/settlementIcon.svg"
-            alt="empty icon"
-            className="h-10 w-10 mx-auto"
-          />
-          <p className="text-sm font-medium text-neutral-400 text-center p-3">
-            {isFilterOn ? '검색/필터 결과가 없어요' : '정산 히스토리가 없어요'}
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* 리스트 */}
-          {listToRender.map((s) => (
-            <SettlementItemWithDetail
-              key={s.id}
-              initial={s}
-              viewerId={viewerId}
-              groupId={groupId}
+      {/* 리스트/빈 상태 영역 */}
+      <div className="flex-1">
+        {isEmpty ? (
+          <div className="flex flex-col justify-center text-center mt-4">
+            <img
+              src="/src/assets/icons/settlementIcon.svg"
+              alt="empty icon"
+              className="h-10 w-10 mx-auto"
             />
-          ))}
-
-          {/* 페이지네이션 바 */}
-          <div className="mt-4">
-            <Pagination
-              page={currentIndex}
-              totalPages={totalPagesToUse}
-              onChange={handlePageChange}
-            />
+            <p className="text-sm font-medium text-neutral-400 text-center p-3">
+              {isFilterOn ? '검색/필터 결과가 없어요' : '정산 히스토리가 없어요'}
+            </p>
           </div>
-        </>
-      )}
+        ) : (
+          <>
+            {/* 리스트 */}
+            {listToRender.map((s) => (
+              <SettlementItemWithDetail
+                key={s.id}
+                initial={s}
+                viewerId={viewerId}
+                groupId={groupId}
+              />
+            ))}
+          </>
+        )}
+      </div>
+
+      {/* 페이지네이션 바: 페이지 맨 아래 */}
+      <div className="mt-auto pt-4 pb-6">
+        <Pagination page={currentIndex} totalPages={totalPagesToUse} onChange={handlePageChange} />
+      </div>
     </div>
   )
 }

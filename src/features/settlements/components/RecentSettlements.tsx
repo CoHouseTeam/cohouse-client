@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
-import SettlementListItem from './SettlementListItem'
 import { useMySettlementHistory } from '../../../libs/hooks/settlements/useMySettlements'
 import LoadingSpinner from '../../common/LoadingSpinner'
 import ErrorCard from '../../common/ErrorCard'
+import SettlementItemWithDetail from './SettlementItemWithDetail'
 
 interface RecentSettlementsProps {
   groupId: number
@@ -10,15 +10,18 @@ interface RecentSettlementsProps {
 }
 
 export default function RecentSettlements({ groupId, viewerId }: RecentSettlementsProps) {
-  const { data, isLoading, error } = useMySettlementHistory({ page: 0, size: 20 })
+  const { data, isLoading, error } = useMySettlementHistory({
+    page: 0,
+    size: 20,
+    sort: 'createdAt,desc',
+  })
 
   if (isLoading) return <LoadingSpinner />
   if (error) return <ErrorCard />
 
-  const list = Array.isArray(data) ? data : []
-
+  const list = Array.isArray(data?.content) ? data!.content : []
   // 완료된 정산
-  const completed = list.filter((s) => s.status === 'COMPLETED')
+  const completed = list.filter((s) => s.status !== 'PENDING')
 
   // 최신순 정렬
   const sorted = completed.sort(
@@ -59,7 +62,12 @@ export default function RecentSettlements({ groupId, viewerId }: RecentSettlemen
         ) : (
           <>
             {recent2.map((s) => (
-              <SettlementListItem key={s.id} item={s} groupId={groupId} viewerId={viewerId} />
+              <SettlementItemWithDetail
+                key={s.id}
+                initial={s}
+                groupId={groupId}
+                viewerId={viewerId}
+              />
             ))}
           </>
         )}

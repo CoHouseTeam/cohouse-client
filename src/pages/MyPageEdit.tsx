@@ -1,5 +1,5 @@
 import { ChangeEvent, useEffect, useState } from 'react'
-import { CameraFill, ChevronLeft, PersonCircle } from 'react-bootstrap-icons'
+import { CameraFill, ChevronLeft } from 'react-bootstrap-icons'
 import { Link } from 'react-router-dom'
 import DatePicker, { registerLocale } from 'react-datepicker'
 import { ko } from 'date-fns/locale'
@@ -7,11 +7,15 @@ import 'react-datepicker/dist/react-datepicker.css'
 import {
   useDeleteProfileImage,
   useProfile,
+  useUpdateProfile,
   useUploadProfileImage,
 } from '../libs/hooks/mypage/useProfile'
 import LoadingSpinner from '../features/common/LoadingSpinner'
 import ConfirmModal from '../features/common/ConfirmModal'
 import ImageViewer from '../features/common/ImageViewer'
+import { formatYYYYMMDDLocal, parseLocalYYYYMMDD } from '../libs/utils/date-local'
+import axios from 'axios'
+import { isDefaultProfileUrl } from '../libs/utils/profile-image'
 
 registerLocale('ko', ko)
 
@@ -42,6 +46,12 @@ export default function MyPageEdit() {
   // 프로필 이미지 삭제
   const [deleteOpen, setDeleteOpen] = useState(false)
 
+  const [gender, setGender] = useState<'남자' | '여자' | ''>('')
+  const GENDER_OPTIONS = [
+    { value: '남자' as const, label: '남자' },
+    { value: '여자' as const, label: '여자' },
+  ]
+
   const showAlert = (msg: string) => {
     setAlertMsg(msg)
     setAlertOpen(true)
@@ -53,12 +63,22 @@ export default function MyPageEdit() {
   }
 
   // 프로필 사진
-  const { data: me, isLoading } = useProfile() // ✅ CHANGED: useProfile 선언을 useEffect 위로
+  const { data: me, isLoading } = useProfile()
+  const { mutateAsync: updateMe } = useUpdateProfile()
+
+  // 프로필 기본 이미지 판별
+  const serverUrl = me?.profileImageUrl ?? null
+  const displayUrl = previewUrl ?? serverUrl
+  const isDefault = isDefaultProfileUrl(serverUrl)
+
+  // 기본 이미지거나 미리보기 중이면 삭제 버튼 숨김
+  const canDelete = !!serverUrl && !isDefault && !previewUrl
 
   // 의존성 배열 추가 + me 로드 후 초기값 주입
   useEffect(() => {
     if (!me) return
-    setSelectedBtdDate(me.birthDate ? new Date(me.birthDate) : null)
+    setSelectedBtdDate(me.birthDate ? parseLocalYYYYMMDD(me.birthDate) : null)
+    setGender((me.gender as '남자' | '여자') ?? '')
   }, [me])
 
   // 미리보기 URL 메모리 정리
@@ -161,14 +181,57 @@ export default function MyPageEdit() {
   // 저장 버튼에서만 실제 업로드 실행
   const onSave = async () => {
     try {
+      if (!me) {
+        showAlert('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.')
+        return
+      }
+
+      // 0) 이미지 먼저 처리(있을 때만)
       if (pendingFile) {
         await uploadImage(pendingFile)
         setPendingFile(null)
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl)
+          setPreviewUrl(null)
+        }
       }
-      // (여기에 생년월일/비번 저장 로직을 이어붙일 수 있음)
+
+      const nextBirth = selectedBtdDate
+        ? formatYYYYMMDDLocal(selectedBtdDate) // "YYYY-MM-DD"
+        : (me.birthDate ?? '')
+
+      if (!nextBirth) {
+        showAlert('생년월일을 선택해 주세요.')
+        return
+      }
+
+      // gender: 화면에서 선택된 값 우선, 없으면 기존값
+      const allowed = new Set(['MALE', 'FEMALE'])
+      const nextGenderRaw = (gender || me.gender || '').toString().trim().toUpperCase()
+      const nextGender = allowed.has(nextGenderRaw) ? nextGenderRaw : 'OTHER'
+
+      // 변경이 없으면 굳이 호출 안 해도 되지만, 서버가 전체 업데이트를 요구한다면 호출
+      if (nextBirth === me.birthDate && nextGender === me.gender) {
+        showAlert('변경된 내용이 없습니다.')
+        return
+      }
+
+      // 항상 둘 다 전송
+      await updateMe({ birthDate: nextBirth, gender: nextGender })
+
       showAlert('저장되었습니다.')
-    } catch {
-      showAlert('저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.')
+    } catch (e: unknown) {
+      if (axios.isAxiosError(e)) {
+        const d = e.response?.data as any
+        console.log('API Error:', e.response?.status, d, e.config?.data)
+        const fieldErrors = d?.errors
+          ?.map((er: any) => `${er.field ?? ''}: ${er.defaultMessage ?? er.message ?? ''}`)
+          .join('\n')
+        showAlert(fieldErrors || d?.message || '저장 중 오류가 발생했어요.')
+      } else {
+        console.error(e)
+        showAlert('알 수 없는 오류가 발생했어요.')
+      }
     }
   }
 
@@ -190,9 +253,8 @@ export default function MyPageEdit() {
             <div className="flex items-center justify-center">
               <div className="relative">
                 {isLoading ? (
-                  // 로딩 중
                   <LoadingSpinner />
-                ) : previewUrl ? (
+                ) : (
                   <button
                     type="button"
                     onClick={openViewer}
@@ -200,28 +262,11 @@ export default function MyPageEdit() {
                     aria-label="프로필 큰 이미지 보기"
                   >
                     <img
-                      src={previewUrl}
-                      alt="프로필 미리보기"
-                      className="w-20 h-20 rounded-full object-cover border cursor-zoom-in hover:opacity-90 transition"
-                    />
-                  </button>
-                ) : me?.profileImageUrl ? (
-                  // 이미지가 있을 때
-                  <button
-                    type="button"
-                    onClick={openViewer}
-                    className="block focus:outline-none"
-                    aria-label="프로필 큰 이미지 보기"
-                  >
-                    <img
-                      src={me.profileImageUrl}
+                      src={displayUrl ?? ''}
                       alt="프로필"
                       className="w-20 h-20 rounded-full object-cover border cursor-zoom-in hover:opacity-90 transition"
                     />
                   </button>
-                ) : (
-                  // 이미지가 없을 때 기본 아이콘
-                  <PersonCircle size={70} />
                 )}
                 {/* 숨겨진 파일 인풋 */}
                 <input
@@ -250,7 +295,7 @@ export default function MyPageEdit() {
             </div>
 
             {/* 사진 삭제 버튼 (이미지/미리보기 있을 때만 노출) */}
-            {(me?.profileImageUrl || previewUrl) && (
+            {(canDelete || previewUrl) && (
               <div className="flex justify-center mt-3">
                 <button
                   type="button"
@@ -270,7 +315,7 @@ export default function MyPageEdit() {
             <div className="flex flex-col gap-2">
               <span className="text-sm">이름</span>
               <input
-                value={'홍길동'}
+                value={me?.name}
                 className="input input-bordered bg-base-200 h-10 w-full md:max-w-md text-sm rounded-lg"
                 readOnly
               />
@@ -279,10 +324,43 @@ export default function MyPageEdit() {
             <div className="flex flex-col gap-2">
               <span className="text-sm">이메일</span>
               <input
-                value={'asdfesd@gmail.com'}
+                value={me?.email}
                 className="input input-bordered bg-base-200 h-10 md:max-w-md text-sm rounded-lg"
                 readOnly
               />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-sm">성별</span>
+
+              <div className="flex items-center gap-6">
+                {GENDER_OPTIONS.map((opt) => (
+                  <label key={opt.value} className="inline-flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="gender"
+                      className="radio"
+                      value={opt.value}
+                      checked={gender === opt.value}
+                      onChange={() => setGender(opt.value)}
+                    />
+                    <span className="text-sm">{opt.label}</span>
+                  </label>
+                ))}
+
+                {/* 선택 해제용(선택 안 함) 필요하면 주석 해제 */}
+                {/* <label className="inline-flex items-center gap-2 cursor-pointer">
+      <input
+        type="radio"
+        name="gender"
+        className="radio"
+        value=""
+        checked={gender === ''}
+        onChange={() => setGender('')}
+      />
+      <span className="text-sm text-neutral-500">선택 안 함</span>
+    </label> */}
+              </div>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -323,14 +401,14 @@ export default function MyPageEdit() {
               }`}
             >
               <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
+                {/* <div className="flex flex-col gap-2">
                   <span className="text-sm">현재 비밀번호</span>
                   <input
                     type="password"
                     className="input input-bordered h-10 md:max-w-md text-sm rounded-lg"
                     placeholder="비밀번호를 입력해 주세요"
                   />
-                </div>
+                </div> */}
                 <div className="flex flex-col gap-2">
                   <span className="text-sm p-1">새 비밀번호</span>
                   <input

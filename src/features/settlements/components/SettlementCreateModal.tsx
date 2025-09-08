@@ -19,6 +19,7 @@ import {
 import ConfirmModal from '../../common/ConfirmModal'
 import ImageViewer from '../../common/ImageViewer'
 import ErrorCard from '../../common/ErrorCard'
+import { DEFAULT_PROFILE_URL } from '../../../libs/utils/profile-image'
 
 type CreateProps = {
   mode?: 'create'
@@ -522,9 +523,19 @@ export default function SettlementCreateModal(props: Props) {
                         >
                           <div className="flex items-center gap-3 ml-2">
                             <img
-                              src={p.profileImageUrl ?? '/placeholder-avatar.png'}
-                              alt="avatar"
-                              className="rounded-full w-6 h-6"
+                              src={
+                                p.profileImageUrl && p.profileImageUrl.trim() !== ''
+                                  ? p.profileImageUrl
+                                  : DEFAULT_PROFILE_URL
+                              }
+                              onError={(e) => {
+                                // 잘못된/만료된 URL이면 백엔드 기본 이미지로 교체
+                                if (e.currentTarget.src !== DEFAULT_PROFILE_URL) {
+                                  e.currentTarget.src = DEFAULT_PROFILE_URL
+                                }
+                              }}
+                              alt={`${p.memberName}의 프로필`}
+                              className="rounded-full w-6 h-6 object-cover"
                             />
                             <span>{p.memberName}</span>
                           </div>

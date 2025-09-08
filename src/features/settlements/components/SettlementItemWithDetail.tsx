@@ -10,13 +10,13 @@ import type {
 // DTO(HistoryItem) → Settlement
 function toSettlementStub(dto: SettlementListItemType): Settlement {
   return {
-    id: dto.id,
+    id: dto.settlementId,
     payerId: 0, // DTO에 없으므로 기본값
-    payerName: '', // 기본값
+    payerName: dto.payerName ?? '',
     category: dto.category,
     title: dto.title ?? '',
     description: null, // 선택 필드 기본값
-    settlementAmount: dto.settlementAmount ?? 0,
+    settlementAmount: dto.totalAmount ?? 0,
     status: dto.status,
     imageUrl: null, // 인터페이스가 string | null 이므로 null로
     platformSupportAmount: 0, // 기본값
@@ -29,13 +29,13 @@ function toSettlementStub(dto: SettlementListItemType): Settlement {
 
 type Props = {
   initial: SettlementListItemType
-  viewerId: number
+  viewerId?: number
   groupId: number
 }
 
 /** id로 상세를 조회해 기존 카드에 그대로 전달하는 래퍼 컴포넌트 */
 export default function SettlementItemWithDetail({ initial, viewerId, groupId }: Props) {
-  const { data, error } = useSettlementDetail(initial.id)
+  const { data, error } = useSettlementDetail(initial.settlementId)
 
   if (error) return <ErrorCard />
 
