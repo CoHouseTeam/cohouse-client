@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import api from '../libs/api/axios'
 import { setTokens } from '../libs/utils/auth'
 import { useAuth } from '../contexts/AuthContext'
+import { fetchMemberInfoAfterLogin } from '../libs/utils/auth'
 
 export default function OAuthCallbackGoogle() {
   const [params] = useSearchParams()
@@ -49,6 +50,9 @@ export default function OAuthCallbackGoogle() {
           accessToken: localStorage.getItem('accessToken'),
           authMethod: localStorage.getItem('authMethod')
         })
+        
+        // Member info fetch (로그인 성공 직후에만)
+        await fetchMemberInfoAfterLogin()
         
         // 인증 상태 새로고침
         refreshAuthState()

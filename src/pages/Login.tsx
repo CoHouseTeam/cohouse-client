@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import api from '../libs/api/axios'
-import { setTokens, isRememberMeEnabled } from '../libs/utils/auth'
+import { setTokens, isRememberMeEnabled, fetchMemberInfoAfterLogin } from '../libs/utils/auth'
 import { useAuth } from '../contexts/AuthContext'
 import { AUTH_ENDPOINTS, GROUP_ENDPOINTS } from '../libs/api/endpoints'
 import { useGroupStore } from '../app/store'
@@ -47,6 +47,10 @@ export default function Login() {
 
       if (accessToken) {
         setTokens(accessToken, refreshToken, rememberMe)
+        
+        // Member info fetch (로그인 성공 직후에만)
+        await fetchMemberInfoAfterLogin()
+        
         refreshAuthState() // 🔄 인증 상태 즉시 업데이트
         //그룹 상태 확인
         try {

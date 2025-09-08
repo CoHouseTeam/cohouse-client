@@ -109,6 +109,7 @@ export interface PostListResponse {
 export interface CreatePostRequest {
   groupId: number
   memberId: number
+  userName: string
   type: 'ANNOUNCEMENT' | 'FREE'
   title: string
   content: string
@@ -199,6 +200,7 @@ export interface BoardPost {
   preview: string
   groupId: number
   memberId: number
+  userName: string
   color: BoardColor
   createdAt: string
   updatedAt: string

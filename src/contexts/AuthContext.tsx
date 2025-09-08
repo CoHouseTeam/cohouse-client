@@ -13,18 +13,20 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 
   // 인증 상태 새로고침
-  const refreshAuthState = () => {
+  const refreshAuthState = async () => {
     const authState = checkAuth()
     const isAuthFromStorage = localStorage.getItem('isAuthenticated') === 'true'
     const hasToken = localStorage.getItem('accessToken')
     
     const finalAuthState = authState || (isAuthFromStorage && !!hasToken)
-    console.log('🔄 인증 상태 업데이트:', finalAuthState, '| localStorage:', isAuthFromStorage, '| hasToken:', !!hasToken)
+    // 인증 상태 업데이트
     setIsAuthenticated(finalAuthState)
+    
   }
 
   // 컴포넌트 마운트 시 초기 인증 상태 확인
@@ -41,6 +43,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
+
 
   const value = {
     isAuthenticated,

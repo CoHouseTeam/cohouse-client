@@ -56,8 +56,7 @@ api.interceptors.request.use((config) => {
 
 // ★ 디버깅 로그: 최종 요청이 뭔지 무조건 찍자
 api.interceptors.request.use((c) => {
-  console.log('[REQ]', c.baseURL, c.url) // 예: /api/proxy  /members/login
-  console.log('[REQ Headers]', c.headers)
+  // API 요청 로그
   return c
 })
 
@@ -65,14 +64,13 @@ api.interceptors.request.use((c) => {
 api.interceptors.request.use(
   (config) => {
     const token = getAccessToken()
-    console.log('🔍 토큰 확인:', token ? '토큰 있음' : '토큰 없음')
+    // 토큰 확인
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
-      console.log('🔑 토큰 첨부됨:', token.substring(0, 20) + '...')
-      console.log('🔑 Authorization 헤더:', config.headers.Authorization)
+      // 토큰 첨부됨
     } else {
-      console.log('⚠️ 토큰이 없어서 Authorization 헤더가 설정되지 않음')
+      // 토큰이 없어서 Authorization 헤더가 설정되지 않음
     }
     return config
   },
