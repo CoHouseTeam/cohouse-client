@@ -22,6 +22,8 @@ import type {
 const CATEGORY_LIST = ['전체', '송금 완료', '송금 실패', '송금 취소'] as const
 type Category = (typeof CATEGORY_LIST)[number]
 
+type SettlementsData = Settlement[] | { content?: Settlement[] | null } | undefined | null
+
 // 카테고리 → 상태 매핑
 const CAT_TO_STATUSES: Record<Category, TransferStatus[]> = {
   전체: ['PENDING', 'PAID', 'REFUNDED', 'FAILED', 'CANCELED'],
@@ -55,21 +57,30 @@ export default function PaymentsHistory() {
 
   // 정산 제목 검색을 위한 정산 전체(또는 필요한 만큼)
   const { data: settlements = [] } = useMySettlements()
+
+  // settlements를 무조건 배열로 정규화 (페이지 객체/배열 모두 대응)
+  const settlementsArray: Settlement[] = useMemo(() => {
+    const s = settlements as SettlementsData
+    if (!s) return []
+    if (Array.isArray(s)) return s
+    return Array.isArray(s.content) ? s.content : []
+  }, [settlements])
+
+  // 위에서 정규화한 배열로 Map 생성
   const settlementMap = useMemo(
-    () => new Map<number, Settlement>((settlements ?? []).map((s) => [s.id, s] as const)),
-    [settlements]
+    () => new Map<number, Settlement>(settlementsArray.map((s) => [s.id, s] as const)),
+    [settlementsArray]
   )
 
   // -------------------------------
   // ① 서버 페이지네이션 (필터 OFF에서만 화면에 사용)
-  //    정산 히스토리와 동일하게 훅으로 래핑된 형태 사용
   // -------------------------------
   const pageable: PageParams = { page, size: PAGE_SIZE, sort: 'transferAt,desc' }
   const {
     data: serverPage,
     isLoading: serverLoading,
     error: serverError,
-  } = useMyPayments(pageable, {}) // ← enabled 옵션 없이 정산과 동일 스타일
+  } = useMyPayments(pageable, {})
 
   // -------------------------------
   // ② 필터 ON: 전체 페이지 한 번 수집
@@ -139,16 +150,12 @@ export default function PaymentsHistory() {
 
   // -------------------------------
   // ⑤ 카테고리/검색 필터
-  //   - 카테고리: status 매핑
-  //   - 검색: 정산 제목 기준 (settlementMap 활용)
   // -------------------------------
   const filtered = useMemo(() => {
     const statuses = CAT_TO_STATUSES[selectedCategory]
     const term = searchTerm.trim().toLowerCase()
     return sorted.filter((p) => {
-      // 카테고리
       if (!statuses.includes(p.status)) return false
-      // 검색어 (정산 제목)
       if (!term) return true
       const title = (settlementMap.get(p.settlementId)?.title ?? '').toLowerCase()
       return title.includes(term)
@@ -157,8 +164,6 @@ export default function PaymentsHistory() {
 
   // -------------------------------
   // ⑥ 실제 렌더 목록
-  //   - 필터 OFF: 서버 페이지 그대로
-  //   - 필터 ON : 클라에서 slice
   // -------------------------------
   const listToRender = useMemo(() => {
     if (!isFilterOn) return rawList
@@ -174,7 +179,7 @@ export default function PaymentsHistory() {
   const totalPagesToUse = isFilterOn ? clientTotalPages : serverTotalPages
 
   // -------------------------------
-  // ⑧ 로딩/에러 가드 (정산과 동일 분기)
+  // ⑧ 로딩/에러 가드
   // -------------------------------
   const isLoading = isFilterOn ? allLoading : serverLoading
   const error = isFilterOn ? (allError ? new Error(allError) : null) : (serverError as Error | null)

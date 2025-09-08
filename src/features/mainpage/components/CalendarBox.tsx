@@ -6,15 +6,28 @@ import '../../../styles/Calendar.css'
 import { Value } from 'react-calendar/dist/shared/types.js'
 import { CalendarBoxProps } from '../../../types/main'
 
-const CalendarBox: React.FC<CalendarBoxProps> = ({ onDateSelect, value, scheduledDates }) => {
+interface ExtendedCalendarBoxProps extends CalendarBoxProps {
+  announcementDates?: string[]
+}
+
+const CalendarBox: React.FC<ExtendedCalendarBoxProps> = ({
+  onDateSelect,
+  value,
+  scheduledDates,
+  announcementDates = [],
+}) => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
 
-  const isScheduledDay = (date: Date) => {
+  const formatDate = (date: Date) => {
     const yyyy = date.getFullYear()
     const mm = String(date.getMonth() + 1).padStart(2, '0')
     const dd = String(date.getDate()).padStart(2, '0')
-    return scheduledDates.includes(`${yyyy}-${mm}-${dd}`)
+    return `${yyyy}-${mm}-${dd}`
   }
+
+  const isScheduledDay = (date: Date) => scheduledDates.includes(formatDate(date))
+
+  const isAnnouncementDay = (date: Date) => announcementDates.includes(formatDate(date))
 
   const onChangeHandler = (value: Value) => {
     if (!value) return
@@ -45,12 +58,28 @@ const CalendarBox: React.FC<CalendarBoxProps> = ({ onDateSelect, value, schedule
         formatDay={(_locale, date) => String(date.getDate())}
         tileContent={({ date, view }) => {
           if (view !== 'month') return null
+          const dots = []
           if (isScheduledDay(date)) {
-            return (
-              <CalendarDateDots colors={['#E88F7F']} dayLength={String(date.getDate()).length} />
+            dots.push(
+              <CalendarDateDots
+                key="todo"
+                colors={['#E88F7F']}
+                dayLength={String(date.getDate()).length}
+              />
             )
           }
-          return null
+          if (isAnnouncementDay(date)) {
+            dots.push(
+              <CalendarDateDots
+                key="announcement"
+                colors={['#F8DF9F']}
+                dayLength={String(date.getDate()).length}
+              />
+            )
+          }
+          return dots.length > 0 ? (
+            <div className="flex space-x-1 justify-center">{dots}</div>
+          ) : null
         }}
       />
     </div>

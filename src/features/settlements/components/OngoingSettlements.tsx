@@ -17,12 +17,14 @@ export default function OngoingSettlements({ groupId, viewerId }: OngoingSettlem
   if (isLoading) return <LoadingSpinner />
   if (error) return <ErrorCard message="정산 정보를 불러오는 중 오류가 발생했습니다." />
 
-  const list: Settlement[] = Array.isArray(data)
-    ? data
-    : // 페이지네이션/랩퍼 응답을 쓰는 경우 대비
-      Array.isArray((data as any)?.content)
-      ? (data as any).content
-      : []
+  const list: Settlement[] = (() => {
+    if (!data) return []
+    if (Array.isArray(data)) return data
+    if ('content' in data && Array.isArray((data as { content?: Settlement[] }).content)) {
+      return (data as { content: Settlement[] }).content
+    }
+    return []
+  })()
 
   const mine =
     viewerId != null

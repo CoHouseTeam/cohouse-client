@@ -1,11 +1,11 @@
 import { XCircle } from 'react-bootstrap-icons'
-import settlementIcon from '../../../assets/icons/settlementIcon.svg'
 import { useState } from 'react'
 
 import { UIParticipant } from '../utils/participants'
 import { useGroupMembers } from '../../../libs/hooks/useGroupMembers'
 import LoadingSpinner from '../../common/LoadingSpinner'
 import ErrorCard from '../../common/ErrorCard'
+import { DEFAULT_PROFILE_URL } from '../../../libs/utils/profile-image'
 
 interface Props {
   onClose: () => void
@@ -89,7 +89,17 @@ export default function ParticipantsSelectModal({ onClose, onSelect, groupId }: 
                     />
                     <div className="flex gap-4 items-center border rounded-lg shadow-sm w-full h-14 pl-3">
                       <img
-                        src={m.profileImageUrl ?? settlementIcon}
+                        src={
+                          m.profileImageUrl && m.profileImageUrl.trim() !== ''
+                            ? m.profileImageUrl
+                            : DEFAULT_PROFILE_URL
+                        }
+                        onError={(e) => {
+                          // 잘못된 URL/권한 문제/만료 시에도 기본이미지로 교체
+                          if (e.currentTarget.src !== DEFAULT_PROFILE_URL) {
+                            e.currentTarget.src = DEFAULT_PROFILE_URL
+                          }
+                        }}
                         alt={`${m.memberName}의 프로필`}
                         className="w-9 h-9 rounded-full"
                       />

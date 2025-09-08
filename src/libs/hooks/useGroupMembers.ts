@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { UIParticipant } from '../../features/settlements/utils/participants'
-import { fetchGroupMembers } from '../api/groups'
+import { fetchGroupMembers, fetchMyGroups } from '../api/groups'
 import { useProfile } from './mypage/useProfile'
 
 type MemberResp = {
@@ -13,6 +13,27 @@ type MemberResp = {
   joinedAt: string
   leavedAt?: string | null
   profileImageUrl?: string | null
+}
+
+export type GroupMember = {
+  id: number
+  groupId: number
+  memberId: number
+  isLeader: boolean
+  nickname: string
+  status: string
+  joinedAt: string
+  leavedAt?: string | null
+  profileImageUrl?: string | null
+}
+
+export type Group = {
+  id: number
+  name: string
+  status: string
+  createdAt: string
+  updatedAt: string
+  groupMembers: GroupMember[]
 }
 
 export function useGroupMembers(groupId: number | null) {
@@ -45,5 +66,13 @@ export function useMyMemberId(groupId: number | null) {
       return mine?.memberId
     },
     staleTime: 30000,
+  })
+}
+
+export function useMyGroups() {
+  return useQuery<Group>({
+    queryKey: ['groups', 'me'],
+    queryFn: fetchMyGroups,
+    staleTime: 5 * 60 * 1000,
   })
 }
