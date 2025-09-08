@@ -48,7 +48,6 @@ const TasksPage: React.FC = () => {
   const modalOpen = useTaskStore((state) => state.modalOpen)
   const setModalOpen = useTaskStore((state) => state.setModalOpen)
   const error = useTaskStore((state) => state.error)
-
   // 에러 상태
   const combinedError = groupError || assignmentsError || error
 
@@ -64,6 +63,7 @@ const TasksPage: React.FC = () => {
     alert(message)
   }, [])
 
+  // 랜덤 배정
   const handleRandomAssign = useCallback(async () => {
     if (!isAuthenticated()) {
       showAlert('로그인이 필요합니다. 다시 로그인해 주세요.')
@@ -125,6 +125,7 @@ const TasksPage: React.FC = () => {
     showAlert,
   ])
 
+  // 교환 요청
   const handleExchangeRequest = useCallback(
     async (selectedIndices: number[]) => {
       if (!selectedIndices.length) {
@@ -223,15 +224,17 @@ const TasksPage: React.FC = () => {
         memberId={myMemberId ?? 0}
       />
 
-      {isLeader && isAssigned && (
-        <ExchangeModal
-          open={modalOpen}
-          members={members}
-          selected={exchangeSelected}
-          onSelect={handleSelect}
-          onRequest={handleRequest}
-          onClose={() => setModalOpen(false)}
-        />
+      {modalOpen && (
+        <>
+          <ExchangeModal
+            open={modalOpen}
+            members={members}
+            selected={exchangeSelected}
+            onSelect={handleSelect}
+            onRequest={handleRequest}
+            onClose={() => setModalOpen(false)}
+          />
+        </>
       )}
     </div>
   )

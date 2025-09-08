@@ -107,12 +107,12 @@ export const PROFILE_ENDPOINTS = {
 
 // Tasks endpoints
 export const TASKS_ENDPOINTS = {
-  LIST: '/tasks',
-  CREATE: '/tasks',
-  DETAIL: (id: string) => `/tasks/${id}`,
-  UPDATE: (id: string) => `/tasks/${id}`,
-  DELETE: (id: string) => `/tasks/${id}`,
-  COMPLETE: (id: string) => `/tasks/${id}/complete`,
+  LIST: '/api/tasks',
+  CREATE: '/api/tasks',
+  DETAIL: (id: string) => `/api/tasks/${id}`,
+  UPDATE: (id: string) => `/api/tasks/${id}`,
+  DELETE: (id: string) => `/api/tasks/${id}`,
+  COMPLETE: (id: string) => `/api/tasks/${id}/complete`,
 }
 
 // 💳 Payment endpoints

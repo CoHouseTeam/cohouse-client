@@ -121,3 +121,11 @@ export interface OverrideRequestBody {
   requesterId: number
   swapAssignmentId: number
 }
+
+// 세팅 모달
+export interface SettingModalProps {
+  onSelectDay: () => void
+  onDeleteTemplate: () => void
+  onClose: () => void
+  positionClass?: string
+}
