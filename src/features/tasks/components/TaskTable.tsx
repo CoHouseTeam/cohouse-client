@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import DaySelectModal from './DaySelectModal'
-import { ChevronRight, PlusCircleFill } from 'react-bootstrap-icons'
+import { GearFill, PlusCircleFill } from 'react-bootstrap-icons'
 import { Assignment, GroupMember, TaskTableProps, Template } from '../../../types/tasks'
 import { daysKr, toEngDay } from '../../../libs/utils/dayMapping'
 import {
@@ -10,6 +10,7 @@ import {
   deleteTaskTemplate,
 } from '../../../libs/api/tasks'
 import { fetchMyGroups } from '../../../libs/api/groups'
+import SettingModal from './SettingModal'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -20,10 +21,11 @@ function getMemberAvatar(groupMemberId: number | number[], groupMembers: GroupMe
 }
 
 const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
-  const [openModal, setOpenModal] = useState<number | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [editValues, setEditValues] = useState<Record<number, string>>({})
   const [groupId, setGroupId] = useState<number | null>(null)
+  const [openSetting, setOpenSetting] = useState<number | null>(null)
+  const [openDayModal, setOpenDayModal] = useState<number | null>(null)
 
   // 그룹 ID 불러오기
   useEffect(() => {
@@ -106,10 +108,6 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
     } catch (error) {
       console.error('템플릿 생성 실패', error)
     }
-  }
-
-  const toggleModal = (rowIdx: number) => {
-    setOpenModal((prev) => (prev === rowIdx ? null : rowIdx))
   }
 
   const findAssignmentForCell = (templateId: number, dayIdx: number): Assignment | undefined => {
@@ -197,19 +195,27 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
                     <button
                       type="button"
                       className="bbt text-gray-400 focus:text-black z-20 -ml-3"
-                      onClick={() => toggleModal(rowIdx)}
+                      onClick={() => setOpenSetting(rowIdx)}
                     >
-                      <ChevronRight
-                        size={16}
-                        className={openModal === rowIdx ? 'scale-x-[-1] transition-transform' : ''}
-                        style={openModal === rowIdx ? { transform: 'scaleX(-1)' } : undefined}
-                      />
+                      <GearFill size={14} />
                     </button>
-                    {openModal === rowIdx && (
+                    {/* Setting Modal */}
+                    {openSetting === rowIdx && (
+                      <SettingModal
+                        onSelectDay={() => {
+                          setOpenDayModal(rowIdx)
+                        }}
+                        onDeleteTemplate={() => handleDeleteTemplate(template.templateId)}
+                        onClose={() => setOpenSetting(null)}
+                        positionClass="left-full -top-3 ml-1"
+                      />
+                    )}
+                    {/* DaySelectModal */}
+                    {openDayModal === rowIdx && (
                       <DaySelectModal
                         days={daysKr}
                         templateId={template.templateId}
-                        onClose={() => setOpenModal(null)}
+                        onClose={() => setOpenDayModal(null)}
                         positionClass="left-full -top-3 ml-1"
                       />
                     )}
@@ -257,21 +263,6 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
           </tr>
         </tbody>
       </table>
-      {templates.map((template, idx) => (
-        <button
-          key={template.templateId}
-          type="button"
-          onClick={() => handleDeleteTemplate(template.templateId)}
-          aria-label="템플릿 삭제"
-          title="템플릿 삭제"
-          className={`absolute -right-2 text-red-500 cursor-pointer border-none bg-transparent p-0 select-none z-10 leading-none text-lg`}
-          style={{
-            top: `${45 + idx * 40}px`,
-          }}
-        >
-          ×
-        </button>
-      ))}
     </div>
   )
 }
