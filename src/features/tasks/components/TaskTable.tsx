@@ -13,15 +13,10 @@ import { fetchMyGroups } from '../../../libs/api/groups'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
 
-//테스트 위해 임시 프로필 사진
-function getMemberAvatar(
-  groupMemberId: number | number[],
-  groupMembers: GroupMember[],
-  defaultImage: string = '/src/assets/icons/defaultImage.svg'
-) {
+function getMemberAvatar(groupMemberId: number | number[], groupMembers: GroupMember[]) {
   const memberId = Array.isArray(groupMemberId) ? groupMemberId[0] : groupMemberId
   const member = groupMembers.find((m) => m.memberId === memberId)
-  return member?.profileImageUrl || defaultImage
+  return member?.profileImageUrl
 }
 
 const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
@@ -105,7 +100,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
         groupId,
         category: '',
         repeatDays: [],
-        randomEnabled: false,
+        randomEnabled: true,
       })
       setTemplates((prev) => [...prev, newTemplate])
     } catch (error) {
