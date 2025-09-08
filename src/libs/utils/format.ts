@@ -34,6 +34,16 @@ export function formatDateWithWeekday(date: string | Date): string {
   return `${year}.${month}.${day}(${weekday})`
 }
 
+export function formatDateDots(date?: string | Date | null): string {
+  if (!date) return '' // undefined/null/'' 처리
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return '' // Invalid Date 방어
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}.${m}.${day}`
+}
+
 export function formatDateTime(date: string | Date): string {
   return new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric',

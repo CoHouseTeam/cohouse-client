@@ -15,6 +15,7 @@ import { fromCategory } from '../../../libs/utils/categoryMapping'
 import SettlementCreateModal from './SettlementCreateModal'
 import ConfirmModal from '../../common/ConfirmModal'
 import axios from 'axios'
+import { DEFAULT_PROFILE_URL } from '../../../libs/utils/profile-image'
 
 type SettlementListItemProps = {
   item: Settlement
@@ -137,7 +138,7 @@ export default function SettlementListItem({ item, groupId, viewerId }: Settleme
     <>
       <div
         className={`flex flex-col border-2 border-gray-100 bg-base-100 rounded-lg pl-4 pr-1 py-3 shadow-md
-                          overflow-hidden transition-[max-height] duration-500 ease-in-out 
+                          overflow-hidden transition-[max-height] duration-500 ease-in-out mb-2
                           ${cardOpen ? 'max-h-screen' : isPayer ? 'max-h-40' : 'max-h-44'}`}
       >
         {/* 요약 카드 */}
@@ -234,7 +235,17 @@ export default function SettlementListItem({ item, groupId, viewerId }: Settleme
 
                 return (
                   <div key={p.memberId} className="flex pl-1 gap-2 justify-center items-center">
-                    <img src={settlementIcon} alt="프로필 사진" className="w-9 h-9" />
+                    <img
+                      src={DEFAULT_PROFILE_URL}
+                      onError={(e) => {
+                        // 혹시 기본 URL도 실패하면 로컬 아이콘으로 최후 폴백
+                        if (e.currentTarget.src !== settlementIcon) {
+                          e.currentTarget.src = settlementIcon
+                        }
+                      }}
+                      alt="프로필 사진"
+                      className="w-9 h-9 rounded-full object-cover"
+                    />
                     <div className="flex flex-col flex-1 justify-center text-sm">
                       <span>{p.memberName}</span>
                       <span>{formatPriceKRW(p.shareAmount)}</span>

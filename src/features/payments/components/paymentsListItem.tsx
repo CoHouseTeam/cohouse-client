@@ -87,7 +87,7 @@ export default function PaymentsListItem({ item, settlement }: PaymentHistoryIte
         </div>
 
         <div
-          className={`flex justify-center items-center transition-[opacity, max-height] duration-200 ${cardOpen ? 'max-h-0 max-w-0 opacity-0 overflow-hidden' : 'h-8 w-20 opacity-100'} rounded-badge text-sm text-white font-bold mr-3`}
+          className={`flex justify-center items-center rounded-full transition-[opacity, max-height] duration-200 ${cardOpen ? 'max-h-0 max-w-0 opacity-0 overflow-hidden' : 'h-8 w-20 opacity-100'} rounded-badge text-sm text-white font-bold mr-3`}
           style={{ backgroundColor: pill.bg }}
         >
           {pill.text}

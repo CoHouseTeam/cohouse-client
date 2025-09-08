@@ -1,13 +1,21 @@
 import { useState } from 'react'
-import { Cake2, Gear, PersonCircle } from 'react-bootstrap-icons'
+import { Cake2, Gear } from 'react-bootstrap-icons'
 import { Link } from 'react-router-dom'
 import AlarmSettingModal from '../features/mypage/components/AlarmSettingModal'
 import { useProfile } from '../libs/hooks/mypage/useProfile'
+import { formatDateDots } from '../libs/utils/format'
+import { useMyGroups } from '../libs/hooks/useGroupMembers'
 
 export default function MyPage() {
   const [alarmSettingModalOpen, setAlarmSettingModalOpen] = useState(false)
 
   const { data: me, isLoading: profileLoading } = useProfile()
+
+  const { data: group, isLoading: groupLoading } = useMyGroups()
+
+  const displayName = profileLoading ? '불러오는 중...' : (me?.name ?? '이름 없음')
+  const displayBirth = profileLoading
+  profileLoading ? '' : formatDateDots(me?.birthDate)
 
   return (
     <>
@@ -31,23 +39,23 @@ export default function MyPage() {
                   <div className="pl-2">
                     {profileLoading ? (
                       <div className="skeleton w-16 h-16 rounded-full" />
-                    ) : me?.profileImageUrl ? (
+                    ) : (
                       <img
-                        src={me.profileImageUrl}
+                        src={me!.profileImageUrl!}
                         alt="프로필"
                         className="w-16 h-16 rounded-full object-cover border"
                       />
-                    ) : (
-                      <PersonCircle size={60} />
                     )}
                   </div>
 
                   <div className="flex flex-col">
-                    <h2 className="card-title">김철수</h2>
-                    <p className="text-base-content/70">101동 1001호</p>
+                    <h2 className="card-title">{displayName}</h2>
+                    <p className="text-base-content/70">
+                      {groupLoading ? '불러오는 중…' : (group?.name ?? '그룹 없음')}
+                    </p>
                     <div className="flex text-sm text-base-content items-center gap-2">
                       <Cake2 />
-                      <p>2000.00.00</p>
+                      <p>{displayBirth || '생일을 설정해주세요'}</p>
                     </div>
                   </div>
                 </div>

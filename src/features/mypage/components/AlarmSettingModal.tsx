@@ -1,16 +1,32 @@
 import { XCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Toggle from '../../common/Toggle'
 import AmPmTimePicker from './AmPmTimePicker'
+import { useProfile, useUpdateAlertTime } from '../../../libs/hooks/mypage/useProfile'
 
 interface OnCloseProps {
   onClose: () => void
 }
 
 export default function AlarmSettingModal({ onClose }: OnCloseProps) {
+  const { data: me } = useProfile()
+
   const [settlementToggleOn, setSettlementToggleOn] = useState(false)
   const [taskToggleOn, setTaskToggleOn] = useState(false)
   const [boardToggleOn, setBoardToggleOn] = useState(false)
+
+  // 시간 상태 (기본값: 서버에서 온 값 또는 09:00)
+  const [hour, setHour] = useState(9)
+  const [minute, setMinute] = useState(0)
+
+  // 서버 값 들어오면 초기화
+  useEffect(() => {
+    if (!me) return
+    const h = me.alertTime?.hour ?? 9
+    const m = me.alertTime?.minute ?? 0
+    setHour(h)
+    setMinute(m)
+  }, [me])
 
   // 전체 토글 클릭 시 자식 3개를 일괄 변경
   const allToggleOn = settlementToggleOn && taskToggleOn && boardToggleOn
@@ -19,6 +35,24 @@ export default function AlarmSettingModal({ onClose }: OnCloseProps) {
     setSettlementToggleOn(n)
     setTaskToggleOn(n)
     setBoardToggleOn(n)
+  }
+
+  // 저장 API 훅
+  const { mutateAsync: updateAlertTime } = useUpdateAlertTime()
+
+  // 저장 클릭
+  const handleSave = async () => {
+    try {
+      // “할 일 알림”이 켜져 있을 때만 시간 저장(요구사항에 맞게 조절 가능)
+      if (taskToggleOn) {
+        await updateAlertTime({ hour, minute })
+      }
+      // TODO: settlementToggleOn / boardToggleOn 은 백엔드 스펙 나오면 연결
+      onClose()
+    } catch (e) {
+      // 가벼운 실패 알림 (원한다면 토스트/모달 사용)
+      alert('알림 시간을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+    }
   }
 
   return (
@@ -79,7 +113,11 @@ export default function AlarmSettingModal({ onClose }: OnCloseProps) {
 
           {/* 푸터 */}
           <div className="h-16 flex justify-center items-center">
-            <button type="button" className="btn bg-secondary rounded-lg text-white btn-sm w-32">
+            <button
+              type="button"
+              className="btn bg-secondary rounded-lg text-white btn-sm w-32"
+              onClick={handleSave}
+            >
               저장
             </button>
           </div>

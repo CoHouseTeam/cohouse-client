@@ -20,7 +20,7 @@ export function useGroupSettlements(groupId: number) {
   return useQuery<Settlement[]>({
     queryKey: ['settlements', 'group', groupId],
     queryFn: () => fetchGroupSettlements(groupId),
-    staleTime: 30000,
+    staleTime: 0,
     enabled: !!groupId,
   })
 }
@@ -30,7 +30,9 @@ export function useMySettlementHistory(params: PageParams) {
   return useQuery({
     queryKey: ['settlements', 'myHistory', params],
     queryFn: () => fetchMySettlementHistory(params),
-    staleTime: 30000,
+    staleTime: 0,
+    refetchOnMount: 'always', // 마운트 때마다 새로고침
+    refetchOnWindowFocus: true,
   })
 }
 
@@ -41,6 +43,6 @@ export function useSettlementDetail(id?: number) {
     // id가 숫자일 때만 실행
     enabled: typeof id === 'number',
     queryFn: () => fetchSettlementDetail(id!),
-    staleTime: 30000,
+    staleTime: 0,
   })
 }
