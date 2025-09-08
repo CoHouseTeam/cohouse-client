@@ -89,13 +89,12 @@ export interface TaskTableProps {
 export interface TaskHistory {
   date: string
   task: string
-  status: '완료' | '미완료'
+  status: 'COMPLETED' | 'PENDING'
 }
 
 export interface HistoryModalProps {
   open: boolean
   onClose: () => void
-  assignmentId: number
 }
 
 export interface GroupMember {

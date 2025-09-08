@@ -1,6 +1,7 @@
 import api from './axios'
 import { AUTH_ENDPOINTS, PROFILE_ENDPOINTS } from './endpoints'
 
+
 export type Profile = {
   id: number
   email: string
@@ -58,6 +59,11 @@ export async function deleteProfileImage(): Promise<Profile> {
 export async function updateAlertTime(hour: number, minute: number): Promise<Profile> {
   const { data } = await api.put<Profile>(PROFILE_ENDPOINTS.UPDATE_ALERT_TIME, { hour, minute })
   return data
+}
+
+// 회원 탈퇴
+export async function withdrawUser(): Promise<void> {
+  await api.delete(AUTH_ENDPOINTS.WITHDRAW)
 }
 
 // 내 멤버 ID 조회

@@ -6,17 +6,28 @@ import '../../../styles/Calendar.css'
 import { Value } from 'react-calendar/dist/shared/types.js'
 import { CalendarBoxProps } from '../../../types/main'
 
-const CalendarBox: React.FC<CalendarBoxProps> = ({ onDateSelect, value }) => {
+interface ExtendedCalendarBoxProps extends CalendarBoxProps {
+  announcementDates?: string[]
+}
+
+const CalendarBox: React.FC<ExtendedCalendarBoxProps> = ({
+  onDateSelect,
+  value,
+  scheduledDates,
+  announcementDates = [],
+}) => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
 
-  const isDay = (date: Date) => {
-    const day = new Date()
-    return (
-      date.getDate() === day.getDate() &&
-      date.getMonth() === day.getMonth() &&
-      date.getFullYear() === day.getFullYear()
-    )
+  const formatDate = (date: Date) => {
+    const yyyy = date.getFullYear()
+    const mm = String(date.getMonth() + 1).padStart(2, '0')
+    const dd = String(date.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
   }
+
+  const isScheduledDay = (date: Date) => scheduledDates.includes(formatDate(date))
+
+  const isAnnouncementDay = (date: Date) => announcementDates.includes(formatDate(date))
 
   const onChangeHandler = (value: Value) => {
     if (!value) return
@@ -46,10 +57,29 @@ const CalendarBox: React.FC<CalendarBoxProps> = ({ onDateSelect, value }) => {
         formatMonthYear={(_locale, date) => `${date.getFullYear()}.${date.getMonth() + 1}`}
         formatDay={(_locale, date) => String(date.getDate())}
         tileContent={({ date, view }) => {
-          if (view !== 'month' || !isDay(date)) return null
-          const fakeDots = ['#E88F7F', '#F8DF9F', '#D5E4AD']
-          const dayLength = String(date.getDate()).length
-          return <CalendarDateDots colors={fakeDots} dayLength={dayLength} />
+          if (view !== 'month') return null
+          const dots = []
+          if (isScheduledDay(date)) {
+            dots.push(
+              <CalendarDateDots
+                key="todo"
+                colors={['#E88F7F']}
+                dayLength={String(date.getDate()).length}
+              />
+            )
+          }
+          if (isAnnouncementDay(date)) {
+            dots.push(
+              <CalendarDateDots
+                key="announcement"
+                colors={['#F8DF9F']}
+                dayLength={String(date.getDate()).length}
+              />
+            )
+          }
+          return dots.length > 0 ? (
+            <div className="flex space-x-1 justify-center">{dots}</div>
+          ) : null
         }}
       />
     </div>

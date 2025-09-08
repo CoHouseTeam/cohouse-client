@@ -188,10 +188,10 @@ export default function SettlementHistory() {
   // - 필터 ON : 전체 수집 로딩/에러 사용
   // --------------------------------------------------------------------------------
   if (!isFilterOn && isLoading) return <LoadingSpinner />
-  if (!isFilterOn && error) return <ErrorCard />
+  if (!isFilterOn && error) return <ErrorCard message="정산 내역을 불러오는 중 오류가 발생했습니다." />
 
   if (isFilterOn && allLoading) return <LoadingSpinner />
-  if (isFilterOn && allError) return <ErrorCard />
+  if (isFilterOn && allError) return <ErrorCard message="필터링된 정산 내역을 불러오는 중 오류가 발생했습니다." />
 
   const isEmpty = filtered.length === 0
 

@@ -19,7 +19,7 @@ export default function ParticipantsSelectModal({ onClose, onSelect, groupId }: 
   const { data: list = [], isLoading, isError } = useGroupMembers(groupId)
 
   if (isLoading) return <LoadingSpinner />
-  if (isError) return <ErrorCard />
+  if (isError) return <ErrorCard message="참여자 정보를 불러오는 중 오류가 발생했습니다." />
 
   // 전체 선택 여부
   const allChecked = list.length > 0 && list.every((m) => checked[m.memberId])

@@ -23,13 +23,14 @@ export const testCreatePost = async () => {
     console.log('📥 응답 데이터:', response.data)
     
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string; response?: { status?: number; data?: unknown } }
     console.error('❌ POST 요청 실패:', error)
-    console.error('🔍 에러 메시지:', error.message)
+    console.error('🔍 에러 메시지:', err.message)
     
-    if (error.response) {
-      console.error('📊 응답 상태:', error.response.status)
-      console.error('📊 응답 데이터:', error.response.data)
+    if (err.response) {
+      console.error('📊 응답 상태:', err.response.status)
+      console.error('📊 응답 데이터:', err.response.data)
     }
     
     throw error
@@ -48,13 +49,14 @@ export const testGetPosts = async () => {
     console.log('📥 응답 데이터:', response.data)
     
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string; response?: { status?: number; data?: unknown } }
     console.error('❌ GET 요청 실패:', error)
-    console.error('🔍 에러 메시지:', error.message)
+    console.error('🔍 에러 메시지:', err.message)
     
-    if (error.response) {
-      console.error('📊 응답 상태:', error.response.status)
-      console.error('📊 응답 데이터:', error.response.data)
+    if (err.response) {
+      console.error('📊 응답 상태:', err.response.status)
+      console.error('📊 응답 데이터:', err.response.data)
     }
     
     throw error

@@ -61,6 +61,8 @@ export const TASK_ENDPOINTS = {
   UPDATE_ASSIGNMENT: (assignmentId: number) => `/api/tasks/assignments/${assignmentId}`,
   ASSIGNMENT_HISTORIES: (assignmentId: number) =>
     `/api/tasks/assignments/${assignmentId}/histories`,
+  MEMBER_HISTORIES: `/api/tasks/assignments/histories`,
+  UNCOMPLETED_HISTORIES: `/api/tasks/assignments/uncompleted`,
 
   // 대신하기 요청
   OVERRIDE_REQUEST: (assignmentId: number) =>
@@ -121,13 +123,16 @@ export const PAYMENT_ENDPOINTS = {
 // 📰 Post endpoints
 export const POST_ENDPOINTS = {
   // 기본 CRUD
-  CREATE: 'api/posts',
+  CREATE: '/api/posts',
   GET_BY_ID: (postId: number) => `api/posts/${postId}`,
   UPDATE: (postId: number) => `api/posts/${postId}`,
   DELETE: (postId: number) => `api/posts/${postId}`,
 
   // 그룹별 게시글 목록 (페이지네이션 및 필터링 지원)
   GET_BY_GROUP: (groupId: number) => `api/posts/${groupId}`,
+
+  // 공지 리스트 (메인 페이지 조회 목적)
+  ANNOUNCEMENTS_SUM: (groupId: number) => `/api/posts/groups/${groupId}/announcements/summary`,
 
   LIKES: (postId: number) => `api/posts/${postId}/likes`,
   LIKE: (postId: number) => `api/posts/${postId}/likes`,
