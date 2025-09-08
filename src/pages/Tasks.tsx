@@ -48,7 +48,6 @@ const TasksPage: React.FC = () => {
   const modalOpen = useTaskStore((state) => state.modalOpen)
   const setModalOpen = useTaskStore((state) => state.setModalOpen)
   const error = useTaskStore((state) => state.error)
-
   // 에러 상태
   const combinedError = groupError || assignmentsError || error
 
@@ -225,15 +224,17 @@ const TasksPage: React.FC = () => {
         memberId={myMemberId ?? 0}
       />
 
-      {isLeader && isAssigned && (
-        <ExchangeModal
-          open={modalOpen}
-          members={members}
-          selected={exchangeSelected}
-          onSelect={handleSelect}
-          onRequest={handleRequest}
-          onClose={() => setModalOpen(false)}
-        />
+      {modalOpen && (
+        <>
+          <ExchangeModal
+            open={modalOpen}
+            members={members}
+            selected={exchangeSelected}
+            onSelect={handleSelect}
+            onRequest={handleRequest}
+            onClose={() => setModalOpen(false)}
+          />
+        </>
       )}
     </div>
   )
