@@ -20,7 +20,7 @@ function getMemberAvatar(groupMemberId: number | number[], groupMembers: GroupMe
   return member?.profileImageUrl
 }
 
-const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
+const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers, isLeader }) => {
   const [templates, setTemplates] = useState<Template[]>([])
   const [editValues, setEditValues] = useState<Record<number, string>>({})
   const [groupId, setGroupId] = useState<number | null>(null)
@@ -192,13 +192,15 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
                     }}
                   />
                   <div className="relative flex items-center">
-                    <button
-                      type="button"
-                      className="bbt text-gray-400 focus:text-black z-20 -ml-3"
-                      onClick={() => setOpenSetting(rowIdx)}
-                    >
-                      <GearFill size={14} />
-                    </button>
+                    {isLeader && (
+                      <button
+                        type="button"
+                        className="bbt text-gray-400 focus:text-black z-20 -ml-3"
+                        onClick={() => setOpenSetting(rowIdx)}
+                      >
+                        <GearFill size={14} />
+                      </button>
+                    )}
                     {/* Setting Modal */}
                     {openSetting === rowIdx && (
                       <SettingModal
@@ -247,20 +249,22 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
                 })}
               </tr>
             ))}
-          <tr>
-            <td colSpan={days.length + 1} className="bg-white border-t border-gray-300 p-0">
-              <div className="flex justify-center items-center py-2.5">
-                <button
-                  type="button"
-                  onClick={handleAddTask}
-                  className="bg-transparent border-none p-0 m-0"
-                  style={{ cursor: 'pointer', lineHeight: 1 }}
-                >
-                  <PlusCircleFill size={18} color="gray" />
-                </button>
-              </div>
-            </td>
-          </tr>
+          {isLeader && (
+            <tr>
+              <td colSpan={days.length + 1} className="bg-white border-t border-gray-300 p-0">
+                <div className="flex justify-center items-center py-2.5">
+                  <button
+                    type="button"
+                    onClick={handleAddTask}
+                    className="bg-transparent border-none p-0 m-0"
+                    style={{ cursor: 'pointer', lineHeight: 1 }}
+                  >
+                    <PlusCircleFill size={18} color="gray" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
