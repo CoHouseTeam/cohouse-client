@@ -129,3 +129,21 @@ export interface SettingModalProps {
   onClose: () => void
   positionClass?: string
 }
+
+// 미이행 모달
+export interface UncompletedAssignment {
+  assignmentId: number
+  groupMemberId: number
+  templateId: number
+  date: string
+  status: string
+  createdAt: string
+  repeatType: string
+  category: string
+}
+
+export interface UncompletedMember {
+  memberId: number
+  nickname: string
+  profileImageUrl: string
+}

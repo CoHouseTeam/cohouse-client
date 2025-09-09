@@ -8,6 +8,7 @@ import { CalendarBoxProps } from '../../../types/main'
 
 interface ExtendedCalendarBoxProps extends CalendarBoxProps {
   announcementDates?: string[]
+  settlementDates?: string[]
 }
 
 const CalendarBox: React.FC<ExtendedCalendarBoxProps> = ({
@@ -15,6 +16,7 @@ const CalendarBox: React.FC<ExtendedCalendarBoxProps> = ({
   value,
   scheduledDates,
   announcementDates = [],
+  settlementDates = [],
 }) => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
 
@@ -28,6 +30,8 @@ const CalendarBox: React.FC<ExtendedCalendarBoxProps> = ({
   const isScheduledDay = (date: Date) => scheduledDates.includes(formatDate(date))
 
   const isAnnouncementDay = (date: Date) => announcementDates.includes(formatDate(date))
+
+  const isSettlementDay = (date: Date) => settlementDates?.includes(formatDate(date)) ?? false
 
   const onChangeHandler = (value: Value) => {
     if (!value) return
@@ -73,6 +77,15 @@ const CalendarBox: React.FC<ExtendedCalendarBoxProps> = ({
               <CalendarDateDots
                 key="announcement"
                 colors={['#F8DF9F']}
+                dayLength={String(date.getDate()).length}
+              />
+            )
+          }
+          if (isSettlementDay(date)) {
+            dots.push(
+              <CalendarDateDots
+                key="settlement"
+                colors={['#D5E4AD']}
                 dayLength={String(date.getDate()).length}
               />
             )

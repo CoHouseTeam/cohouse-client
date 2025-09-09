@@ -78,6 +78,7 @@ export const SETTLEMENT_ENDPOINTS = {
   MY_HISTORY: 'api/settlements/my/history',
   GROUP_LIST: (groupId: number) => `api/settlements/group/${groupId}`,
   PAYMENT_HISTORIES: 'api/settlements/payment-histories',
+  MY_SIMPLE: '/api/settlements/my/simple',
 
   // 정산별 상세
   DETAIL: (settlementId: number) => `api/settlements/${settlementId}`,

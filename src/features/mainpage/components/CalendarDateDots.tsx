@@ -1,7 +1,4 @@
-interface CalendarDotsProps {
-  colors: string[]
-  dayLength?: number // 날짜 문자열 길이: 1(한자리) 또는 2(두자리)
-}
+import { CalendarDotsProps } from '../../../types/main'
 
 const CalendarDateDots = ({ colors, dayLength = 2 }: CalendarDotsProps) => {
   const adjust = dayLength === 1 ? -5 : -9

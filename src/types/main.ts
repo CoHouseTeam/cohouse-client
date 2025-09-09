@@ -41,6 +41,12 @@ export interface CalendarBoxProps {
   scheduledDates: string[]
 }
 
+export interface TodoListBoxProps {
+  todos: TodoItem[]
+  groupId: number | null
+  memberId: number | null
+}
+
 export interface ModalProps {
   onClose: () => void
 }

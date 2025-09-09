@@ -113,3 +113,9 @@ export async function createSettlement(body: CreateSettlementBody): Promise<Crea
   const { data } = await api.post<CreateSettlementResp>(SETTLEMENT_ENDPOINTS.CREATE, body)
   return data
 }
+
+// 내 간단한 정산 내역 (메인 페이지 조회 목적)
+export async function fetchMySimple(): Promise<Settlement[]> {
+  const { data } = await api.get<Settlement[]>(SETTLEMENT_ENDPOINTS.MY_SIMPLE)
+  return data
+}

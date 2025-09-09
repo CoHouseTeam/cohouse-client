@@ -17,24 +17,24 @@ const GroupInviteInputModal: React.FC<ModalProps> = ({ onClose }) => {
       setError('초대 코드를 입력해주세요.')
       return
     }
-    
+
     setError('')
     setLoading(true)
-    
+
     try {
       const accessToken = getAccessToken()
       const nickname = localStorage.getItem('memberName')
-      
+
       if (!accessToken || !nickname) {
         setError('인증 정보가 없습니다. 다시 로그인해주세요.')
         return
       }
-      
+
       await joinGroup(accessToken, nickname, inviteCode.trim())
-      
+
       // On success, navigate to homepage
       toast.success('그룹 참여가 완료되었습니다!')
-      navigate(window.location.href = '/')
+      navigate((window.location.href = '/'))
       onClose()
     } catch (err: any) {
       toast.error(err.message || '그룹 참여에 실패했습니다.')
@@ -55,11 +55,7 @@ const GroupInviteInputModal: React.FC<ModalProps> = ({ onClose }) => {
       <div className="modal-box w-11/12 max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-bold text-lg">그룹 초대 코드 입력</h3>
-          <button
-            onClick={onClose}
-            className="btn btn-sm btn-circle btn-ghost"
-            aria-label="닫기"
-          >
+          <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost" aria-label="닫기">
             <XCircleFill className="w-5 h-5" />
           </button>
         </div>
@@ -93,17 +89,10 @@ const GroupInviteInputModal: React.FC<ModalProps> = ({ onClose }) => {
         </div>
 
         <div className="modal-action">
-          <button
-            className="btn btn-ghost"
-            onClick={onClose}
-          >
+          <button className="btn btn-ghost" onClick={onClose}>
             취소
           </button>
-          <button
-            className="btn btn-primary"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
             {loading ? '참여 중...' : '그룹 참여하기'}
           </button>
         </div>
