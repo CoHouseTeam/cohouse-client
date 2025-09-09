@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import UncompletedTasksModal from './UncompletedTasksModal'
-import { TodoItem } from '../../../types/main.ts'
+import { TodoItem, TodoListBoxProps } from '../../../types/main.ts'
 import { getAssignments, updateAssignment } from '../../../libs/api/tasks.ts'
-
-interface TodoListBoxProps {
-  todos: TodoItem[]
-  groupId: number | null
-  memberId: number | null
-}
 
 const TodoListBox = React.memo(({ todos, groupId, memberId }: TodoListBoxProps) => {
   const [localTodos, setLocalTodos] = useState<TodoItem[]>([])
@@ -39,26 +33,20 @@ const TodoListBox = React.memo(({ todos, groupId, memberId }: TodoListBoxProps) 
   // 체크박스 토글 처리
   const handleToggle = async (index: number) => {
     const todo = localTodos[index]
-    if (!todo.assignmentId) {
-      console.warn('업무 ID가 없습니다.')
-      return
-    }
+    if (!todo.assignmentId) return
 
     const newChecked = !todo.checked
-    setLocalTodos((prevTodos) =>
-      prevTodos.map((t, i) => (i === index ? { ...t, checked: newChecked } : t))
-    )
+
+    setLocalTodos((prev) => prev.map((t, i) => (i === index ? { ...t, checked: newChecked } : t)))
 
     try {
-      const newStatus = newChecked ? 'COMPLETED' : 'PENDING'
-      await updateAssignment(todo.assignmentId, { status: newStatus })
-
-      // 상태 변경 후 서버에서 할 일 다시 조회
+      await updateAssignment(todo.assignmentId, {
+        status: newChecked ? 'COMPLETED' : 'PENDING',
+      })
       await refetchTodos()
     } catch (error) {
-      console.error('업무 상태 업데이트 실패', error)
-      setLocalTodos((prevTodos) =>
-        prevTodos.map((t, i) => (i === index ? { ...t, checked: !newChecked } : t))
+      setLocalTodos((prev) =>
+        prev.map((t, i) => (i === index ? { ...t, checked: !newChecked } : t))
       )
       alert('업무 상태 업데이트에 실패했습니다.')
     }

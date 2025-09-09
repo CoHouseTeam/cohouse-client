@@ -3,31 +3,16 @@ import { XCircleFill } from 'react-bootstrap-icons'
 import { getUncompletedHistories } from '../../../libs/api/tasks'
 import { fetchGroupMembers } from '../../../libs/api/groups'
 import { UncompletedTasksModalProps } from '../../../types/main'
-
-interface Assignment {
-  assignmentId: number
-  groupMemberId: number
-  templateId: number
-  date: string
-  status: string
-  createdAt: string
-  repeatType: string
-  category: string
-}
-
-interface Member {
-  memberId: number
-  nickname: string
-  profileImageUrl: string
-}
+import { UncompletedAssignment, UncompletedMember } from '../../../types/tasks'
+import LoadingSpinner from '../../common/LoadingSpinner'
 
 const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({
   onClose,
   groupId,
   memberId,
 }) => {
-  const [pendingData, setPendingData] = useState<Assignment[]>([])
-  const [members, setMembers] = useState<Member[]>([])
+  const [pendingData, setPendingData] = useState<UncompletedAssignment[]>([])
+  const [members, setMembers] = useState<UncompletedMember[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -43,7 +28,11 @@ const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({
       .then((result) => {
         setPendingData(Array.isArray(result) ? result : [])
       })
-      .catch(() => setPendingData([]))
+      .catch((err) => {
+        setPendingData([])
+        setError('미이행 내역을 불러오는 중 오류가 발생했습니다.')
+        console.error(err)
+      })
       .finally(() => setLoading(false))
   }, [groupId, memberId])
 
@@ -69,14 +58,18 @@ const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({
 
   // 날짜별 그룹화
   const grouped = useMemo(() => {
-    // 중복 제거
+    const today = new Date().toISOString().slice(0, 10)
+
     const groups: Record<string, { task: string; name: string; profileImageUrl: string }[]> = {}
-    const seen = new Set<string>() // "date|category|memberId" 기준 중복 방지
+    const seen = new Set<string>()
 
     pendingData.forEach((item) => {
       const date = item.date
+
+      // 오늘 이후(오늘 포함) 날짜 제외
+      if (date >= today) return
+
       const uniqueKey = `${date}|${item.category}|${item.groupMemberId}`
-      // 중복된 업무 skip
       if (seen.has(uniqueKey)) return
       seen.add(uniqueKey)
 
@@ -109,7 +102,7 @@ const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({
 
         <h3 className="font-bold text-[24px] text-center mb-6">미이행 내역</h3>
         {loading ? (
-          <div className="text-center text-gray-500">불러오는 중...</div>
+          <LoadingSpinner />
         ) : error ? (
           <div className="text-center text-red-500">{error}</div>
         ) : grouped.length === 0 ? (
