@@ -16,6 +16,7 @@ import SettlementCreateModal from './SettlementCreateModal'
 import ConfirmModal from '../../common/ConfirmModal'
 import axios from 'axios'
 import { DEFAULT_PROFILE_URL } from '../../../libs/utils/profile-image'
+import useOnClickOutside from '../../../libs/hooks/useOnClickOutside'
 
 type SettlementListItemProps = {
   item: Settlement
@@ -34,30 +35,12 @@ export default function SettlementListItem({ item, groupId, viewerId }: Settleme
   const menuRef = useRef<HTMLDivElement | null>(null)
   const menuBtnRef = useRef<HTMLButtonElement | null>(null)
 
-  useEffect(() => {
-    if (!menuOpen) return
-    const handleDown = (e: MouseEvent) => {
-      const target = e.target as Node
-      const menuEl = menuRef.current
-      const btnEl = menuBtnRef.current
-
-      if (menuEl && !menuEl.contains(target) && btnEl && !btnEl.contains(target)) {
-        setMenuOpen(false)
-      }
+  useOnClickOutside(menuRef, (e) => {
+    if (e instanceof MouseEvent || e instanceof TouchEvent) {
+      if (menuBtnRef.current?.contains(e.target as Node)) return
     }
-
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false)
-    }
-
-    document.addEventListener('mousedown', handleDown)
-    document.addEventListener('keydown', handleEsc)
-
-    return () => {
-      document.removeEventListener('mousedown', handleDown)
-      document.removeEventListener('keydown', handleEsc)
-    }
-  }, [menuOpen])
+    if (menuOpen) setMenuOpen(false)
+  })
 
   const payMut = usePaySettlement()
   const cancelMut = useCancelSettlement()
