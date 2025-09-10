@@ -33,15 +33,15 @@ export default function MyPage() {
       console.error('회원 탈퇴 실패:', error)
       console.error('응답 데이터:', error.response?.data)
       console.error('상태 코드:', error.response?.status)
-      
+
       let errorMessage = '회원 탈퇴에 실패했습니다. 다시 시도해주세요.'
-      
+
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message
       } else if (error.response?.status === 409) {
         errorMessage = '서버에서 탈퇴를 거부했습니다. 관리자에게 문의해주세요.'
       }
-      
+
       alert(errorMessage)
     }
   }
@@ -56,8 +56,7 @@ export default function MyPage() {
   const { data: group, isLoading: groupLoading } = useMyGroups()
 
   const displayName = profileLoading ? '불러오는 중...' : (me?.name ?? '이름 없음')
-  const displayBirth = profileLoading
-  profileLoading ? '' : formatDateDots(me?.birthDate)
+  const displayBirth = profileLoading ? '' : me?.birthDate ? formatDateDots(me.birthDate) : ''
 
   return (
     <>
@@ -141,7 +140,7 @@ export default function MyPage() {
                   <button className="text-start py-1 md:pb-2 md:px-5  transition rounded-lg">
                     그룹 탈퇴
                   </button>
-                  <button 
+                  <button
                     onClick={handleWithdrawClick}
                     className="text-start py-1 md:pb-2 md:px-5 transition rounded-lg text-red-600 hover:bg-red-50"
                   >
