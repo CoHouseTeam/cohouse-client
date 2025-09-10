@@ -6,12 +6,6 @@ import CheckRepeat from '../features/tasks/components/CheckRepeat'
 import GroupMemberList from '../features/tasks/components/GroupMemberList'
 import HistoryModal from '../features/tasks/components/HistoryModal'
 import ExchangeModal from '../features/tasks/components/ExchangeModal'
-import { OverrideRequestBody } from '../types/tasks'
-import { isAuthenticated } from '../libs/utils/auth'
-import { groupMembersName } from '../libs/utils/groupMemberName'
-import { getDateOfThisWeek } from '../libs/utils/dayMapping'
-import { createAssignment, createOverrideRequest } from '../libs/api/tasks'
-
 import { useAuth } from '../libs/hooks/taskpage/useAuth'
 import { useGroupData } from '../libs/hooks/taskpage/useGroupData'
 import { useAssignments } from '../libs/hooks/taskpage/useAssignments'
@@ -19,6 +13,9 @@ import { useMyMemberId } from '../libs/hooks/taskpage/useMyMemberId'
 import TaskRandomButton from '../features/tasks/components/TaskRandomButton'
 import { useTaskStore } from '../app/tasksStore'
 import LoadingSpinner from '../features/common/LoadingSpinner'
+import { groupMembersName } from '../libs/utils/groupMemberName'
+import { useRandomAssign } from '../libs/hooks/taskpage/useRandomAssign'
+import { useExchangeRequest } from '../libs/hooks/taskpage/useExchangeRequest'
 
 const TasksPage: React.FC = () => {
   const { userAuthenticated } = useAuth()
@@ -48,7 +45,7 @@ const TasksPage: React.FC = () => {
   const modalOpen = useTaskStore((state) => state.modalOpen)
   const setModalOpen = useTaskStore((state) => state.setModalOpen)
   const error = useTaskStore((state) => state.error)
-  // 에러 상태
+
   const combinedError = groupError || assignmentsError || error
 
   const isAlreadyAssigned = useCallback(
@@ -64,58 +61,7 @@ const TasksPage: React.FC = () => {
   }, [])
 
   // 랜덤 배정
-  const handleRandomAssign = useCallback(async () => {
-    if (!isAuthenticated()) {
-      showAlert('로그인이 필요합니다. 다시 로그인해 주세요.')
-      return
-    }
-    if (!groupId || groupMembers.length === 0) {
-      showAlert('그룹 정보가 없습니다.')
-      return
-    }
-    if (!templates.length) {
-      showAlert('템플릿 정보가 없습니다.')
-      return
-    }
-    if (!repeatDays.length) {
-      showAlert('반복 요일 정보가 없습니다. 템플릿의 반복 설정을 확인해 주세요.')
-      return
-    }
-
-    try {
-      const memberIds = groupMembers.map((m) => m.memberId).filter(Boolean) as number[]
-      const assignmentPromises = []
-
-      for (let idx = 0; idx < templates.length; idx++) {
-        const tpl = templates[idx]
-        const tplRepeatDays = repeatDays.filter((rd) => rd.templateId === tpl.templateId)
-
-        const assignedMemberId = memberIds[idx % memberIds.length]
-
-        for (const day of tplRepeatDays) {
-          const assignDate = getDateOfThisWeek(day.dayOfWeek)
-
-          if (!isAlreadyAssigned(assignedMemberId, tpl.templateId, assignDate)) {
-            assignmentPromises.push(
-              createAssignment({
-                groupId,
-                date: assignDate,
-                templateId: tpl.templateId,
-                groupMemberId: [assignedMemberId],
-                randomEnabled: true,
-              })
-            )
-          }
-        }
-      }
-
-      await Promise.all(assignmentPromises)
-      await reloadAssignments()
-    } catch (err) {
-      console.error(err)
-      showAlert('랜덤 배정에 실패했습니다.')
-    }
-  }, [
+  const handleRandomAssign = useRandomAssign({
     groupId,
     groupMembers,
     templates,
@@ -123,58 +69,17 @@ const TasksPage: React.FC = () => {
     isAlreadyAssigned,
     reloadAssignments,
     showAlert,
-  ])
+  })
 
   // 교환 요청
-  const handleExchangeRequest = useCallback(
-    async (selectedIndices: number[]) => {
-      if (!selectedIndices.length) {
-        showAlert('교환할 멤버를 선택해 주세요.')
-        return
-      }
-      if (myMemberId === null) {
-        showAlert('현재 로그인한 사용자 ID가 없습니다.')
-        return
-      }
-
-      try {
-        const targetIds = selectedIndices.map((idx) => groupMembers[idx].memberId)
-        const targetId = targetIds[0]
-
-        const swapAssignment = assignments.find((a) => {
-          if (!a.groupMemberId) return false
-          if (Array.isArray(a.groupMemberId)) return a.groupMemberId.includes(targetId)
-          return a.groupMemberId === targetId
-        })
-        const swapAssignmentId = swapAssignment?.assignmentId ?? 0
-
-        const currentUserAssignment = assignments.find((a) => {
-          if (!a.groupMemberId) return false
-          if (Array.isArray(a.groupMemberId)) return a.groupMemberId.includes(myMemberId)
-          return a.groupMemberId === myMemberId
-        })
-        const assignmentId = currentUserAssignment?.assignmentId ?? 0
-
-        const requestData: OverrideRequestBody = {
-          assignmentId,
-          targetId,
-          targetIds,
-          requesterId: myMemberId,
-          swapAssignmentId,
-        }
-
-        await createOverrideRequest(requestData)
-
-        setModalOpen(false)
-        setExchangeSelected([])
-        showAlert('업무 교환 요청이 성공하였습니다.')
-      } catch (err) {
-        console.error(err)
-        showAlert('교환 요청에 실패했습니다.')
-      }
-    },
-    [assignments, groupMembers, myMemberId, setExchangeSelected, setModalOpen, showAlert]
-  )
+  const handleExchangeRequest = useExchangeRequest({
+    assignments,
+    groupMembers,
+    myMemberId,
+    setExchangeSelected,
+    setModalOpen,
+    showAlert,
+  })
 
   const handleRequest = () => handleExchangeRequest(exchangeSelected)
   const handleSelect = (selected: number[]) => setExchangeSelected(selected)
@@ -225,16 +130,14 @@ const TasksPage: React.FC = () => {
       />
 
       {modalOpen && (
-        <>
-          <ExchangeModal
-            open={modalOpen}
-            members={members}
-            selected={exchangeSelected}
-            onSelect={handleSelect}
-            onRequest={handleRequest}
-            onClose={() => setModalOpen(false)}
-          />
-        </>
+        <ExchangeModal
+          open={modalOpen}
+          members={members}
+          selected={exchangeSelected}
+          onSelect={handleSelect}
+          onRequest={handleRequest}
+          onClose={() => setModalOpen(false)}
+        />
       )}
     </div>
   )
