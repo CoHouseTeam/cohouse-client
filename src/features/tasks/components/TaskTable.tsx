@@ -111,8 +111,8 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers, isLead
   }
 
   const findAssignmentForCell = (templateId: number, dayIdx: number): Assignment | undefined => {
-    const korDay = daysKr[dayIdx] // '일', '월', ...
-    const engDay = toEngDay(korDay) // 'SUNDAY', 'MONDAY', ...
+    const korDay = daysKr[dayIdx]
+    const engDay = toEngDay(korDay)
 
     return assignments.find((a) => {
       if (!a.date) return false
