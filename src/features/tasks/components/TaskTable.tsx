@@ -75,7 +75,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers, isLead
             groupId,
             category: edited,
             repeatDays: [],
-            randomEnabled: false,
+            randomEnabled: true,
           })
           setTemplates((prev) => prev.map((t) => (t.templateId === templateId ? newTemplate : t)))
         } else {

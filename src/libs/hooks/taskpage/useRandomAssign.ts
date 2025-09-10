@@ -9,6 +9,7 @@ interface UseRandomAssignParams {
   isAlreadyAssigned: (memberId: number, templateId: number, date: string) => boolean
   reloadAssignments: () => Promise<void>
   showAlert: (msg: string) => void
+  randomModeEnabled: boolean
 }
 
 export function useRandomAssign({
@@ -19,6 +20,7 @@ export function useRandomAssign({
   isAlreadyAssigned,
   reloadAssignments,
   showAlert,
+  randomModeEnabled,
 }: UseRandomAssignParams) {
   return async function randomAssign() {
     if (!groupId || groupMembers.length === 0) {
@@ -53,7 +55,7 @@ export function useRandomAssign({
                 date: assignDate,
                 templateId: tpl.templateId,
                 groupMemberId: [assignedMemberId],
-                randomEnabled: true,
+                randomEnabled: randomModeEnabled,
               })
             )
           }

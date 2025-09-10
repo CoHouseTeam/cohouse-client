@@ -69,6 +69,7 @@ const TasksPage: React.FC = () => {
     isAlreadyAssigned,
     reloadAssignments,
     showAlert,
+    randomModeEnabled: repeat,
   })
 
   // 교환 요청
