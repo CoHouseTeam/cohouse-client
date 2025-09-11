@@ -3,6 +3,7 @@ import { CaretDownFill, XCircleFill } from 'react-bootstrap-icons'
 import { HistoryModalProps, TaskHistory } from '../../../types/tasks'
 import { MemberAssignmentsHistories } from '../../../libs/api/tasks'
 import LoadingSpinner from '../../common/LoadingSpinner'
+import { formatYYYYMMDDLocal } from '../../../libs/utils/date-local'
 
 const filterOptions = [
   { label: '전체보기', value: 'all' },
@@ -31,14 +32,21 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
     setLoading(true)
     setError(null)
     MemberAssignmentsHistories({ groupId, memberId })
-      .then((data) => setItems(Array.isArray(data) ? data : []))
+      .then((data) => {
+        if (!Array.isArray(data)) return setItems([])
+
+        const seen = new Set<string>()
+        const filtered = data.filter((item) => {
+          const key = `${item.date}-${item.category}`
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+        setItems(filtered)
+      })
       .catch(() => setError('내 업무 내역을 불러오지 못했습니다.'))
       .finally(() => setLoading(false))
   }, [open, groupId, memberId])
-
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [filter, items])
 
   function getStatusLabel(status: string) {
     if (status === 'COMPLETED') return '완료'
@@ -48,7 +56,7 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
 
   if (!open) return null
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = formatYYYYMMDDLocal(new Date())
 
   // 필터에 따라 아이템 필터링 (오늘 이후 내역 제외)
   const filteredItems = (
@@ -61,7 +69,7 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
         )
   ).filter((item) => {
     const date = item.date.slice(0, 10)
-    return date < today
+    return date <= today
   })
 
   // 페이지 계산 및 현재 페이지에 해당하는 아이템 추출

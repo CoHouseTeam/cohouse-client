@@ -42,6 +42,9 @@ interface TaskState {
   loadingAssignments: boolean
   setLoadingAssignments: (loading: boolean) => void
 
+  loadingTemplates: boolean
+  setLoadingTemplates: (loading: boolean) => void
+
   errorAssignments: string
   setErrorAssignments: (error: string) => void
 
@@ -85,6 +88,9 @@ export const useTaskStore = create<TaskState>((set) => ({
 
   loadingAssignments: false,
   setLoadingAssignments: (loading) => set({ loadingAssignments: loading }),
+
+  loadingTemplates: false,
+  setLoadingTemplates: (loading) => set({ loadingTemplates: loading }),
 
   errorAssignments: '',
   setErrorAssignments: (error) => set({ errorAssignments: error }),

@@ -1,5 +1,6 @@
 import { GroupMember, Template } from '../../../types/tasks'
 import { createAssignment } from '../../api/tasks'
+import { formatYYYYMMDDLocal } from '../../utils/date-local'
 
 interface UseRandomAssignParams {
   groupId: number | null
@@ -39,7 +40,7 @@ export function useRandomAssign({
       const memberIds = groupMembers.map((m) => m.memberId).filter(Boolean) as number[]
       const assignmentPromises = []
 
-      const today = new Date().toISOString().slice(0, 10)
+      const today = formatYYYYMMDDLocal(new Date())
 
       for (let idx = 0; idx < templates.length; idx++) {
         const tpl = templates[idx]

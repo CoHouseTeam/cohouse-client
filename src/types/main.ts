@@ -13,6 +13,7 @@ export interface TodoItem {
   assignmentId?: number
   category: string
   status?: 'COMPLETED' | 'PENDING' | string
+  date?: string
 }
 
 export interface Member {
