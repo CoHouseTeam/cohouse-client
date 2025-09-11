@@ -5,6 +5,7 @@ import { fetchGroupMembers } from '../../../libs/api/groups'
 import { UncompletedTasksModalProps } from '../../../types/main'
 import { UncompletedAssignment, UncompletedMember } from '../../../types/tasks'
 import LoadingSpinner from '../../common/LoadingSpinner'
+import { formatYYYYMMDDLocal } from '../../../libs/utils/date-local'
 
 const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({
   onClose,
@@ -58,7 +59,7 @@ const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({
 
   // 날짜별 그룹화
   const grouped = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = formatYYYYMMDDLocal(new Date())
 
     const groups: Record<string, { task: string; name: string; profileImageUrl: string }[]> = {}
     const seen = new Set<string>()
@@ -66,8 +67,8 @@ const UncompletedTasksModal: React.FC<UncompletedTasksModalProps> = ({
     pendingData.forEach((item) => {
       const date = item.date
 
-      // 오늘 이후(오늘 포함) 날짜 제외
-      if (date >= today) return
+      // 오늘 이후 날짜 제외
+      if (date > today) return
 
       const uniqueKey = `${date}|${item.category}|${item.groupMemberId}`
       if (seen.has(uniqueKey)) return

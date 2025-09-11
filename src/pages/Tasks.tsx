@@ -35,6 +35,17 @@ const TasksPage: React.FC = () => {
   } = useAssignments(userAuthenticated, groupId)
   const { myMemberId } = useMyMemberId()
 
+  const loadingTemplates = useTaskStore((state) => state.loadingTemplates)
+  const setLoadingTemplates = useTaskStore((state) => state.setLoadingTemplates)
+  // 로딩 상태 업데이트
+  React.useEffect(() => {
+    if (templates.length > 0) {
+      setLoadingTemplates(false)
+    } else {
+      setLoadingTemplates(true)
+    }
+  }, [templates, setLoadingTemplates])
+
   // zustand
   const repeat = useTaskStore((state) => state.repeat)
   const setRepeat = useTaskStore((state) => state.setRepeat)
@@ -69,8 +80,10 @@ const TasksPage: React.FC = () => {
     isAlreadyAssigned,
     reloadAssignments,
     showAlert,
-    randomModeEnabled: repeat,
+    randomModeEnabled: true,
   })
+
+  const randomButtonDisabled = loadingTemplates || templates.length === 0
 
   // 교환 요청
   const handleExchangeRequest = useExchangeRequest({
@@ -107,7 +120,9 @@ const TasksPage: React.FC = () => {
 
       <div className="flex flex-col items-center space-y-4 mt-2">
         <div className="flex space-x-2">
-          {isLeader && <TaskRandomButton onClick={handleRandomAssign} disabled={isAssigned} />}
+          {isLeader && (
+            <TaskRandomButton onClick={handleRandomAssign} disabled={randomButtonDisabled} />
+          )}
 
           {(isLeader && isAssigned) || !isLeader ? (
             <TaskExchangeButton onClick={() => setModalOpen(true)} />

@@ -7,10 +7,19 @@ const TodoListBox = React.memo(({ todos, groupId, memberId }: TodoListBoxProps) 
   const [localTodos, setLocalTodos] = useState<TodoItem[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // status에 따라 checked 상태로 초기화
+  // checked 상태 초기화
   useEffect(() => {
+    // category로 중복 제거
+    const seen = new Set<string>()
+    const filteredTodos = todos.filter((todo) => {
+      if (!todo.category) return true
+      if (seen.has(todo.category)) return false
+      seen.add(todo.category)
+      return true
+    })
+
     setLocalTodos(
-      todos.map((todo) => ({
+      filteredTodos.map((todo) => ({
         ...todo,
         checked: todo.status === 'COMPLETED',
       }))
@@ -21,8 +30,17 @@ const TodoListBox = React.memo(({ todos, groupId, memberId }: TodoListBoxProps) 
   async function refetchTodos() {
     if (groupId && memberId) {
       const updated = await getAssignments({ groupId, memberId })
+      // 중복 category 제거
+      const seen = new Set<string>()
+      const filtered = updated.filter((todo) => {
+        if (!todo.category) return true
+        if (seen.has(todo.category)) return false
+        seen.add(todo.category)
+        return true
+      })
+
       setLocalTodos(
-        updated.map((todo) => ({
+        filtered.map((todo) => ({
           ...todo,
           checked: todo.status === 'COMPLETED',
         }))

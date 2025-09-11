@@ -1,5 +1,6 @@
 import { GroupMember, Template } from '../../../types/tasks'
 import { createAssignment } from '../../api/tasks'
+import { formatYYYYMMDDLocal } from '../../utils/date-local'
 
 interface UseRandomAssignParams {
   groupId: number | null
@@ -39,20 +40,20 @@ export function useRandomAssign({
       const memberIds = groupMembers.map((m) => m.memberId).filter(Boolean) as number[]
       const assignmentPromises = []
 
+      const today = formatYYYYMMDDLocal(new Date())
+
       for (let idx = 0; idx < templates.length; idx++) {
         const tpl = templates[idx]
         const tplRepeatDays = repeatDays.filter((rd) => rd.templateId === tpl.templateId)
 
         const assignedMemberId = memberIds[idx % memberIds.length]
 
-        for (const day of tplRepeatDays) {
-          const assignDate = day.dayOfWeek
-
-          if (!isAlreadyAssigned(assignedMemberId, tpl.templateId, assignDate)) {
+        for (let i = 0; i < tplRepeatDays.length; i++) {
+          if (!isAlreadyAssigned(assignedMemberId, tpl.templateId, today)) {
             assignmentPromises.push(
               createAssignment({
                 groupId,
-                date: assignDate,
+                date: today,
                 templateId: tpl.templateId,
                 groupMemberId: [assignedMemberId],
                 randomEnabled: randomModeEnabled,
