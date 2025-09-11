@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { CaretDownFill, XCircleFill } from 'react-bootstrap-icons'
 import { HistoryModalProps, TaskHistory } from '../../../types/tasks'
 import { MemberAssignmentsHistories } from '../../../libs/api/tasks'
+import LoadingSpinner from '../../common/LoadingSpinner'
 
 const filterOptions = [
   { label: '전체보기', value: 'all' },
@@ -26,7 +27,7 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!open) return // 모달이 열릴 때만 요청
+    if (!open) return
     setLoading(true)
     setError(null)
     MemberAssignmentsHistories({ groupId, memberId })
@@ -47,8 +48,10 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
 
   if (!open) return null
 
-  // 필터에 따라 아이템 필터링
-  const filteredItems =
+  const today = new Date().toISOString().slice(0, 10)
+
+  // 필터에 따라 아이템 필터링 (오늘 이후 내역 제외)
+  const filteredItems = (
     filter === 'all'
       ? items
       : items.filter(
@@ -56,6 +59,10 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
             (filter === '완료' && i.status === 'COMPLETED') ||
             (filter === '미완료' && i.status === 'PENDING')
         )
+  ).filter((item) => {
+    const date = item.date.slice(0, 10)
+    return date < today
+  })
 
   // 페이지 계산 및 현재 페이지에 해당하는 아이템 추출
   const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE)
@@ -71,11 +78,10 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
   return (
     <dialog open className="modal">
       <div className="modal-box max-w-lg h-[90vh] px-4 py-7 overflow-y-auto flex flex-col">
-        {loading && <div>로딩 중...</div>}
+        {loading && <LoadingSpinner />}
         {error && <div className="text-red-500">{error}</div>}
         {!loading && !error && (
           <>
-            {/* 닫기 버튼 */}
             <button
               className="btn btn-xs btn-circle btn-ghost absolute right-4 top-4"
               onClick={onClose}
@@ -147,7 +153,7 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
                 "
                   >
                     <div className="font-bold mr-1.5 min-w-[100px]">{item.date}</div>
-                    <div className="flex-1 text-md">{item.task}</div>
+                    <div className="flex-1 text-md">{item.category}</div>
                     <span
                       className={`
     badge h-9 w-20
