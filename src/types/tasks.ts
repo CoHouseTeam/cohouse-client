@@ -90,6 +90,7 @@ export interface TaskHistory {
   date: string
   task: string
   status: 'COMPLETED' | 'PENDING'
+  category: string
 }
 
 export interface HistoryModalProps {
