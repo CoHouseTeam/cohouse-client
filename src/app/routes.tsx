@@ -20,7 +20,7 @@ const GroupInvite = lazy(() => import('../pages/GroupInvite'))
 const OAuthCallback = lazy(() => import('../pages/OAuthCallback'))
 const OAuthCallbackNaver = lazy(() => import('../pages/OAuthCallbackNaver'))
 const OAuthCallbackGoogle = lazy(() => import('../pages/OAuthCallbackGoogle'))
-
+const ResetPassword = lazy(() => import('../pages/ResetPassword'))
 
 export function Routes() {
   return (
@@ -33,60 +33,91 @@ export function Routes() {
       <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route path="/oauth/callback/naver" element={<OAuthCallbackNaver />} />
       <Route path="/oauth/callback/google" element={<OAuthCallbackGoogle />} />
-      
+      <Route path="/reset-password" element={<ResetPassword />} />
+
       {/* 인증 필요 라우트 - 로그인만 필요 */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute requireAuth={true}>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute requireAuth={true}>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
       {/* 그룹 참여 필요 라우트 - 로그인 + 그룹 참여 필요 */}
-      <Route path="/settlements" element={
-        <ProtectedRoute requireAuth={true} requireGroup={true}>
-          <Settlements />
-        </ProtectedRoute>
-      } />
-      <Route path="/settlements/history" element={
-        <ProtectedRoute requireAuth={true} requireGroup={true}>
-          <SettlementHistory />
-        </ProtectedRoute>
-      } />
-      <Route path="/payments/history" element={
-        <ProtectedRoute requireAuth={true} requireGroup={true}>
-          <PaymentHistory />
-        </ProtectedRoute>
-      } />
-      <Route path="/tasks" element={
-        <ProtectedRoute requireAuth={true} requireGroup={true}>
-          <Tasks />
-        </ProtectedRoute>
-      } />
-      <Route path="/board" element={
-        <ProtectedRoute requireAuth={true} requireGroup={true}>
-          <Board />
-        </ProtectedRoute>
-      } />
-      <Route path="/mypage" element={
-        <ProtectedRoute requireAuth={true} requireGroup={true}>
-          <MyPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/mypage/edit" element={
-        <ProtectedRoute requireAuth={true} requireGroup={true}>
-          <MyPgeEdit />
-        </ProtectedRoute>
-      } />
-      <Route path="/create-complete" element={
-        <ProtectedRoute requireAuth={true}>
-          <GroupComplete />
-        </ProtectedRoute>
-      } />
-      <Route path="/invite" element={
-        <ProtectedRoute requireAuth={true}>
-          <GroupInvite />
-        </ProtectedRoute>
-      } />
+      <Route
+        path="/settlements"
+        element={
+          <ProtectedRoute requireAuth={true} requireGroup={true}>
+            <Settlements />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settlements/history"
+        element={
+          <ProtectedRoute requireAuth={true} requireGroup={true}>
+            <SettlementHistory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/payments/history"
+        element={
+          <ProtectedRoute requireAuth={true} requireGroup={true}>
+            <PaymentHistory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tasks"
+        element={
+          <ProtectedRoute requireAuth={true} requireGroup={true}>
+            <Tasks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/board"
+        element={
+          <ProtectedRoute requireAuth={true} requireGroup={true}>
+            <Board />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mypage"
+        element={
+          <ProtectedRoute requireAuth={true} requireGroup={true}>
+            <MyPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mypage/edit"
+        element={
+          <ProtectedRoute requireAuth={true} requireGroup={true}>
+            <MyPgeEdit />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/create-complete"
+        element={
+          <ProtectedRoute requireAuth={true}>
+            <GroupComplete />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/invite"
+        element={
+          <ProtectedRoute requireAuth={true}>
+            <GroupInvite />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="*" element={<NotFound />} />
     </RouterRoutes>

@@ -16,6 +16,7 @@ import ImageViewer from '../features/common/ImageViewer'
 import { formatYYYYMMDDLocal, parseLocalYYYYMMDD } from '../libs/utils/date-local'
 import axios, { AxiosError } from 'axios'
 import { isDefaultProfileUrl } from '../libs/utils/profile-image'
+import { api, AUTH_ENDPOINTS } from '../libs/api'
 
 registerLocale('ko', ko)
 
@@ -31,8 +32,6 @@ type ApiErrorField = { field?: string; defaultMessage?: string; message?: string
 type ApiErrorData = { message?: string; errors?: ApiErrorField[] }
 
 export default function MyPageEdit() {
-  const [pwOpen, setPwOpen] = useState(false)
-
   // 알림 컴포넌트
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMsg, setAlertMsg] = useState('')
@@ -190,6 +189,21 @@ export default function MyPageEdit() {
     if (!currentImageSrc) return
     if (uploading || deleting) return
     setViewerOpen(true)
+  }
+
+  // 이메일 발송 버튼(비밀번호 변경)
+  const onClickSendResetMail = async () => {
+    if (!me?.email) {
+      showAlert('이메일 정보를 불러오지 못했습니다.')
+      return
+    }
+
+    try {
+      await api.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, { email: me.email })
+      showAlert('비밀번호 변경 이메일을 발송했습니다. 메일함을 확인해주세요.')
+    } catch (e) {
+      showAlert('메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.')
+    }
   }
 
   // 저장 버튼에서만 실제 업로드 실행
@@ -379,19 +393,6 @@ export default function MyPageEdit() {
                     <span className="text-sm">{opt.label}</span>
                   </label>
                 ))}
-
-                {/* 선택 해제용(선택 안 함) 필요하면 주석 해제 */}
-                {/* <label className="inline-flex items-center gap-2 cursor-pointer">
-      <input
-        type="radio"
-        name="gender"
-        className="radio"
-        value=""
-        checked={gender === ''}
-        onChange={() => setGender('')}
-      />
-      <span className="text-sm text-neutral-500">선택 안 함</span>
-    </label> */}
               </div>
             </div>
 
@@ -421,26 +422,18 @@ export default function MyPageEdit() {
               <span className="text-sm font-semibold text-neutral-500">보안</span>
               <button
                 className="border border-neutral rounded-full h-fit w-fit py-1 px-2 text-sm"
-                onClick={() => setPwOpen(!pwOpen)}
+                onClick={onClickSendResetMail}
               >
-                {pwOpen ? '변경 취소' : '비밀번호 변경'}
+                비밀번호 변경
               </button>
             </div>
 
-            <div
+            {/* <div
               className={`overflow-hidden transition-all duration-500 ${
                 pwOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
               }`}
             >
               <div className="flex flex-col gap-4">
-                {/* <div className="flex flex-col gap-2">
-                  <span className="text-sm">현재 비밀번호</span>
-                  <input
-                    type="password"
-                    className="input input-bordered h-10 md:max-w-md text-sm rounded-lg"
-                    placeholder="비밀번호를 입력해 주세요"
-                  />
-                </div> */}
                 <div className="flex flex-col gap-2">
                   <span className="text-sm p-1">새 비밀번호</span>
                   <input
@@ -458,7 +451,7 @@ export default function MyPageEdit() {
                   />
                 </div>
               </div>
-            </div>
+            </div> */}
           </section>
         </div>
       </main>

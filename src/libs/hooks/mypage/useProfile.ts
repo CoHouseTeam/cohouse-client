@@ -3,7 +3,7 @@ import {
   deleteProfileImage,
   getProfile,
   Profile,
-  refreshPassword,
+  resetPassword,
   updateAlertTime,
   updateProfile,
   UpdateProfileDto,
@@ -78,10 +78,9 @@ export function useUpdateAlertTime() {
 }
 
 // 비밀번호 변경
-
 export function useResetPassword() {
   return useMutation({
-    mutationFn: ({ token, newPassword }: { token: string; newPassword: string }) =>
-      refreshPassword(token, newPassword),
+    mutationFn: ({ newPassword, token }: { newPassword: string; token: string }) =>
+      resetPassword(newPassword, token),
   })
 }
