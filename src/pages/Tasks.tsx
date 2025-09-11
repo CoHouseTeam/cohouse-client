@@ -69,7 +69,7 @@ const TasksPage: React.FC = () => {
     isAlreadyAssigned,
     reloadAssignments,
     showAlert,
-    randomModeEnabled: repeat,
+    randomModeEnabled: true,
   })
 
   // 교환 요청
@@ -107,7 +107,9 @@ const TasksPage: React.FC = () => {
 
       <div className="flex flex-col items-center space-y-4 mt-2">
         <div className="flex space-x-2">
-          {isLeader && <TaskRandomButton onClick={handleRandomAssign} disabled={isAssigned} />}
+          {isLeader && (
+            <TaskRandomButton onClick={handleRandomAssign} disabled={templates.length > 0} />
+          )}
 
           {(isLeader && isAssigned) || !isLeader ? (
             <TaskExchangeButton onClick={() => setModalOpen(true)} />
