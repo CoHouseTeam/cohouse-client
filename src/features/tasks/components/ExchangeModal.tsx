@@ -9,29 +9,31 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
   onSelect,
   onRequest,
   onClose,
+  currentUserId,
 }) => {
   if (!open) return null
 
-  // 전체선택 체크 여부: 모든 멤버 선택 시 true, 아닐 경우 false
-  const allSelected =
-    Array.isArray(selected) && members.length > 0 && selected.length === members.length
+  // 현재 사용자 제외 멤버 필터링
+  const filteredMembers = members.filter((m) => m.memberId !== currentUserId)
 
-  // 전체선택 토글 함수
+  // 전체선택 체크 상태 및 토글 함수
+  const allSelected =
+    Array.isArray(selected) &&
+    filteredMembers.length > 0 &&
+    selected.length === filteredMembers.length
+
   const toggleSelectAll = () => {
-    if (allSelected) {
-      onSelect([]) // 모두 선택 해제
-    } else {
-      onSelect(members.map((_, idx) => idx)) // 모두 선택
-    }
+    if (allSelected) onSelect([])
+    else onSelect(filteredMembers.map((m) => m.memberId!))
   }
 
-  // 개별 멤버 선택 토글
-  const toggleSelect = (idx: number) => {
+  // 개별 체크
+  const toggleSelect = (id: number) => {
     if (!Array.isArray(selected)) return
-    if (selected.includes(idx)) {
-      onSelect(selected.filter((i) => i !== idx))
+    if (selected.includes(id)) {
+      onSelect(selected.filter((i) => i !== id))
     } else {
-      onSelect([...selected, idx])
+      onSelect([...selected, id])
     }
   }
 
@@ -56,26 +58,25 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
             />
             <span className="text-sm">전체선택</span>
           </label>
-          {Array.isArray(members) &&
-            members.map((member, idx) => (
-              <label
-                key={member.name}
-                className="flex items-center space-x-3 p-3 bg-base-100 rounded-lg cursor-pointer border mt-2"
-              >
-                <input
-                  type="checkbox"
-                  checked={Array.isArray(selected) ? selected.includes(idx) : false}
-                  onChange={() => toggleSelect(idx)}
-                  className="checkbox checkbox-sm"
-                />
-                <img
-                  src={member.profileImageUrl}
-                  alt={member.name}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-                <span className="text-base">{member.name}</span>
-              </label>
-            ))}
+          {filteredMembers.map((member) => (
+            <label
+              key={member.memberId}
+              className="flex items-center space-x-3 p-3 bg-base-100 rounded-lg cursor-pointer border mt-2"
+            >
+              <input
+                type="checkbox"
+                checked={Array.isArray(selected) ? selected.includes(member.memberId!) : false}
+                onChange={() => toggleSelect(member.memberId!)}
+                className="checkbox checkbox-sm"
+              />
+              <img
+                src={member.profileImageUrl}
+                alt={member.name}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              <span className="text-base">{member.name}</span>
+            </label>
+          ))}
         </div>
         <button
           className="btn bg-[#242424] w-[60%] text-white rounded-lg mt-2 text-[16px] mx-auto block"
