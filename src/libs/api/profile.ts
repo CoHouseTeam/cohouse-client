@@ -55,8 +55,8 @@ export async function deleteProfileImage(): Promise<Profile> {
 }
 
 // 알림 시간 변경
-export async function updateAlertTime(hour: number, minute: number): Promise<Profile> {
-  const { data } = await api.put<Profile>(PROFILE_ENDPOINTS.UPDATE_ALERT_TIME, { hour, minute })
+export async function updateAlertTime(alertTime: string): Promise<Profile> {
+  const { data } = await api.put<Profile>(PROFILE_ENDPOINTS.UPDATE_ALERT_TIME, { alertTime })
   return data
 }
 
