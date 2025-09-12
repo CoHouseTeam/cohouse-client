@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getUnreadCount } from '../api/notifications'
+import {
+  getNotificationsSettings,
+  getUnreadCount,
+  NotificationSettings,
+  updateNotificationsSettings,
+} from '../api/notifications'
 import { useAuth } from '../../contexts/AuthContext'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useProfile } from './mypage/useProfile'
 
 export const useNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0)
@@ -37,9 +44,12 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!isAuthenticated) return
 
-    const interval = setInterval(() => {
-      fetchUnreadCount()
-    }, 5 * 60 * 1000) // 5분
+    const interval = setInterval(
+      () => {
+        fetchUnreadCount()
+      },
+      5 * 60 * 1000
+    ) // 5분
 
     return () => clearInterval(interval)
   }, [isAuthenticated, fetchUnreadCount])
@@ -48,6 +58,34 @@ export const useNotifications = () => {
     unreadCount,
     loading,
     fetchUnreadCount,
-    updateUnreadCount
+    updateUnreadCount,
   }
+}
+
+export const NOTI_SETTINGS_KEY = ['notifications', 'settings'] as const
+
+/** 알림 설정 조회 (GET /api/notifications/settings) */
+export function useNotificationsSettings() {
+  const { data: me } = useProfile()
+  return useQuery({
+    queryKey: [NOTI_SETTINGS_KEY, me?.id],
+    queryFn: getNotificationsSettings,
+    enabled: !!me?.id,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  })
+}
+
+/** 알림 설정 저장 (PUT /api/notifications/settings) */
+export function useUpdateNotificationSetting() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: NotificationSettings) => updateNotificationsSettings(body),
+    onSuccess: (_data, body) => {
+      // 즉시 캐시 갱신
+      qc.setQueryData(NOTI_SETTINGS_KEY, body)
+      // 저장 후 목록 재검증
+      qc.invalidateQueries({ queryKey: NOTI_SETTINGS_KEY })
+    },
+  })
 }

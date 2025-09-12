@@ -154,4 +154,7 @@ export const NOTIFICATION_ENDPOINTS = {
 
   // 모든 알림 삭제
   DELETE_ALL: 'api/notifications/all',
+
+  // 알림 설정 (GET / PUT 공용)
+  SETTINGS: 'api/notifications/settings',
 } as const
