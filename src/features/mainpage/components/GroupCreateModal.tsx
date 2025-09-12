@@ -10,6 +10,7 @@ const SUCCESS_REDIRECT_ROUTE = '/create-complete'
 
 const GroupCreateModal: React.FC<ModalProps> = ({ onClose }) => {
   const [groupName, setGroupName] = useState('')
+  const [leaderNickname, setLeaderNickname] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -20,10 +21,14 @@ const GroupCreateModal: React.FC<ModalProps> = ({ onClose }) => {
       setError('그룹명을 입력해주세요.')
       return
     }
+    if (!leaderNickname.trim()) {
+      setError('닉네임을 입력해주세요.')
+      return
+    }
     setError('')
     setLoading(true)
     try {
-      await createGroup(groupName.trim())
+      await createGroup(groupName.trim(), leaderNickname.trim())
       setHasGroups(true)
       navigate(SUCCESS_REDIRECT_ROUTE)
     } catch (e: unknown) {
@@ -46,9 +51,8 @@ const GroupCreateModal: React.FC<ModalProps> = ({ onClose }) => {
           >
             <XCircleFill className="text-xl text-gray-400" />
           </button>
-
           <h2 className="font-bold text-[24px] text-center mb-3">그룹 생성</h2>
-
+          {/* 그룹명 입력 */}
           <label className="block text-left text-base mb-2" htmlFor="groupName">
             그룹명
           </label>
@@ -63,11 +67,22 @@ const GroupCreateModal: React.FC<ModalProps> = ({ onClose }) => {
             disabled={loading}
           />
           <div className="text-right text-xs text-gray-400 mb-1">{groupName.length}/20</div>
-
+          {/* 닉네임 입력 */}
+          <label className="block text-left text-base mb-2" htmlFor="leaderNickname">
+            닉네임
+          </label>
+          <input
+            id="leaderNickname"
+            type="text"
+            className="input input-bordered w-full rounded-lg text-[16px] mb-1"
+            placeholder="닉네임을 입력해주세요."
+            value={leaderNickname}
+            onChange={(e) => setLeaderNickname(e.target.value)}
+            disabled={loading}
+          />
           {error && <div className="text-red-600 text-sm text-center mb-2">{error}</div>}
-
           <button
-            className="btn bg-[#242424] w-[60%] text-white rounded-lg mt-2 text-[16px] mx-auto block"
+            className="btn btn-primary w-[60%] rounded-lg mt-3 text-[16px] mx-auto block"
             onClick={handleCreate}
             disabled={loading}
           >

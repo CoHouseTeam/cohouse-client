@@ -8,12 +8,12 @@ export async function fetchMyGroups() {
   try {
     const response = await api.get(GROUP_ENDPOINTS.MY_GROUPS)
     // 그룹 정보 조회 성공
-    
+
     // 응답 데이터 검증
     if (!response.data) {
       return []
     }
-    
+
     return response.data
   } catch (error: unknown) {
     const err = error as { response?: { status?: number } }
@@ -21,13 +21,13 @@ export async function fetchMyGroups() {
     if (err.response?.status === 404) {
       return []
     }
-    
+
     // 401 에러는 인증 문제
     if (err.response?.status === 401) {
       console.error('❌ 인증이 필요합니다. 로그인해주세요.')
       throw new Error('인증이 필요합니다. 로그인해주세요.')
     }
-    
+
     // 기타 에러는 그대로 throw
     throw error
   }
@@ -48,16 +48,16 @@ export async function getCurrentGroupId(): Promise<number | null> {
   try {
     // getCurrentGroupId 호출
     const groupData = await fetchMyGroups()
-    
+
     // 응답 데이터 구조 확인
     // 그룹 데이터 구조 확인
-    
+
     // 응답에서 그룹 ID를 반환
     if (groupData && groupData.id) {
       // 현재 그룹 ID 확인
       return groupData.id
     }
-    
+
     // 다른 가능한 응답 구조 확인
     if (groupData && Array.isArray(groupData) && groupData.length > 0) {
       const firstGroup = groupData[0]
@@ -66,7 +66,7 @@ export async function getCurrentGroupId(): Promise<number | null> {
         return firstGroup.id
       }
     }
-    
+
     // 그룹이 없는 경우 null 반환 (에러가 아님)
     console.log('ℹ️ 그룹에 속하지 않음')
     return null
@@ -77,15 +77,15 @@ export async function getCurrentGroupId(): Promise<number | null> {
       console.log('ℹ️ 그룹이 없음 (404)')
       return null
     }
-    
+
     // 기타 에러는 그대로 throw
     throw error
   }
 }
 
 //그룹 생성
-export async function createGroup(groupName: string) {
-  const response = await api.post(GROUP_ENDPOINTS.CREATE, { groupName })
+export async function createGroup(groupName: string, leaderNickname: string) {
+  const response = await api.post(GROUP_ENDPOINTS.CREATE, { groupName, leaderNickname })
   return response.data
 }
 
@@ -113,7 +113,7 @@ export async function createGroupInvitation(groupId: number) {
 // 해당 그룹 멤버 목록
 export async function fetchGroupMembers(groupId: number) {
   // fetchGroupMembers 호출
-  
+
   const response = await api.get(GROUP_ENDPOINTS.MEMBERS(groupId))
   // 그룹 멤버 정보 조회 성공
   return response.data
@@ -122,7 +122,7 @@ export async function fetchGroupMembers(groupId: number) {
 // 현재 사용자의 그룹 멤버 정보 조회 (memberId 포함)
 export async function getMyGroupMemberInfo(groupId: number) {
   // getMyGroupMemberInfo 호출
-  
+
   const response = await api.put(GROUP_ENDPOINTS.UPDATE_MY_INFO(groupId), {})
   // 내 그룹 멤버 정보 조회 성공
   return response.data
