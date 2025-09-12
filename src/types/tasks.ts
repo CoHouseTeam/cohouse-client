@@ -2,6 +2,7 @@ import React from 'react'
 import { KorDay } from '../libs/utils/dayMapping'
 
 export interface Member {
+  memberId?: number
   name: string
   profileImageUrl: string
 }
@@ -22,6 +23,7 @@ export interface ExchangeModalProps {
   open: boolean
   members: Member[]
   selected: number[]
+  currentUserId: number
   onSelect: (selected: number[]) => void
   onRequest: () => void
   onClose: () => void

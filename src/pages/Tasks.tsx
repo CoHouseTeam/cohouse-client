@@ -16,6 +16,7 @@ import LoadingSpinner from '../features/common/LoadingSpinner'
 import { groupMembersName } from '../libs/utils/groupMemberName'
 import { useRandomAssign } from '../libs/hooks/taskpage/useRandomAssign'
 import { useExchangeRequest } from '../libs/hooks/taskpage/useExchangeRequest'
+import { Member } from '../types/tasks'
 
 const TasksPage: React.FC = () => {
   const { userAuthenticated } = useAuth()
@@ -106,6 +107,11 @@ const TasksPage: React.FC = () => {
     )
 
   const members = groupMembersName(groupMembers)
+  const membersForModal: Member[] = groupMembers.map((gm) => ({
+    memberId: gm.memberId,
+    name: gm.nickname,
+    profileImageUrl: gm.profileImageUrl,
+  }))
 
   return (
     <div className="space-y-6">
@@ -148,11 +154,12 @@ const TasksPage: React.FC = () => {
       {modalOpen && (
         <ExchangeModal
           open={modalOpen}
-          members={members}
+          members={membersForModal}
           selected={exchangeSelected}
           onSelect={handleSelect}
           onRequest={handleRequest}
           onClose={() => setModalOpen(false)}
+          currentUserId={myMemberId ?? -1} // 사용자 Id
         />
       )}
     </div>
