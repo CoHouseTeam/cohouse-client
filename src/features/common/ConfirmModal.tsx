@@ -34,11 +34,11 @@ export default function ConfirmModal({
           {typeof message === 'string' ? <p>{message}</p> : message}
         </div>
         <div className="modal-action flex items-center justify-center gap-3">
-          <button className="btn btn-sm rounded-lg w-20" onClick={onCancel}>
+          <button className="btn btn-sm rounded-lg w-24" onClick={onCancel}>
             {cancelText}
           </button>
           <button
-            className="btn btn-sm rounded-lg bg-secondary text-white w-20"
+            className="btn btn-sm rounded-lg bg-secondary text-white w-24"
             onClick={onConfirm}
           >
             {confirmText}

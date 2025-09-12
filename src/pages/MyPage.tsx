@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Cake2, Gear } from 'react-bootstrap-icons'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import AlarmSettingModal from '../features/mypage/components/AlarmSettingModal'
 import ConfirmModal from '../features/common/ConfirmModal'
 import { useProfile } from '../libs/hooks/mypage/useProfile'
@@ -15,8 +15,37 @@ export default function MyPage() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [showWithdrawSuccessModal, setShowWithdrawSuccessModal] = useState(false)
 
+  // 로그아웃 확인/에러 안내 모달 상태
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+
+  const [loggingOut, setLoggingOut] = useState(false)
+  const navigate = useNavigate()
+
   const { data: me, isLoading: profileLoading } = useProfile()
   const { refreshAuthState } = useAuth()
+
+  // 로그아웃 처리
+  const handleLogout = async () => {
+    if (loggingOut) return
+    setLoggingOut(true)
+
+    try {
+      // 토큰/세션 삭제
+      await logout()
+      // 전역 인증 상태 갱신
+      refreshAuthState()
+      // 로그인 페이지로 이동
+      navigate('/login')
+    } catch (e) {
+      console.error('로그아웃 실패:', e)
+      setErrorMsg('로그아웃에 실패했습니다. 잠시 후 다시 시도해주세요.')
+      setShowErrorModal(true)
+    } finally {
+      setLoggingOut(false)
+    }
+  }
 
   // 회원 탈퇴 확인 모달 열기
   const handleWithdrawClick = () => {
@@ -42,7 +71,8 @@ export default function MyPage() {
         errorMessage = '서버에서 탈퇴를 거부했습니다. 관리자에게 문의해주세요.'
       }
 
-      alert(errorMessage)
+      setErrorMsg(errorMessage)
+      setShowErrorModal(true)
     }
   }
 
@@ -51,6 +81,7 @@ export default function MyPage() {
     setShowWithdrawSuccessModal(false)
     await logout()
     refreshAuthState()
+    navigate('/login')
   }
 
   const { data: group, isLoading: groupLoading } = useMyGroups()
@@ -134,7 +165,11 @@ export default function MyPage() {
                     알림 설정
                   </button>
 
-                  <button className="text-start py-1 md:pb-2 md:px-5 transition rounded-lg">
+                  <button
+                    onClick={() => setShowLogoutModal(true)}
+                    disabled={loggingOut}
+                    className="text-start py-1 md:pb-2 md:px-5 transition rounded-lg"
+                  >
                     로그아웃
                   </button>
                   <button className="text-start py-1 md:pb-2 md:px-5  transition rounded-lg">
@@ -155,6 +190,19 @@ export default function MyPage() {
       {alarmSettingModalOpen && (
         <AlarmSettingModal onClose={() => setAlarmSettingModalOpen(false)} />
       )}
+      {/* 로그아웃 확인 모달 */}
+      <ConfirmModal
+        open={showLogoutModal}
+        title="로그아웃"
+        message="정말 로그아웃 하시겠습니까?"
+        confirmText="로그아웃"
+        cancelText="취소"
+        onConfirm={() => {
+          setShowLogoutModal(false)
+          void handleLogout()
+        }}
+        onCancel={() => setShowLogoutModal(false)}
+      />
 
       {/* 회원 탈퇴 확인 모달 */}
       <ConfirmModal
@@ -176,6 +224,17 @@ export default function MyPage() {
         cancelText=""
         onConfirm={handleWithdrawSuccess}
         onCancel={handleWithdrawSuccess}
+      />
+
+      {/* 에러 안내(단일 버튼) 모달 */}
+      <ConfirmModal
+        open={showErrorModal}
+        title="알림"
+        message={errorMsg}
+        confirmText="확인"
+        cancelText=""
+        onConfirm={() => setShowErrorModal(false)}
+        onCancel={() => setShowErrorModal(false)}
       />
     </>
   )
