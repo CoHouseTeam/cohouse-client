@@ -127,3 +127,27 @@ export async function getMyGroupMemberInfo(groupId: number) {
   // 내 그룹 멤버 정보 조회 성공
   return response.data
 }
+
+// 그룹 탈퇴 요청
+export type LeaveRequestStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'INACTIVE'
+
+export type GroupLeaveRequest = {
+  id: number
+  groupId: number
+  memberId: number
+  reason: string
+  status: LeaveRequestStatus // POST 응답은 'PENDING'
+  requestedAt: string
+  respondedAt: string | null
+}
+
+export async function requestGroupLeave(
+  groupId: number,
+  reason: string
+): Promise<GroupLeaveRequest> {
+  const { data } = await api.post<GroupLeaveRequest>(GROUP_ENDPOINTS.LEAVE_REQUESTS(groupId), {
+    reason,
+  })
+
+  return data
+}

@@ -32,7 +32,6 @@ export const GROUP_ENDPOINTS = {
 
   // 탈퇴 요청
   LEAVE_REQUESTS: (groupId: number) => `/api/groups/${groupId}/leave-requests`,
-  LEAVE_REQUEST: (groupId: number) => `/api/groups/${groupId}/leave-requests`,
   APPROVE_LEAVE: (groupId: number, requestId: number) =>
     `/api/groups/${groupId}/leave-requests/${requestId}`,
 
