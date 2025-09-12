@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { UIParticipant } from '../../features/settlements/utils/participants'
-import { fetchGroupMembers, fetchMyGroups } from '../api/groups'
+import { fetchGroupMembers, fetchMyGroups, requestGroupLeave } from '../api/groups'
 import { useProfile } from './mypage/useProfile'
 
 type MemberResp = {
@@ -74,5 +74,21 @@ export function useMyGroups() {
     queryKey: ['groups', 'me'],
     queryFn: fetchMyGroups,
     staleTime: 5 * 60 * 1000,
+  })
+}
+
+// 그룹 탈퇴
+export function useRequestGroupLeave() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ groupId, reason }: { groupId: number; reason: string }) =>
+      requestGroupLeave(groupId, reason),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['myGroup'] }),
+        qc.invalidateQueries({ queryKey: ['groups'] }),
+        qc.invalidateQueries({ queryKey: ['groups', 'members'] }),
+      ])
+    },
   })
 }
