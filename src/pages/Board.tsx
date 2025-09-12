@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Heart, X, ChevronDown, ChevronUp, Edit, Trash2 } from 'lucide-react'
+import { Heart, X, ChevronDown, ChevronUp, Edit, Trash2, User } from 'lucide-react'
 import ConfirmModal from '../features/common/ConfirmModal'
+import NicknameEditModal from '../features/common/NicknameEditModal'
 import { createPost, deletePost, togglePostLike, getPostLikes, updatePost } from '../libs/api/posts'
 import { fetchGroupPosts, fetchPost, fetchPostLikesCount, fetchPostLikeStatus } from '../services/posts'
-import { getCurrentGroupId, fetchGroupMembers } from '../libs/api/groups'
+import { getCurrentGroupId, fetchGroupMembers, updateMyGroupMemberInfo } from '../libs/api/groups'
 import { getCurrentMemberId, getCurrentUser, getAccessToken } from '../libs/utils/auth'
 import { useAuth } from '../libs/hooks/useAuth'
 import { getProfile } from '../libs/api/profile'
@@ -35,6 +36,12 @@ export default function Board() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showErrorModal, setShowErrorModal] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  
+  // 닉네임 수정 관련 상태
+  const [showNicknameModal, setShowNicknameModal] = useState(false)
+  const [currentNickname, setCurrentNickname] = useState('')
+  const [isUpdatingNickname, setIsUpdatingNickname] = useState(false)
+  const [myGroupMemberInfo, setMyGroupMemberInfo] = useState<any>(null)
 
   // API 상태 관리
   const [loading, setLoading] = useState(false)
@@ -109,6 +116,18 @@ export default function Board() {
           isLeader: member.isLeader
         })))
         setGroupMembers(groupInfo)
+        
+        // 내 그룹 멤버 정보 찾기 (그룹 멤버 목록에서)
+        if (currentMemberId) {
+          const myInfo = groupInfo.find((member: any) => member.memberId === currentMemberId)
+          if (myInfo) {
+            console.log('✅ 내 그룹 멤버 정보:', myInfo)
+            setMyGroupMemberInfo(myInfo)
+            setCurrentNickname(myInfo.nickname || '')
+          } else {
+            console.log('⚠️ 내 그룹 멤버 정보를 찾을 수 없음')
+          }
+        }
       } catch (error) {
         console.error('❌ 그룹 멤버 정보 가져오기 실패:', error)
         // 에러가 발생해도 빈 배열로 설정하여 앱이 계속 작동하도록 함
@@ -182,7 +201,7 @@ export default function Board() {
     
     if (!groupMembers || groupMembers.length === 0) {
       console.log('⚠️ groupMembers가 없음, 기본값 반환')
-      return '작성자'
+      return '익명'
     }
     
     const member = groupMembers.find(m => m.memberId === memberId)
@@ -190,11 +209,23 @@ export default function Board() {
       member,
       memberId,
       found: !!member,
-      nickname: member?.nickname
+      nickname: member?.nickname,
+      nicknameType: typeof member?.nickname,
+      nicknameLength: member?.nickname?.length
     })
     
-    // nickname이 null이거나 빈 문자열인 경우 기본값 반환
-    const result = member && member.nickname ? member.nickname : '작성자'
+    // nickname이 null, undefined, 빈 문자열인 경우 익명 반환
+    if (!member) {
+      console.log('❌ 멤버를 찾을 수 없음')
+      return '익명'
+    }
+    
+    if (!member.nickname || member.nickname.trim() === '') {
+      console.log('❌ nickname이 없거나 빈 문자열')
+      return '익명'
+    }
+    
+    const result = member.nickname
     console.log('✅ 최종 결과:', result)
     return result
   }
@@ -223,8 +254,8 @@ export default function Board() {
       if (post.title.toLowerCase().includes(searchLower)) return true
       // 내용(preview) 검색
       if (post.preview.toLowerCase().includes(searchLower)) return true
-      // 작성자 검색 (userName 또는 닉네임으로 검색)
-      const authorName = post.userName || getNicknameByMemberId(post.memberId)
+      // 작성자 검색 (닉네임으로 검색)
+      const authorName = getNicknameByMemberId(post.memberId)
       if (authorName && authorName.toLowerCase().includes(searchLower)) return true
       return false
     })
@@ -237,8 +268,8 @@ export default function Board() {
     const tokenMemberId = userFromToken?.memberId
     const tokenName = userFromToken?.name
     
-    // 게시글 작성자 이름 가져오기
-    const postAuthorName = getNicknameByMemberId(postMemberId)
+    // 게시글 작성자 닉네임 가져오기
+    const postAuthorNickname = getNicknameByMemberId(postMemberId)
 
     
     // JWT 토큰에서 추출한 ID 사용 (우선순위)
@@ -247,16 +278,16 @@ export default function Board() {
       return isAuthor
     }
     
-    // memberId가 없는 경우, JWT의 name과 게시글 작성자 이름 비교
-    if (tokenName && postAuthorName && postAuthorName !== '작성자') {
-      const isAuthorByName = tokenName === postAuthorName
+    // memberId가 없는 경우, JWT의 name과 게시글 작성자 닉네임 비교
+    if (tokenName && postAuthorNickname && postAuthorNickname !== '익명') {
+      const isAuthorByName = tokenName === postAuthorNickname
       return isAuthorByName
     }
     
-    // 이름이 '작성자'로 표시되는 경우, 그룹 멤버 정보에서 정확한 이름 찾기
+    // 닉네임이 '익명'으로 표시되는 경우, 그룹 멤버 정보에서 정확한 닉네임 찾기
     if (tokenName && groupMembers.length > 0) {
       const member = groupMembers.find(m => m.memberId === postMemberId)
-      if (member && member.nickname && member.nickname !== '작성자') {
+      if (member && member.nickname && member.nickname !== '익명') {
         const isAuthorByMemberName = tokenName === member.nickname
         return isAuthorByMemberName
       }
@@ -481,6 +512,78 @@ export default function Board() {
     setErrorMessage('')
   }
 
+  // 닉네임 수정 모달 열기
+  const openNicknameModal = () => {
+    setShowNicknameModal(true)
+  }
+
+  // 닉네임 수정 모달 닫기
+  const closeNicknameModal = () => {
+    setShowNicknameModal(false)
+  }
+
+  // 닉네임 수정 처리
+  const handleNicknameUpdate = async (newNickname: string) => {
+    console.log('🚀 닉네임 수정 시작:', {
+      newNickname,
+      groupId,
+      myGroupMemberInfo,
+      currentMemberId
+    })
+
+    if (!groupId) {
+      throw new Error('그룹 ID를 찾을 수 없습니다.')
+    }
+
+    if (!myGroupMemberInfo) {
+      throw new Error('내 그룹 멤버 정보를 찾을 수 없습니다.')
+    }
+
+    setIsUpdatingNickname(true)
+    try {
+      // 현재 정보를 복사하고 닉네임만 변경
+      const updatedMemberData = {
+        ...myGroupMemberInfo,
+        nickname: newNickname
+      }
+
+      console.log('📤 API 요청 데이터:', updatedMemberData)
+      console.log('📡 요청 URL:', `/api/groups/${groupId}/members/me`)
+
+      const response = await updateMyGroupMemberInfo(groupId, updatedMemberData)
+      console.log('📥 API 응답:', response)
+      
+      // 성공 시 상태 업데이트
+      setCurrentNickname(newNickname)
+      setMyGroupMemberInfo(updatedMemberData)
+      
+      // 그룹 멤버 목록도 새로고침
+      const groupInfo = await fetchGroupMembers(groupId)
+      setGroupMembers(groupInfo)
+      
+      console.log('✅ 닉네임 수정 완료:', newNickname)
+    } catch (error: any) {
+      console.error('❌ 닉네임 수정 실패:', {
+        error,
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status
+      })
+      
+      // 더 구체적인 에러 메시지 제공
+      let errorMessage = '닉네임 수정에 실패했습니다.'
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.message) {
+        errorMessage = error.message
+      }
+      
+      throw new Error(errorMessage)
+    } finally {
+      setIsUpdatingNickname(false)
+    }
+  }
+
   // 새 글 작성 제출
   const handleNewPostSubmit = async () => {
     if (!newPostTitle.trim() || !newPostContent.trim()) {
@@ -670,6 +773,14 @@ export default function Board() {
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">게시판</h1>
           <div className="flex gap-2">
             <button
+              onClick={openNicknameModal}
+              className="btn btn-outline btn-sm rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              title="닉네임 수정"
+            >
+              <User className="w-4 h-4" />
+              닉네임 수정
+            </button>
+            <button
               onClick={openNewPostModal}
               className="btn btn-primary btn-sm rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >
@@ -790,7 +901,7 @@ export default function Board() {
 
                   {/* Meta info */}
                   <div className="flex justify-between items-center text-xs text-base-content/60">
-                        <span>{post.userName || getNicknameByMemberId(post.memberId)}</span>
+                        <span>{getNicknameByMemberId(post.memberId)}</span>
                         <span>{new Date(post.createdAt).toISOString().split('T')[0]}</span>
                   </div>
 
@@ -900,7 +1011,7 @@ export default function Board() {
               
                 {/* Meta info */}
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                    <span>작성자: {selectedPost.userName || getNicknameByMemberId(selectedPost.memberId)} </span>
+                    <span>작성자: {getNicknameByMemberId(selectedPost.memberId)} </span>
                     <span>작성일: {new Date(selectedPost.createdAt).toISOString().split('T')[0]}</span>
                     <span>카테고리: {selectedPost.type === 'ANNOUNCEMENT' ? '공지사항' : '자유게시판'}</span>
               </div>
@@ -1198,6 +1309,15 @@ export default function Board() {
           <div className="modal-backdrop" onClick={closeErrorModal}></div>
         </div>
       )}
+
+      {/* Nickname Edit Modal */}
+      <NicknameEditModal
+        isOpen={showNicknameModal}
+        onClose={closeNicknameModal}
+        currentNickname={currentNickname}
+        onSave={handleNicknameUpdate}
+        isLoading={isUpdatingNickname}
+      />
     </div>
   )
 }

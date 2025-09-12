@@ -119,11 +119,24 @@ export async function fetchGroupMembers(groupId: number) {
   return response.data
 }
 
-// 현재 사용자의 그룹 멤버 정보 조회 (memberId 포함)
-export async function getMyGroupMemberInfo(groupId: number) {
-  // getMyGroupMemberInfo 호출
-  
-  const response = await api.put(GROUP_ENDPOINTS.UPDATE_MY_INFO(groupId), {})
-  // 내 그룹 멤버 정보 조회 성공
-  return response.data
+
+// 그룹 멤버 정보 수정 (닉네임 등)
+export async function updateMyGroupMemberInfo(groupId: number, memberData: {
+  id: number
+  groupId: number
+  memberId: number
+  isLeader: boolean
+  nickname: string
+  status: string
+  joinedAt: string
+  leavedAt: string | null
+  profileImageUrl: string
+}) {
+  try {
+    const response = await api.put(GROUP_ENDPOINTS.UPDATE_MY_INFO(groupId), memberData)
+    return response.data
+  } catch (error) {
+    console.error('❌ 그룹 멤버 정보 수정 실패:', error)
+    throw error
+  }
 }
