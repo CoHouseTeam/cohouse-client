@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import TaskHistoryButton from '../features/tasks/components/TaskHistoryButton'
 import TaskTable from '../features/tasks/components/TaskTable'
 import TaskExchangeButton from '../features/tasks/components/TaskExchangeButton'
@@ -17,6 +17,7 @@ import { groupMembersName } from '../libs/utils/groupMemberName'
 import { useRandomAssign } from '../libs/hooks/taskpage/useRandomAssign'
 import { useExchangeRequest } from '../libs/hooks/taskpage/useExchangeRequest'
 import { Member } from '../types/tasks'
+import toast from 'react-hot-toast'
 
 const TasksPage: React.FC = () => {
   const { userAuthenticated } = useAuth()
@@ -36,18 +37,9 @@ const TasksPage: React.FC = () => {
   } = useAssignments(userAuthenticated, groupId)
   const { myMemberId } = useMyMemberId()
 
+  // Zustand
   const loadingTemplates = useTaskStore((state) => state.loadingTemplates)
   const setLoadingTemplates = useTaskStore((state) => state.setLoadingTemplates)
-  // 로딩 상태 업데이트
-  React.useEffect(() => {
-    if (templates.length > 0) {
-      setLoadingTemplates(false)
-    } else {
-      setLoadingTemplates(true)
-    }
-  }, [templates, setLoadingTemplates])
-
-  // zustand
   const repeat = useTaskStore((state) => state.repeat)
   const setRepeat = useTaskStore((state) => state.setRepeat)
   const showHistory = useTaskStore((state) => state.showHistory)
@@ -58,9 +50,19 @@ const TasksPage: React.FC = () => {
   const setModalOpen = useTaskStore((state) => state.setModalOpen)
   const error = useTaskStore((state) => state.error)
 
+  // 로딩 상태 업데이트
+  React.useEffect(() => {
+    if (templates.length > 0) {
+      setLoadingTemplates(false)
+    } else {
+      setLoadingTemplates(true)
+    }
+  }, [templates.length, setLoadingTemplates])
+
   const combinedError = groupError || assignmentsError || error
 
-  const isAlreadyAssigned = useCallback(
+  // 상태 변경시만 렌더링
+  const isAlreadyAssigned = React.useCallback(
     (memberId: number, templateId: number, date: string) =>
       assignments.some(
         (a) => a.groupMemberId === memberId && a.templateId === templateId && a.date === date
@@ -68,7 +70,7 @@ const TasksPage: React.FC = () => {
     [assignments]
   )
 
-  const showAlert = useCallback((message: string) => {
+  const showAlert = React.useCallback((message: string) => {
     alert(message)
   }, [])
 
@@ -82,6 +84,10 @@ const TasksPage: React.FC = () => {
     reloadAssignments,
     showAlert,
     randomModeEnabled: true,
+    onSuccess: () => {
+      toast.success('랜덤 배정이 완료되었습니다!')
+    },
+    onError: (msg) => toast.error(msg),
   })
 
   const randomButtonDisabled = loadingTemplates || templates.length === 0

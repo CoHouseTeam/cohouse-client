@@ -11,6 +11,8 @@ interface UseRandomAssignParams {
   reloadAssignments: () => Promise<void>
   showAlert: (msg: string) => void
   randomModeEnabled: boolean
+  onSuccess?: () => void
+  onError?: (errorMessage: string) => void
 }
 
 export function useRandomAssign({
@@ -22,6 +24,8 @@ export function useRandomAssign({
   reloadAssignments,
   showAlert,
   randomModeEnabled,
+  onSuccess,
+  onError,
 }: UseRandomAssignParams) {
   return async function randomAssign() {
     if (!groupId || groupMembers.length === 0) {
@@ -64,8 +68,14 @@ export function useRandomAssign({
       }
       await Promise.all(assignmentPromises)
       await reloadAssignments()
+
+      if (onSuccess) {
+        onSuccess()
+      }
     } catch (err) {
-      showAlert('랜덤 배정에 실패했습니다.')
+      const msg = '랜덤 배정에 실패했습니다.'
+      if (onError) onError(msg)
+      else showAlert(msg)
     }
   }
 }
