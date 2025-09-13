@@ -9,7 +9,7 @@ interface UseRandomAssignParams {
   repeatDays: { templateId: number; dayOfWeek: string }[]
   isAlreadyAssigned: (memberId: number, templateId: number, date: string) => boolean
   reloadAssignments: () => Promise<void>
-  showAlert: (msg: string) => void
+  showAlert?: (msg: string) => void // Optional, fallback 용도
   randomModeEnabled: boolean
   onSuccess?: () => void
   onError?: (errorMessage: string) => void
@@ -29,15 +29,21 @@ export function useRandomAssign({
 }: UseRandomAssignParams) {
   return async function randomAssign() {
     if (!groupId || groupMembers.length === 0) {
-      showAlert('그룹 정보가 없습니다.')
+      const msg = '그룹 정보가 없습니다.'
+      if (onError) onError(msg)
+      else showAlert?.(msg)
       return
     }
     if (!templates.length) {
-      showAlert('템플릿 정보가 없습니다.')
+      const msg = '템플릿 정보가 없습니다.'
+      if (onError) onError(msg)
+      else showAlert?.(msg)
       return
     }
     if (!repeatDays.length) {
-      showAlert('반복 요일 정보가 없습니다. 템플릿의 반복 설정을 확인해 주세요.')
+      const msg = '반복 요일 정보가 없습니다. 템플릿의 반복 설정을 확인해 주세요.'
+      if (onError) onError(msg)
+      else showAlert?.(msg)
       return
     }
     try {
@@ -69,13 +75,11 @@ export function useRandomAssign({
       await Promise.all(assignmentPromises)
       await reloadAssignments()
 
-      if (onSuccess) {
-        onSuccess()
-      }
+      if (onSuccess) onSuccess()
     } catch (err) {
       const msg = '랜덤 배정에 실패했습니다.'
       if (onError) onError(msg)
-      else showAlert(msg)
+      else showAlert?.(msg)
     }
   }
 }

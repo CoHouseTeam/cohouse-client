@@ -8,6 +8,8 @@ interface UseExchangeRequestParams {
   setExchangeSelected: (selected: number[]) => void
   setModalOpen: (open: boolean) => void
   showAlert: (msg: string) => void
+  onSuccess?: (msg: string) => void
+  onError?: (msg: string) => void
 }
 
 export function useExchangeRequest({
@@ -16,15 +18,16 @@ export function useExchangeRequest({
   myMemberId,
   setExchangeSelected,
   setModalOpen,
-  showAlert,
+  onSuccess,
+  onError,
 }: UseExchangeRequestParams) {
   return async function requestExchange(selectedIndices: number[]) {
     if (!selectedIndices.length) {
-      showAlert('교환할 멤버를 선택해 주세요.')
+      onError?.('교환할 멤버를 선택해 주세요.')
       return
     }
     if (myMemberId === null) {
-      showAlert('현재 로그인한 사용자 ID가 없습니다.')
+      onError?.('현재 로그인한 사용자 ID가 없습니다.')
       return
     }
 
@@ -58,9 +61,9 @@ export function useExchangeRequest({
 
       setModalOpen(false)
       setExchangeSelected([])
-      showAlert('업무 교환 요청이 성공하였습니다.')
+      onSuccess?.('업무 교환 요청이 성공하였습니다.')
     } catch (err) {
-      showAlert('교환 요청에 실패했습니다.')
+      onError?.('교환 요청에 실패했습니다.')
     }
   }
 }

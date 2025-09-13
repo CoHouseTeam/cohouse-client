@@ -85,7 +85,7 @@ const TasksPage: React.FC = () => {
     showAlert,
     randomModeEnabled: true,
     onSuccess: () => {
-      toast.success('랜덤 배정이 완료되었습니다!')
+      toast.success('랜덤 배정이 완료되었습니다.')
     },
     onError: (msg) => toast.error(msg),
   })
@@ -100,6 +100,8 @@ const TasksPage: React.FC = () => {
     setExchangeSelected,
     setModalOpen,
     showAlert,
+    onSuccess: (msg) => toast.success(msg),
+    onError: (msg) => toast.error(msg),
   })
 
   const handleRequest = () => handleExchangeRequest(exchangeSelected)
