@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import { getAccessToken } from '../../../libs/utils/auth'
 import { joinGroup } from '../../../libs/utils/group'
+import { isAxiosError } from 'axios'
 
 const GroupInviteInputModal: React.FC<ModalProps> = ({ onClose }) => {
   const [inviteCode, setInviteCode] = useState('')
@@ -36,11 +37,15 @@ const GroupInviteInputModal: React.FC<ModalProps> = ({ onClose }) => {
       toast.success('그룹 참여가 완료되었습니다!')
       navigate((window.location.href = '/'))
       onClose()
-    } catch (err: any) {
-      toast.error(err.message || '그룹 참여에 실패했습니다.')
-      setError(err.message || '그룹 참여에 실패했습니다.')
-    } finally {
-      setLoading(false)
+    } catch (err: unknown) {
+      let errorMessage = '그룹 참여에 실패했습니다.'
+      if (isAxiosError(err) && err.response?.data?.message) {
+        errorMessage = err.response.data.message
+      } else if (err instanceof Error && err.message) {
+        errorMessage = err.message
+      }
+      toast.error(errorMessage)
+      setError(errorMessage)
     }
   }
 
