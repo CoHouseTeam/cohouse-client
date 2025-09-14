@@ -14,15 +14,14 @@ interface UseExchangeRequestParams {
 
 export function useExchangeRequest({
   assignments,
-  groupMembers,
   myMemberId,
   setExchangeSelected,
   setModalOpen,
   onSuccess,
   onError,
 }: UseExchangeRequestParams) {
-  return async function requestExchange(selectedIndices: number[]) {
-    if (!selectedIndices.length) {
+  return async function requestExchange(selectedId: number[]) {
+    if (!selectedId.length) {
       onError?.('교환할 멤버를 선택해 주세요.')
       return
     }
@@ -32,7 +31,7 @@ export function useExchangeRequest({
     }
 
     try {
-      const targetIds = selectedIndices.map((idx) => groupMembers[idx].memberId)
+      const targetIds = selectedId
       const targetId = targetIds[0]
 
       const swapAssignment = assignments.find((a) => {
@@ -41,7 +40,6 @@ export function useExchangeRequest({
         return a.groupMemberId === targetId
       })
       const swapAssignmentId = swapAssignment?.assignmentId ?? 0
-
       const currentUserAssignment = assignments.find((a) => {
         if (!a.groupMemberId) return false
         if (Array.isArray(a.groupMemberId)) return a.groupMemberId.includes(myMemberId)

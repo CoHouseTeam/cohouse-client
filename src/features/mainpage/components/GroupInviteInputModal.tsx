@@ -73,7 +73,7 @@ const GroupInviteInputModal: React.FC<ModalProps> = ({ onClose }) => {
             <input
               type="text"
               placeholder="초대 코드를 입력하세요"
-              className="input input-bordered w-full"
+              className="input input-bordered rounded-lg w-full"
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -94,12 +94,21 @@ const GroupInviteInputModal: React.FC<ModalProps> = ({ onClose }) => {
         </div>
 
         <div className="modal-action">
-          <button className="btn btn-ghost" onClick={onClose}>
-            취소
-          </button>
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
-            {loading ? '참여 중...' : '그룹 참여하기'}
-          </button>
+          <div className="flex justify-center space-x-3 mt-2 w-full">
+            <button
+              className="btn btn-primary rounded-lg text-[16px] w-[40%]"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? '참여 중...' : '참여하기'}
+            </button>
+            <button
+              className="btn bg-gray-200 text-black rounded-lg text-[16px] w-[40%]"
+              onClick={onClose}
+            >
+              취소
+            </button>
+          </div>
         </div>
       </div>
       <div className="modal-backdrop" onClick={onClose}></div>

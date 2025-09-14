@@ -25,7 +25,7 @@ export interface ExchangeModalProps {
   selected: number[]
   currentUserId: number
   onSelect: (selected: number[]) => void
-  onRequest: () => void
+  onRequest: (selected: number[]) => void
   onClose: () => void
 }
 

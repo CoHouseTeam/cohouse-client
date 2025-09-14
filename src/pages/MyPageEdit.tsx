@@ -199,7 +199,7 @@ export default function MyPageEdit() {
     }
 
     try {
-      await api.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, { email: me.email })
+      await api.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, { email: me.email, name: me.name })
       showAlert('비밀번호 변경 이메일을 발송했습니다. 메일함을 확인해주세요.')
     } catch (e) {
       showAlert('메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.')

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { XCircleFill } from 'react-bootstrap-icons'
 import { ModalProps } from '../../../types/main'
 import { useNavigate } from 'react-router-dom'
@@ -16,13 +16,19 @@ const GroupCreateModal: React.FC<ModalProps> = ({ onClose }) => {
   const navigate = useNavigate()
   const setHasGroups = useGroupStore((state) => state.setHasGroups)
 
+  // 닉네임 자동으로 저장
+  useEffect(() => {
+    const name = localStorage.getItem('memberName')
+    if (name) setLeaderNickname(name)
+  }, [])
+
   const handleCreate = async () => {
     if (!groupName.trim()) {
       setError('그룹명을 입력해주세요.')
       return
     }
     if (!leaderNickname.trim()) {
-      setError('닉네임을 입력해주세요.')
+      setError('이름 정보가 없습니다. 다시 로그인해주세요.')
       return
     }
     setError('')
@@ -67,19 +73,6 @@ const GroupCreateModal: React.FC<ModalProps> = ({ onClose }) => {
             disabled={loading}
           />
           <div className="text-right text-xs text-gray-400 mb-1">{groupName.length}/20</div>
-          {/* 닉네임 입력 */}
-          <label className="block text-left text-base mb-2" htmlFor="leaderNickname">
-            닉네임
-          </label>
-          <input
-            id="leaderNickname"
-            type="text"
-            className="input input-bordered w-full rounded-lg text-[16px] mb-1"
-            placeholder="닉네임을 입력해주세요."
-            value={leaderNickname}
-            onChange={(e) => setLeaderNickname(e.target.value)}
-            disabled={loading}
-          />
           {error && <div className="text-red-600 text-sm text-center mb-2">{error}</div>}
           <button
             className="btn btn-primary w-[60%] rounded-lg mt-3 text-[16px] mx-auto block"
