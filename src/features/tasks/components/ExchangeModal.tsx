@@ -80,7 +80,7 @@ const ExchangeModal: React.FC<ExchangeModalProps> = ({
         </div>
         <button
           className="btn bg-[#242424] w-[60%] text-white rounded-lg mt-2 text-[16px] mx-auto block"
-          onClick={onRequest}
+          onClick={() => onRequest(selected)}
         >
           요청하기
         </button>
