@@ -91,7 +91,7 @@ const CalendarBox: React.FC<ExtendedCalendarBoxProps> = ({
             )
           }
           return dots.length > 0 ? (
-            <div className="flex space-x-1 justify-center">{dots}</div>
+            <div className="flex space-x-2 justify-center">{dots}</div>
           ) : null
         }}
       />

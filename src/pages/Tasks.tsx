@@ -38,7 +38,6 @@ const TasksPage: React.FC = () => {
   const { myMemberId } = useMyMemberId()
 
   // Zustand
-  const loadingTemplates = useTaskStore((state) => state.loadingTemplates)
   const setLoadingTemplates = useTaskStore((state) => state.setLoadingTemplates)
   const repeat = useTaskStore((state) => state.repeat)
   const setRepeat = useTaskStore((state) => state.setRepeat)
@@ -90,8 +89,6 @@ const TasksPage: React.FC = () => {
     onError: (msg) => toast.error(msg),
   })
 
-  const randomButtonDisabled = loadingTemplates || templates.length === 0
-
   // 교환 요청
   const handleExchangeRequest = useExchangeRequest({
     assignments,
@@ -104,7 +101,8 @@ const TasksPage: React.FC = () => {
     onError: (msg) => toast.error(msg),
   })
 
-  const handleRequest = () => handleExchangeRequest(exchangeSelected)
+  const handleRequest = (selected: number[]) => handleExchangeRequest(selected)
+
   const handleSelect = (selected: number[]) => setExchangeSelected(selected)
 
   if (isLeader === null)
@@ -134,9 +132,7 @@ const TasksPage: React.FC = () => {
 
       <div className="flex flex-col items-center space-y-4 mt-2">
         <div className="flex space-x-2">
-          {isLeader && (
-            <TaskRandomButton onClick={handleRandomAssign} disabled={randomButtonDisabled} />
-          )}
+          {isLeader && <TaskRandomButton onClick={handleRandomAssign} />}
 
           {(isLeader && isAssigned) || !isLeader ? (
             <TaskExchangeButton onClick={() => setModalOpen(true)} />
@@ -167,7 +163,7 @@ const TasksPage: React.FC = () => {
           onSelect={handleSelect}
           onRequest={handleRequest}
           onClose={() => setModalOpen(false)}
-          currentUserId={myMemberId ?? -1} // 사용자 Id
+          currentUserId={myMemberId ?? -1}
         />
       )}
     </div>
