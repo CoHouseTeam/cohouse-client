@@ -24,10 +24,10 @@ export default function NavBar({ children }: NavBarProps) {
   const [showWithdrawSuccessModal, setShowWithdrawSuccessModal] = useState(false)
   // Context에서 인증 상태 가져오기
   const { isAuthenticated: isLoggedIn, refreshAuthState } = useAuthContext()
-  
+
   // 권한 정보 가져오기
   const { permissions } = useAuth()
-  
+
   // 알림 관련 훅 사용
   const { unreadCount } = useNotifications()
 
@@ -78,18 +78,18 @@ export default function NavBar({ children }: NavBarProps) {
     try {
       // 동적으로 현재 그룹 ID를 가져오기
       const groupId = await getCurrentGroupId()
-      
+
       // 그룹이 없는 경우 처리
       if (!groupId) {
         alert('그룹에 속해있지 않습니다.')
         return
       }
-      
+
       const invitationData = await createGroupInvitation(groupId)
       const inviteCode = invitationData.inviteCode
 
       // 전체 초대 URL 생성
-      const inviteUrl = `${window.location.origin}/invite?code=${inviteCode}`
+      const inviteUrl = `${inviteCode}`
 
       // 초대 URL을 클립보드에 복사
       await navigator.clipboard.writeText(inviteUrl)
@@ -105,13 +105,13 @@ export default function NavBar({ children }: NavBarProps) {
       // 폴백: 구식 브라우저 지원
       try {
         const groupId = await getCurrentGroupId()
-        
+
         // 그룹이 없는 경우 처리
         if (!groupId) {
           alert('그룹에 속해있지 않습니다.')
           return
         }
-        
+
         const invitationData = await createGroupInvitation(groupId)
         const inviteCode = invitationData.inviteCode
 
@@ -179,8 +179,6 @@ export default function NavBar({ children }: NavBarProps) {
     }
   }, [])
 
-
-
   const commonLinks = [
     { to: '/tasks', label: '할 일', requireGroup: true },
     { to: '/settlements', label: '정산하기', requireGroup: true },
@@ -188,7 +186,7 @@ export default function NavBar({ children }: NavBarProps) {
   ]
 
   // 권한에 따라 메뉴 항목 필터링
-  const filteredCommonLinks = commonLinks.filter(link => {
+  const filteredCommonLinks = commonLinks.filter((link) => {
     if (link.requireGroup) {
       return permissions.canAccessFeatures
     }
@@ -249,7 +247,12 @@ export default function NavBar({ children }: NavBarProps) {
               ) : (
                 permissions.canAccessFeatures && (
                   <li>
-                    <NavLink to="/mypage" className={({ isActive }) => `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`}>
+                    <NavLink
+                      to="/mypage"
+                      className={({ isActive }) =>
+                        `hover:rounded-lg ${isActive ? 'font-semibold' : ''}`
+                      }
+                    >
                       마이페이지
                     </NavLink>
                   </li>
@@ -262,8 +265,8 @@ export default function NavBar({ children }: NavBarProps) {
           <div className="navbar-end gap-1">
             {isLoggedIn ? (
               <>
-                <button 
-                  className="btn btn-ghost btn-square rounded-lg" 
+                <button
+                  className="btn btn-ghost btn-square rounded-lg"
                   aria-label="Notifications"
                   onClick={handleNotificationClick}
                 >
@@ -290,14 +293,11 @@ export default function NavBar({ children }: NavBarProps) {
                     >
                       <Share2 className="w-5 h-5" />
                     </button>
-                    
+
                     {showShareDropdown && (
                       <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-2">
                         <li>
-                          <button
-                            onClick={handleShare}
-                            className="flex items-center gap-2"
-                          >
+                          <button onClick={handleShare} className="flex items-center gap-2">
                             <Copy className="w-4 h-4" />
                             초대 코드 복사하기
                           </button>
@@ -329,13 +329,10 @@ export default function NavBar({ children }: NavBarProps) {
                       <User size={16} />
                       <ChevronDown size={14} />
                     </button>
-                    
+
                     <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-48 mt-2">
                       <li>
-                        <button
-                          onClick={handleLogout}
-                          className="flex items-center gap-2"
-                        >
+                        <button onClick={handleLogout} className="flex items-center gap-2">
                           <LogOut size={16} />
                           로그아웃
                         </button>
@@ -374,7 +371,7 @@ export default function NavBar({ children }: NavBarProps) {
 
         <aside className="w-72 bg-base-100 min-h-full border-r relative z-[99999]">
           <div className="px-6 pt-6 pb-3 text-lg font-semibold">CoHouse</div>
-          
+
           <ul className="menu p-2">
             {filteredCommonLinks.map(({ to, label }) => (
               <li key={to}>
@@ -398,12 +395,17 @@ export default function NavBar({ children }: NavBarProps) {
               <>
                 {permissions.canAccessFeatures && (
                   <li>
-                    <NavLink to="/mypage" onClick={closeDrawer} className="rounded-lg">마이페이지</NavLink>
+                    <NavLink to="/mypage" onClick={closeDrawer} className="rounded-lg">
+                      마이페이지
+                    </NavLink>
                   </li>
                 )}
                 <li>
-                  <button 
-                    onClick={async () => { closeDrawer(); await handleLogout(); }} 
+                  <button
+                    onClick={async () => {
+                      closeDrawer()
+                      await handleLogout()
+                    }}
                     className="rounded-lg w-full text-left flex items-center gap-2"
                   >
                     <LogOut size={16} />
@@ -412,8 +414,11 @@ export default function NavBar({ children }: NavBarProps) {
                 </li>
                 {!permissions.canAccessFeatures && (
                   <li>
-                    <button 
-                      onClick={async () => { closeDrawer(); handleWithdrawClick(); }} 
+                    <button
+                      onClick={async () => {
+                        closeDrawer()
+                        handleWithdrawClick()
+                      }}
                       className="rounded-lg w-full text-left flex items-center gap-2 text-red-600 hover:text-red-700"
                     >
                       <User size={16} />
@@ -438,10 +443,7 @@ export default function NavBar({ children }: NavBarProps) {
       )}
 
       {/* 알림 사이드바 */}
-      <NotificationSidebar
-        isOpen={showNotificationSidebar}
-        onClose={handleNotificationClose}
-      />
+      <NotificationSidebar isOpen={showNotificationSidebar} onClose={handleNotificationClose} />
 
       {/* 회원 탈퇴 확인 모달 */}
       <ConfirmModal

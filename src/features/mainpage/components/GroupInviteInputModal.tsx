@@ -85,12 +85,6 @@ const GroupInviteInputModal: React.FC<ModalProps> = ({ onClose }) => {
               </label>
             )}
           </div>
-
-          <div className="text-sm text-gray-500">
-            <p>• 그룹장으로부터 받은 초대 코드를 입력하세요</p>
-            <p>• 초대 코드는 URL의 마지막 부분입니다</p>
-            <p>• 예: https://example.com/invite?code=ABC123 → ABC123</p>
-          </div>
         </div>
 
         <div className="modal-action">
