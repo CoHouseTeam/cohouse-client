@@ -62,36 +62,14 @@ const CalendarBox: React.FC<ExtendedCalendarBoxProps> = ({
         formatDay={(_locale, date) => String(date.getDate())}
         tileContent={({ date, view }) => {
           if (view !== 'month') return null
-          const dots = []
-          if (isScheduledDay(date)) {
-            dots.push(
-              <CalendarDateDots
-                key="todo"
-                colors={['#E88F7F']}
-                dayLength={String(date.getDate()).length}
-              />
-            )
-          }
-          if (isAnnouncementDay(date)) {
-            dots.push(
-              <CalendarDateDots
-                key="announcement"
-                colors={['#F8DF9F']}
-                dayLength={String(date.getDate()).length}
-              />
-            )
-          }
-          if (isSettlementDay(date)) {
-            dots.push(
-              <CalendarDateDots
-                key="settlement"
-                colors={['#D5E4AD']}
-                dayLength={String(date.getDate()).length}
-              />
-            )
-          }
-          return dots.length > 0 ? (
-            <div className="flex space-x-2 justify-center">{dots}</div>
+
+          const dotsColors: string[] = []
+          if (isScheduledDay(date)) dotsColors.push('#E88F7F')
+          if (isAnnouncementDay(date)) dotsColors.push('#F8DF9F')
+          if (isSettlementDay(date)) dotsColors.push('#D5E4AD')
+
+          return dotsColors.length > 0 ? (
+            <CalendarDateDots colors={dotsColors} dayLength={String(date.getDate()).length} />
           ) : null
         }}
       />
