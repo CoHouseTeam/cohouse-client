@@ -2,14 +2,38 @@ import LoadingSpinner from '../../common/LoadingSpinner'
 import SettlementListItem from './SettlementListItem'
 import { useMySettlements } from '../../../libs/hooks/settlements/useMySettlements'
 import ErrorCard from '../../common/ErrorCard'
+import { Settlement } from '../../../types/settlement'
 
-export default function OngoingSettlements() {
+interface OngoingSettlementsProps {
+  groupId: number
+  viewerId?: number
+}
+
+export default function OngoingSettlements({ groupId, viewerId }: OngoingSettlementsProps) {
+  if (!groupId) return null
+
   const { data, isLoading, error } = useMySettlements()
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorCard />
+  if (error) return <ErrorCard message="정산 정보를 불러오는 중 오류가 발생했습니다." />
 
-  const ongoing = Array.isArray(data) ? data.filter((s) => s.status === 'PENDING') : []
+  const list: Settlement[] = (() => {
+    if (!data) return []
+    if (Array.isArray(data)) return data
+    if ('content' in data && Array.isArray((data as { content?: Settlement[] }).content)) {
+      return (data as { content: Settlement[] }).content
+    }
+    return []
+  })()
+
+  const mine =
+    viewerId != null
+      ? list.filter(
+          (s) => s.payerId === viewerId || s.participants.some((p) => p.memberId === viewerId)
+        )
+      : list
+
+  const ongoing = mine.filter((s) => s.status === 'PENDING')
   const isEmpty = ongoing.length === 0
 
   return (
@@ -34,7 +58,7 @@ export default function OngoingSettlements() {
         ) : (
           <>
             {ongoing.map((s) => (
-              <SettlementListItem key={s.id} item={s} viewerId={1} />
+              <SettlementListItem key={s.id} item={s} groupId={groupId} viewerId={viewerId} />
             ))}
           </>
         )}

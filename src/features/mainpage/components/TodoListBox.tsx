@@ -1,20 +1,73 @@
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import UncompletedTasksModal from './UncompletedTasksModal'
-import { Todo } from '../../../types/main.ts'
+import { TodoItem, TodoListBoxProps } from '../../../types/main.ts'
+import { getAssignments, updateAssignment } from '../../../libs/api/tasks.ts'
 
-const initialTodos: Todo[] = [
-  { text: '설거지', checked: false },
-  { text: '분리수거', checked: true },
-]
-
-const TodoListBox = () => {
-  const [todos, setTodos] = useState<Todo[]>(initialTodos)
+const TodoListBox = React.memo(({ todos, groupId, memberId }: TodoListBoxProps) => {
+  const [localTodos, setLocalTodos] = useState<TodoItem[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleToggle = (idx: number) => {
-    setTodos((prev) =>
-      prev.map((todo, i) => (i === idx ? { ...todo, checked: !todo.checked } : todo))
+  // checked 상태 초기화
+  useEffect(() => {
+    // category로 중복 제거
+    const seen = new Set<string>()
+    const filteredTodos = todos.filter((todo) => {
+      if (!todo.category) return true
+      if (seen.has(todo.category)) return false
+      seen.add(todo.category)
+      return true
+    })
+
+    setLocalTodos(
+      filteredTodos.map((todo) => ({
+        ...todo,
+        checked: todo.status === 'COMPLETED',
+      }))
     )
+  }, [todos])
+
+  // 할 일 업데이트
+  async function refetchTodos() {
+    if (groupId && memberId) {
+      const updated = await getAssignments({ groupId, memberId })
+      // 중복 category 제거
+      const seen = new Set<string>()
+      const filtered = updated.filter((todo) => {
+        if (!todo.category) return true
+        if (seen.has(todo.category)) return false
+        seen.add(todo.category)
+        return true
+      })
+
+      setLocalTodos(
+        filtered.map((todo) => ({
+          ...todo,
+          checked: todo.status === 'COMPLETED',
+        }))
+      )
+    }
+  }
+
+  // 체크박스 토글 처리
+  const handleToggle = async (index: number) => {
+    const todo = localTodos[index]
+    if (!todo.assignmentId) return
+
+    const newChecked = !todo.checked
+
+    setLocalTodos((prev) => prev.map((t, i) => (i === index ? { ...t, checked: newChecked } : t)))
+
+    try {
+      await updateAssignment(todo.assignmentId, {
+        status: newChecked ? 'COMPLETED' : 'PENDING',
+      })
+      await refetchTodos()
+    } catch (error) {
+      setLocalTodos((prev) =>
+        prev.map((t, i) => (i === index ? { ...t, checked: !newChecked } : t))
+      )
+      alert('업무 상태 업데이트에 실패했습니다.')
+    }
   }
 
   return (
@@ -30,33 +83,43 @@ const TodoListBox = () => {
             미이행 내역
           </button>
         </div>
-        <ul>
-          {todos.map((todo, idx) => (
-            <li
-              key={todo.text}
-              className={`flex items-center mb-2 last:mb-0 text-[16px] ${
-                todo.checked ? 'text-base-300 line-through' : 'text-base-content'
-              }`}
-              style={todo.checked ? { color: '#5C5C5C' } : undefined}
-            >
-              <input
-                type="checkbox"
-                className={`checkbox checkbox-sm mr-2 
-                  ${todo.checked ? 'bg-[#5C5C5C] border-[#5C5C5C]' : 'bg-white border-[#5C5C5C]'}
-                `}
-                checked={todo.checked}
-                onChange={() => handleToggle(idx)}
-                style={{ accentColor: todo.checked ? '#5C5C5C' : '#fff' }}
-              />
-              {todo.text}
-            </li>
-          ))}
-        </ul>
+        {localTodos.length === 0 ? (
+          <p className="text-left text-base-content text-[16px]">오늘 일정이 없어요</p>
+        ) : (
+          <ul>
+            {localTodos.map((todo, idx) => (
+              <li
+                key={`${todo.assignmentId ?? 'todo'}-${idx}`}
+                className={`flex items-center mb-2 last:mb-0 text-[16px] ${
+                  todo.checked ? 'text-base-300 line-through' : 'text-base-content'
+                }`}
+                style={todo.checked ? { color: '#5C5C5C' } : undefined}
+              >
+                <input
+                  type="checkbox"
+                  className={`checkbox checkbox-sm mr-2 ${
+                    todo.checked ? 'bg-[#5C5C5C] border-[#5C5C5C]' : 'bg-white border-[#5C5C5C]'
+                  }`}
+                  checked={todo.checked}
+                  onChange={() => handleToggle(idx)}
+                  style={{ accentColor: todo.checked ? '#5C5C5C' : '#fff' }}
+                />
+                {todo.category || '할 일'}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      {isModalOpen && <UncompletedTasksModal onClose={() => setIsModalOpen(false)} />}
+      {isModalOpen && (
+        <UncompletedTasksModal
+          onClose={() => setIsModalOpen(false)}
+          groupId={groupId}
+          memberId={memberId}
+        />
+      )}
     </>
   )
-}
+})
 
 export default TodoListBox

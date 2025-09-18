@@ -7,7 +7,7 @@ const GroupMemberList: React.FC<GroupMemberListProps> = ({ members }) => (
     <div>
       {Array.isArray(members) &&
         members.map((member, idx) => (
-          <GroupMemberItem key={idx} name={member.name} profileUrl={member.profileUrl} />
+          <GroupMemberItem key={idx} name={member.name} profileImageUrl={member.profileImageUrl} />
         ))}
     </div>
   </div>

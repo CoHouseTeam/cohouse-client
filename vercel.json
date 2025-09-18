@@ -1,11 +1,9 @@
 {
+  "functions": {
+    "api/proxy/[...path].js": { "maxDuration": 30 }
+  },
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite"
+    { "source": "/api/:path*", "destination": "/api/proxy/:path*" },
+    { "source": "/(.*)", "destination": "/" }
+  ]
 }

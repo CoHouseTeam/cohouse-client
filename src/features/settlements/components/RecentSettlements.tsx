@@ -1,17 +1,27 @@
 import { Link } from 'react-router-dom'
-import SettlementListItem from './SettlementListItem'
-import { useMySettlements } from '../../../libs/hooks/settlements/useMySettlements'
+import { useMySettlementHistory } from '../../../libs/hooks/settlements/useMySettlements'
 import LoadingSpinner from '../../common/LoadingSpinner'
 import ErrorCard from '../../common/ErrorCard'
+import SettlementItemWithDetail from './SettlementItemWithDetail'
 
-export default function RecentSettlements() {
-  const { data, isLoading, error } = useMySettlements()
+interface RecentSettlementsProps {
+  groupId: number
+  viewerId?: number
+}
+
+export default function RecentSettlements({ groupId, viewerId }: RecentSettlementsProps) {
+  const { data, isLoading, error } = useMySettlementHistory({
+    page: 0,
+    size: 20,
+    sort: 'createdAt,desc',
+  })
 
   if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorCard />
+  if (error) return <ErrorCard message="최근 정산 정보를 불러오는 중 오류가 발생했습니다." />
 
+  const list = Array.isArray(data?.content) ? data!.content : []
   // 완료된 정산
-  const completed = Array.isArray(data) ? data.filter((s) => s.status === 'COMPLETED') : []
+  const completed = list.filter((s) => s.status !== 'PENDING')
 
   // 최신순 정렬
   const sorted = completed.sort(
@@ -24,8 +34,8 @@ export default function RecentSettlements() {
   const isEmpty = completed.length === 0
 
   return (
-    <section className={`card ${isEmpty ? 'border-2 border-dashed bg-base-200 shadow-sm' : ''}`}>
-      <div className="flex items-baseline gap-1 text-center">
+    <section className={`card ${isEmpty ? 'shadow-sm' : ''}`}>
+      <div className="flex items-baseline gap-1 text-center mb-1">
         <h2 className="card-title">정산 내역</h2>
         <div className="flex flex-1 justify-between">
           <span className="text-[0.7rem] text-neutral-400">(최근 내역 2개)</span>
@@ -52,7 +62,12 @@ export default function RecentSettlements() {
         ) : (
           <>
             {recent2.map((s) => (
-              <SettlementListItem key={s.id} item={s} viewerId={1} />
+              <SettlementItemWithDetail
+                key={s.id}
+                initial={s}
+                groupId={groupId}
+                viewerId={viewerId}
+              />
             ))}
           </>
         )}

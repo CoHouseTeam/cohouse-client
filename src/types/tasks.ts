@@ -2,8 +2,9 @@ import React from 'react'
 import { KorDay } from '../libs/utils/dayMapping'
 
 export interface Member {
+  memberId?: number
   name: string
-  profileUrl: string
+  profileImageUrl: string
 }
 
 export interface GroupMemberListProps {
@@ -21,9 +22,10 @@ export interface Template {
 export interface ExchangeModalProps {
   open: boolean
   members: Member[]
-  selected: number | null
-  onSelect: (idx: number | null) => void
-  onRequest: () => void
+  selected: number[]
+  currentUserId: number
+  onSelect: (selected: number[]) => void
+  onRequest: (selected: number[]) => void
   onClose: () => void
 }
 
@@ -48,11 +50,15 @@ export interface DaySelectModalProps {
 //POST 요청으로 받는
 export interface AssignmentBody {
   groupId: number
-  groupMemberId?: number
+  groupMemberId?: number[]
   templateId: number
+  randomEnabled: boolean
+  fixedAssigneeId?: number
+  get_compatAssigneeId?: number
+  get_compatCandidateIds?: number[]
+  get_compatAssignType?: string
   date: string
   status?: string
-  dayOfWeek: string
   repeatType?: string
   updatedAt?: string
 }
@@ -68,6 +74,7 @@ export interface Assignment {
   repeatType?: string
   createdAt?: string
   updatedAt?: string
+  category: string
 }
 
 export interface RandomProps {
@@ -77,16 +84,69 @@ export interface RandomProps {
 
 export interface TaskTableProps {
   assignments: Assignment[]
+  groupMembers: GroupMember[]
+  isLeader: boolean
 }
 
 export interface TaskHistory {
   date: string
   task: string
-  status: '완료' | '미완료'
+  status: 'COMPLETED' | 'PENDING'
+  category: string
 }
 
 export interface HistoryModalProps {
   open: boolean
   onClose: () => void
-  items: TaskHistory[]
+}
+
+export interface GroupMember {
+  id: number
+  groupId: number
+  memberId: number
+  isLeader: boolean
+  nickname: string
+  profileImageUrl: string
+  status: string
+  joinedAt: string
+  leavedAt: string | null
+}
+
+export interface MyRoleResponse {
+  isLeader: boolean
+}
+
+// 교환 요청
+export interface OverrideRequestBody {
+  assignmentId: number
+  targetId: number
+  targetIds: number[]
+  requesterId: number
+  swapAssignmentId: number
+}
+
+// 세팅 모달
+export interface SettingModalProps {
+  onSelectDay: () => void
+  onDeleteTemplate: () => void
+  onClose: () => void
+  positionClass?: string
+}
+
+// 미이행 모달
+export interface UncompletedAssignment {
+  assignmentId: number
+  groupMemberId: number
+  templateId: number
+  date: string
+  status: string
+  createdAt: string
+  repeatType: string
+  category: string
+}
+
+export interface UncompletedMember {
+  memberId: number
+  nickname: string
+  profileImageUrl: string
 }

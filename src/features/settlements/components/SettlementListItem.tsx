@@ -13,63 +13,88 @@ import {
 } from '../../../libs/hooks/settlements/useSettlementMutations'
 import { fromCategory } from '../../../libs/utils/categoryMapping'
 import SettlementCreateModal from './SettlementCreateModal'
+import ConfirmModal from '../../common/ConfirmModal'
+import axios from 'axios'
+import { DEFAULT_PROFILE_URL } from '../../../libs/utils/profile-image'
+import useOnClickOutside from '../../../libs/hooks/useOnClickOutside'
 
 type SettlementListItemProps = {
   item: Settlement
-  viewerId: number
+  groupId: number
+  viewerId?: number
 }
 
-export default function SettlementListItem({ item, viewerId }: SettlementListItemProps) {
+export default function SettlementListItem({ item, groupId, viewerId }: SettlementListItemProps) {
   if (!item) return null
 
   const [cardOpen, SetCardOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [payModalOpen, setPayModalOpen] = useState(false)
 
   const menuRef = useRef<HTMLDivElement | null>(null)
   const menuBtnRef = useRef<HTMLButtonElement | null>(null)
 
-  useEffect(() => {
-    if (!menuOpen) return
-    const handleDown = (e: MouseEvent) => {
-      const target = e.target as Node
-      const menuEl = menuRef.current
-      const btnEl = menuBtnRef.current
-
-      if (menuEl && !menuEl.contains(target) && btnEl && !btnEl.contains(target)) {
-        setMenuOpen(false)
-      }
+  useOnClickOutside(menuRef, (e) => {
+    if (e instanceof MouseEvent || e instanceof TouchEvent) {
+      if (menuBtnRef.current?.contains(e.target as Node)) return
     }
-
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false)
-    }
-
-    document.addEventListener('mousedown', handleDown)
-    document.addEventListener('keydown', handleEsc)
-
-    return () => {
-      document.removeEventListener('mousedown', handleDown)
-      document.removeEventListener('keydown', handleEsc)
-    }
-  }, [menuOpen])
+    if (menuOpen) setMenuOpen(false)
+  })
 
   const payMut = usePaySettlement()
   const cancelMut = useCancelSettlement()
 
   const settlement = item
-  const isPayer = settlement.payerId === viewerId
-  const me = settlement.participants.find((p) => p.memberId === viewerId)
+  const isPayer = viewerId != null && settlement.payerId === viewerId
+  const me =
+    viewerId != null ? settlement.participants.find((p) => p.memberId === viewerId) : undefined
   const myDue = me?.shareAmount ?? 0
   const isMyPaymentDone = me?.status === 'PAID'
   const isPendingSettlement = settlement.status === 'PENDING'
 
+  useEffect(() => {
+    console.log(
+      'viewerId=',
+      viewerId,
+      'payerId=',
+      settlement.payerId,
+      'participants=',
+      settlement.participants.map((p) => ({
+        id: p.memberId,
+        name: p.memberName,
+        share: p.shareAmount,
+        status: p.status,
+      }))
+    )
+  }, [viewerId, settlement])
+
   const handlePayClick = () => {
+    console.log({
+      id: settlement.id,
+      isPayer,
+      isPendingSettlement,
+      isMyPaymentDone,
+      payerId: settlement.payerId,
+      viewerId,
+    })
+
     if (isPayer) return
     if (!isPendingSettlement) return
     if (isMyPaymentDone) return
     if (payMut.isPending) return
-    payMut.mutate(settlement.id)
+    setPayModalOpen(true)
+  }
+  const handlePayConfirm = async () => {
+    try {
+      await payMut.mutateAsync(settlement.id)
+      setPayModalOpen(false)
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        console.error('payment 500', e.response?.data)
+        alert(`송금 실패 (HTTP ${e.response?.status})`)
+      }
+    }
   }
 
   const handleCancelClick = () => {
@@ -96,7 +121,7 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
     <>
       <div
         className={`flex flex-col border-2 border-gray-100 bg-base-100 rounded-lg pl-4 pr-1 py-3 shadow-md
-                          overflow-hidden transition-[max-height] duration-500 ease-in-out 
+                          overflow-hidden transition-[max-height] duration-500 ease-in-out mb-2
                           ${cardOpen ? 'max-h-screen' : isPayer ? 'max-h-40' : 'max-h-44'}`}
       >
         {/* 요약 카드 */}
@@ -126,7 +151,7 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
               >
                 정산 상세
               </button>
-              {isPendingSettlement && (
+              {isPendingSettlement && isPayer && (
                 <>
                   <div className="border-t w-full"></div>
                   <button
@@ -192,8 +217,18 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
                     : { text: '송금 대기', bg: '#E6A65D' }
 
                 return (
-                  <div key={p.id} className="flex pl-1 gap-2 justify-center items-center">
-                    <img src={settlementIcon} alt="프로필 사진" className="w-9 h-9" />
+                  <div key={p.memberId} className="flex pl-1 gap-2 justify-center items-center">
+                    <img
+                      src={DEFAULT_PROFILE_URL}
+                      onError={(e) => {
+                        // 혹시 기본 URL도 실패하면 로컬 아이콘으로 최후 폴백
+                        if (e.currentTarget.src !== settlementIcon) {
+                          e.currentTarget.src = settlementIcon
+                        }
+                      }}
+                      alt="프로필 사진"
+                      className="w-9 h-9 rounded-full object-cover"
+                    />
                     <div className="flex flex-col flex-1 justify-center text-sm">
                       <span>{p.memberName}</span>
                       <span>{formatPriceKRW(p.shareAmount)}</span>
@@ -225,9 +260,19 @@ export default function SettlementListItem({ item, viewerId }: SettlementListIte
           onClose={() => setDetailOpen(false)}
           mode="detail"
           detailId={settlement.id}
-          groupId={1}
+          groupId={groupId}
         />
       )}
+
+      <ConfirmModal
+        open={payModalOpen}
+        title="송금 처리"
+        message="송금하시겠습니까?"
+        confirmText="확인"
+        cancelText="취소"
+        onConfirm={handlePayConfirm}
+        onCancel={() => setPayModalOpen(false)}
+      />
     </>
   )
 }
