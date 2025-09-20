@@ -2,7 +2,13 @@
 export type SettlementStatus = 'PENDING' | 'COMPLETED' | 'CANCELED'
 
 // 송금 상태
-export type TransferStatus = 'PENDING' | 'PAID' | 'REFUNDED' | 'FAILED' | 'CANCELED'
+export type TransferStatus =
+  | 'PENDING'
+  | 'PAID'
+  | 'REFUNDED'
+  | 'REFUND_FAILED'
+  | 'FAILED'
+  | 'CANCELED'
 
 // 정산 카테고리
 export type SettlementCategory = 'FOOD' | 'DAILY_SUPPLIES' | 'CULTURE' | 'ETC'

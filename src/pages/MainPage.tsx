@@ -3,15 +3,20 @@ import CalendarBox from '../features/mainpage/components/CalendarBox'
 import CalendarDateDetails from '../features/mainpage/components/CalendarDateDetail'
 import TodoListBox from '../features/mainpage/components/TodoListBox'
 import GroupBox from '../features/mainpage/components/GroupBox'
-import { useAnnouncementStore, useCalendarStore } from '../app/tasksStore'
-import { useTaskStore } from '../app/tasksStore'
-import { useGroupStore } from '../app/store'
+import {
+  useAnnouncementStore,
+  useCalendarStore,
+  useSettlementStore,
+  useTaskStore,
+} from '../app/tasksStore'
+
 import { useUserProfile } from '../libs/hooks/mainpage/useUserProfile'
 import { useGroupData } from '../libs/hooks/mainpage/useGroupData'
 import { formatDateKey } from '../libs/utils/dateKey'
 import LoadingSpinner from '../features/common/LoadingSpinner'
-import { getAssignments } from '../libs/api/tasks'
-import { announcementsSummary } from '../libs/api'
+import { announcementsSummary, fetchMySimple } from '../libs/api'
+import { MemberAssignmentsHistories } from '../libs/api/tasks'
+import { useGroupStore } from '../app/store'
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
@@ -19,6 +24,7 @@ const MainPage = () => {
   const { loadingGroup, errorGroup, hasGroups, groupId } = useGroupData(userAuthenticated)
   const myMemberId = useGroupStore((state) => state.myMemberId)
 
+  // Task Store
   const assignments = useTaskStore((state) => state.assignments)
   const setAssignments = useTaskStore((state) => state.setAssignments)
   const loadingAssignments = useTaskStore((state) => state.loadingAssignments)
@@ -28,14 +34,24 @@ const MainPage = () => {
   const myAssignments = useTaskStore((state) => state.myAssignments)
   const setMyAssignments = useTaskStore((state) => state.setMyAssignments)
 
-  const setAnnouncements = useAnnouncementStore((state) => state.setAnnouncements)
-  const setLoadingAnnouncements = useAnnouncementStore((state) => state.setLoadingAnnouncements)
-  const setErrorAnnouncements = useAnnouncementStore((state) => state.setErrorAnnouncements)
+  // Announcement Store
   const announcements = useAnnouncementStore((state) => state.announcements)
-  const announcementDates = announcements.map((a) => a.date)
+  const setAnnouncements = useAnnouncementStore((state) => state.setAnnouncements)
+  const loadingAnnouncements = useAnnouncementStore((state) => state.loadingAnnouncements)
+  const setLoadingAnnouncements = useAnnouncementStore((state) => state.setLoadingAnnouncements)
+  const errorAnnouncements = useAnnouncementStore((state) => state.errorAnnouncements)
+  const setErrorAnnouncements = useAnnouncementStore((state) => state.setErrorAnnouncements)
 
-  const dateKey = useMemo(() => formatDateKey(selectedDate), [selectedDate])
+  // Settlement Store
+  const simpleSettlements = useSettlementStore((state) => state.simpleSettlements)
+  const setSimpleSettlements = useSettlementStore((state) => state.setSimpleSettlements)
+  const loadingSettlements = useSettlementStore((state) => state.loadingSettlements)
+  const setLoadingSettlements = useSettlementStore((state) => state.setLoadingSettlements)
+  const errorSettlements = useSettlementStore((state) => state.errorSettlements)
+  const setErrorSettlements = useSettlementStore((state) => state.setErrorSettlements)
+
   const todayKey = useMemo(() => formatDateKey(new Date()), [])
+  const selectedDateKey = useMemo(() => formatDateKey(selectedDate), [selectedDate])
 
   const isAssignedToUser = (assignment: (typeof assignments)[number], memberId: number | null) => {
     if (!memberId) return false
@@ -45,22 +61,26 @@ const MainPage = () => {
     return assignment.groupMemberId === memberId
   }
 
+  // 할당된 날짜 리스트
   const assignmentDates = useMemo(() => {
-    return Array.from(
-      new Set(
-        assignments
-          .filter((a) => isAssignedToUser(a, myMemberId))
-          .map((a) => (a.date ? formatDateKey(new Date(a.date)) : ''))
-          .filter(Boolean)
-      )
-    )
-  }, [assignments, myMemberId])
+    const dates = assignments
+      .map((a) => (a.date ? formatDateKey(new Date(a.date)) : ''))
+      .filter(Boolean)
+    return Array.from(new Set(dates))
+  }, [assignments])
 
+  // 공지 날짜 배열
+  const announcementDates = useMemo(() => {
+    return announcements.map((a) => a.date)
+  }, [announcements])
+
+  // 선택한 날짜 공지 제목 리스트
   const announcementSelectedDate = useMemo(() => {
     if (!announcements || announcements.length === 0) return []
-    return announcements.filter((a) => a.date === formatDateKey(selectedDate)).map((a) => a.title)
-  }, [announcements, selectedDate])
+    return announcements.filter((a) => a.date === selectedDateKey).map((a) => a.title)
+  }, [announcements, selectedDateKey])
 
+  // 오늘 날짜 내 할당 업무
   const todayAssignments = useMemo(
     () =>
       assignments
@@ -78,9 +98,24 @@ const MainPage = () => {
     [assignments, myMemberId, todayKey]
   )
 
+  // 선택 날짜 정산 제목 리스트 및 날짜 목록
+  const settlementDates = useMemo(
+    () => simpleSettlements.map((s) => formatDateKey(new Date(s.createdAt))),
+    [simpleSettlements]
+  )
+
+  const selectedDaySettlementTitles = useMemo(
+    () =>
+      simpleSettlements
+        .filter((s) => formatDateKey(new Date(s.createdAt)) === selectedDateKey)
+        .map((s) => s.title),
+    [simpleSettlements, selectedDateKey]
+  )
+
+  // 업무 내역 조회
   useEffect(() => {
     async function loadAssignments() {
-      if (!groupId) {
+      if (!groupId || !myMemberId) {
         setAssignments([])
         setMyAssignments([])
         setLoadingAssignments(false)
@@ -91,22 +126,19 @@ const MainPage = () => {
       setErrorAssignments('')
 
       try {
-        const data = await getAssignments({ groupId })
+        const data = await MemberAssignmentsHistories({ groupId, memberId: myMemberId })
         const assignmentList = Array.isArray(data) ? data : []
         setAssignments(assignmentList)
 
-        // 오늘 날짜 할 일 카테고리만 추출해서 저장
-        if (myMemberId) {
-          const filteredCategories = assignmentList
-            .filter((a) => {
-              if (!a.date) return false
-              return isAssignedToUser(a, myMemberId) && formatDateKey(new Date(a.date)) === dateKey
-            })
-            .map((a) => a.category || '할 일')
-          setMyAssignments(filteredCategories)
-        } else {
-          setMyAssignments([])
-        }
+        const filteredCategories = assignmentList
+          .filter((a) => {
+            if (!a.date) return false
+            return (
+              isAssignedToUser(a, myMemberId) && formatDateKey(new Date(a.date)) === selectedDateKey
+            )
+          })
+          .map((a) => a.category || '할 일')
+        setMyAssignments(filteredCategories)
       } catch {
         setAssignments([])
         setMyAssignments([])
@@ -116,7 +148,7 @@ const MainPage = () => {
       }
     }
 
-    if (userAuthenticated && groupId) {
+    if (userAuthenticated && groupId && myMemberId) {
       loadAssignments()
     } else {
       setAssignments([])
@@ -124,17 +156,9 @@ const MainPage = () => {
       setLoadingAssignments(false)
       setErrorAssignments('')
     }
-  }, [
-    userAuthenticated,
-    groupId,
-    myMemberId,
-    dateKey,
-    setAssignments,
-    setErrorAssignments,
-    setLoadingAssignments,
-    setMyAssignments,
-  ])
+  }, [userAuthenticated, groupId, myMemberId, selectedDateKey]) // selectedDateKey로 변경
 
+  // 공지사항 호출
   useEffect(() => {
     if (!groupId) return
     setLoadingAnnouncements(true)
@@ -148,11 +172,26 @@ const MainPage = () => {
       .finally(() => setLoadingAnnouncements(false))
   }, [groupId])
 
+  // 정산 내역 호출
+  useEffect(() => {
+    if (!userAuthenticated || !groupId || !myMemberId || !selectedDate) {
+      setSimpleSettlements([])
+      setLoadingSettlements(false)
+      setErrorSettlements('')
+      return
+    }
+    setLoadingSettlements(true)
+    setErrorSettlements('')
+
+    fetchMySimple()
+      .then((data) => setSimpleSettlements(Array.isArray(data) ? data : []))
+      .catch(() => setErrorSettlements('정산 히스토리 조회 실패'))
+      .finally(() => setLoadingSettlements(false))
+  }, [userAuthenticated, groupId, myMemberId, selectedDate])
+
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-blue-800 mb-2">
-        반가워요, {userName || '사용자'}님!
-      </h3>
+      <h3 className="text-lg font-semibold text-#242424">반가워요, {userName || '사용자'}님!</h3>
 
       {loadingGroup && <LoadingSpinner />}
       {errorGroup && <div className="text-red-600">{errorGroup}</div>}
@@ -166,6 +205,12 @@ const MainPage = () => {
               {loadingAssignments && <LoadingSpinner />}
               {errorAssignments && <div className="text-red-600">{errorAssignments}</div>}
 
+              {loadingAnnouncements && <LoadingSpinner />}
+              {errorAnnouncements && <div className="text-red-600">{errorAnnouncements}</div>}
+
+              {loadingSettlements && <LoadingSpinner />}
+              {errorSettlements && <div className="text-red-600">{errorSettlements}</div>}
+
               {!loadingAssignments && !errorAssignments && (
                 <TodoListBox todos={todayAssignments} groupId={groupId} memberId={myMemberId} />
               )}
@@ -175,10 +220,15 @@ const MainPage = () => {
                 value={selectedDate}
                 scheduledDates={assignmentDates}
                 announcementDates={announcementDates}
+                settlementDates={settlementDates}
               />
               <CalendarDateDetails
                 selectedDate={selectedDate}
-                events={[...myAssignments, ...announcementSelectedDate]}
+                events={[
+                  ...myAssignments,
+                  ...announcementSelectedDate,
+                  ...selectedDaySettlementTitles,
+                ]}
               />
             </>
           )}

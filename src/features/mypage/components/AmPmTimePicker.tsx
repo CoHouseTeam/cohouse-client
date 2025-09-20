@@ -1,12 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ScrollDropDown from './ScrollDropdown'
+import { from24h, to24h, type Meridiem } from '../../../libs/utils/time'
 
-export default function AmPmTimePicker() {
-  const [ampm, setAmpm] = useState<'AM' | 'PM'>('AM')
-  const [hour, setHour] = useState<number>(8)
-  const [minute, setMinute] = useState<number>(0)
+type Props = {
+  /** 0~23 */
+  hour: number
+  /** 0~59 */
+  minute: number
+  /** 사용자 변경 시에만 24시간 기준으로 콜백 */
+  onChange: (time: { hour: number; minute: number }) => void
+}
 
-  // 각 드롭다운 열림 상태
+export default function AmPmTimePicker(props: Props) {
+  // 표시용 내부 상태(12시간제) — 초기값을 props로 세팅해 깜빡임 방지
+  const init = from24h(props.hour, props.minute)
+  const [ampm, setAmpm] = useState<Meridiem>(init.meridiem)
+  const [hh12, setHh12] = useState<number>(init.hour12) // 1~12
+  const [mm, setMm] = useState<number>(props.minute) // 0~59
+
+  // 드롭다운 열림 상태
   const [showAmpm, setShowAmpm] = useState(false)
   const [showHour, setShowHour] = useState(false)
   const [showMinute, setShowMinute] = useState(false)
@@ -15,6 +27,15 @@ export default function AmPmTimePicker() {
   const hourRef = useRef<HTMLDivElement>(null)
   const minuteRef = useRef<HTMLDivElement>(null)
 
+  // 부모 값 변경 시(모달 재오픈/프로필 리패치 등) 내부 표시용 상태 동기화
+  useEffect(() => {
+    const next = from24h(props.hour, props.minute)
+    setAmpm((prev) => (prev === next.meridiem ? prev : next.meridiem))
+    setHh12((prev) => (prev === next.hour12 ? prev : next.hour12))
+    setMm((prev) => (prev === props.minute ? prev : props.minute))
+  }, [props.hour, props.minute])
+
+  // 외부 클릭/ESC → 드롭다운 닫기
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -30,7 +51,6 @@ export default function AmPmTimePicker() {
         setShowMinute(false)
       }
     }
-
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowAmpm(false)
@@ -38,7 +58,6 @@ export default function AmPmTimePicker() {
         setShowMinute(false)
       }
     }
-
     document.addEventListener('click', handleClickOutside)
     document.addEventListener('keydown', handleEsc)
     return () => {
@@ -83,10 +102,16 @@ export default function AmPmTimePicker() {
             }}
             items={ampmItems}
             value={ampm}
-            onChange={(v) => setAmpm(v as 'AM' | 'PM')}
+            onChange={(v) => {
+              const nextAmpm = v as Meridiem
+              setAmpm(nextAmpm)
+              const { hour, minute } = to24h(hh12, mm, nextAmpm)
+              props.onChange({ hour, minute }) // 사용자 조작 시에만 부모 알림(24h)
+            }}
           />
         </div>
-        {/* 시 선택 */}
+
+        {/* 시 선택 (1~12) */}
         <div className="flex justify-center items-end gap-1" ref={hourRef}>
           <ScrollDropDown
             open={showHour}
@@ -98,12 +123,18 @@ export default function AmPmTimePicker() {
               }
             }}
             items={hourItems}
-            value={hour}
-            onChange={(v) => setHour(v as number)}
+            value={hh12}
+            onChange={(v) => {
+              const nextH = v as number
+              setHh12(nextH)
+              const { hour, minute } = to24h(nextH, mm, ampm)
+              props.onChange({ hour, minute }) // 사용자 조작 시에만 부모 알림(24h)
+            }}
           />
           <span className="text-xs mb-1">시</span>
         </div>
-        {/* 분 선택 */}
+
+        {/* 분 선택 (00~59) */}
         <div className="flex justify-center items-end gap-1" ref={minuteRef}>
           <ScrollDropDown
             open={showMinute}
@@ -115,8 +146,13 @@ export default function AmPmTimePicker() {
               }
             }}
             items={minuteItems}
-            value={minute}
-            onChange={(v) => setMinute(v as number)}
+            value={mm}
+            onChange={(v) => {
+              const nextM = v as number
+              setMm(nextM)
+              const { hour, minute } = to24h(hh12, nextM, ampm)
+              props.onChange({ hour, minute }) // 사용자 조작 시에만 부모 알림(24h)
+            }}
           />
           <span className="text-xs mb-1">분</span>
         </div>

@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react'
 import { CaretDownFill, XCircleFill } from 'react-bootstrap-icons'
 import { HistoryModalProps, TaskHistory } from '../../../types/tasks'
 import { MemberAssignmentsHistories } from '../../../libs/api/tasks'
+import LoadingSpinner from '../../common/LoadingSpinner'
+import { formatYYYYMMDDLocal } from '../../../libs/utils/date-local'
 
 const filterOptions = [
   { label: '전체보기', value: 'all' },
@@ -26,18 +28,25 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!open) return // 모달이 열릴 때만 요청
+    if (!open) return
     setLoading(true)
     setError(null)
     MemberAssignmentsHistories({ groupId, memberId })
-      .then((data) => setItems(Array.isArray(data) ? data : []))
+      .then((data) => {
+        if (!Array.isArray(data)) return setItems([])
+
+        const seen = new Set<string>()
+        const filtered = data.filter((item) => {
+          const key = `${item.date}-${item.category}`
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+        setItems(filtered)
+      })
       .catch(() => setError('내 업무 내역을 불러오지 못했습니다.'))
       .finally(() => setLoading(false))
   }, [open, groupId, memberId])
-
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [filter, items])
 
   function getStatusLabel(status: string) {
     if (status === 'COMPLETED') return '완료'
@@ -47,8 +56,10 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
 
   if (!open) return null
 
-  // 필터에 따라 아이템 필터링
-  const filteredItems =
+  const today = formatYYYYMMDDLocal(new Date())
+
+  // 필터에 따라 아이템 필터링 (오늘 이후 내역 제외)
+  const filteredItems = (
     filter === 'all'
       ? items
       : items.filter(
@@ -56,6 +67,10 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
             (filter === '완료' && i.status === 'COMPLETED') ||
             (filter === '미완료' && i.status === 'PENDING')
         )
+  ).filter((item) => {
+    const date = item.date.slice(0, 10)
+    return date <= today
+  })
 
   // 페이지 계산 및 현재 페이지에 해당하는 아이템 추출
   const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE)
@@ -71,11 +86,10 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
   return (
     <dialog open className="modal">
       <div className="modal-box max-w-lg h-[90vh] px-4 py-7 overflow-y-auto flex flex-col">
-        {loading && <div>로딩 중...</div>}
+        {loading && <LoadingSpinner />}
         {error && <div className="text-red-500">{error}</div>}
         {!loading && !error && (
           <>
-            {/* 닫기 버튼 */}
             <button
               className="btn btn-xs btn-circle btn-ghost absolute right-4 top-4"
               onClick={onClose}
@@ -147,7 +161,7 @@ const HistoryModal: React.FC<HistoryModalProps & { groupId: number; memberId: nu
                 "
                   >
                     <div className="font-bold mr-1.5 min-w-[100px]">{item.date}</div>
-                    <div className="flex-1 text-md">{item.task}</div>
+                    <div className="flex-1 text-md">{item.category}</div>
                     <span
                       className={`
     badge h-9 w-20

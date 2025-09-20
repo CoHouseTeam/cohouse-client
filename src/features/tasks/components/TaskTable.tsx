@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import DaySelectModal from './DaySelectModal'
-import { ChevronRight, PlusCircleFill } from 'react-bootstrap-icons'
+import { GearFill, PlusCircleFill } from 'react-bootstrap-icons'
 import { Assignment, GroupMember, TaskTableProps, Template } from '../../../types/tasks'
 import { daysKr, toEngDay } from '../../../libs/utils/dayMapping'
 import {
@@ -10,25 +10,22 @@ import {
   deleteTaskTemplate,
 } from '../../../libs/api/tasks'
 import { fetchMyGroups } from '../../../libs/api/groups'
+import SettingModal from './SettingModal'
 
 const days = ['일', '월', '화', '수', '목', '금', '토']
 
-//테스트 위해 임시 프로필 사진
-function getMemberAvatar(
-  groupMemberId: number | number[],
-  groupMembers: GroupMember[],
-  defaultImage: string = '/src/assets/icons/defaultImage.svg'
-) {
+function getMemberAvatar(groupMemberId: number | number[], groupMembers: GroupMember[]) {
   const memberId = Array.isArray(groupMemberId) ? groupMemberId[0] : groupMemberId
   const member = groupMembers.find((m) => m.memberId === memberId)
-  return member?.profileImageUrl || defaultImage
+  return member?.profileImageUrl
 }
 
-const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
-  const [openModal, setOpenModal] = useState<number | null>(null)
+const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers, isLeader }) => {
   const [templates, setTemplates] = useState<Template[]>([])
   const [editValues, setEditValues] = useState<Record<number, string>>({})
   const [groupId, setGroupId] = useState<number | null>(null)
+  const [openSetting, setOpenSetting] = useState<number | null>(null)
+  const [openDayModal, setOpenDayModal] = useState<number | null>(null)
 
   // 그룹 ID 불러오기
   useEffect(() => {
@@ -78,7 +75,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
             groupId,
             category: edited,
             repeatDays: [],
-            randomEnabled: false,
+            randomEnabled: true,
           })
           setTemplates((prev) => prev.map((t) => (t.templateId === templateId ? newTemplate : t)))
         } else {
@@ -105,7 +102,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
         groupId,
         category: '',
         repeatDays: [],
-        randomEnabled: false,
+        randomEnabled: true,
       })
       setTemplates((prev) => [...prev, newTemplate])
     } catch (error) {
@@ -113,13 +110,9 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
     }
   }
 
-  const toggleModal = (rowIdx: number) => {
-    setOpenModal((prev) => (prev === rowIdx ? null : rowIdx))
-  }
-
   const findAssignmentForCell = (templateId: number, dayIdx: number): Assignment | undefined => {
-    const korDay = daysKr[dayIdx] // '일', '월', ...
-    const engDay = toEngDay(korDay) // 'SUNDAY', 'MONDAY', ...
+    const korDay = daysKr[dayIdx]
+    const engDay = toEngDay(korDay)
 
     return assignments.find((a) => {
       if (!a.date) return false
@@ -199,22 +192,32 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
                     }}
                   />
                   <div className="relative flex items-center">
-                    <button
-                      type="button"
-                      className="bbt text-gray-400 focus:text-black z-20 -ml-3"
-                      onClick={() => toggleModal(rowIdx)}
-                    >
-                      <ChevronRight
-                        size={16}
-                        className={openModal === rowIdx ? 'scale-x-[-1] transition-transform' : ''}
-                        style={openModal === rowIdx ? { transform: 'scaleX(-1)' } : undefined}
+                    {isLeader && (
+                      <button
+                        type="button"
+                        className="bbt text-gray-400 focus:text-black z-20 -ml-3"
+                        onClick={() => setOpenSetting(rowIdx)}
+                      >
+                        <GearFill size={14} />
+                      </button>
+                    )}
+                    {/* Setting Modal */}
+                    {openSetting === rowIdx && (
+                      <SettingModal
+                        onSelectDay={() => {
+                          setOpenDayModal(rowIdx)
+                        }}
+                        onDeleteTemplate={() => handleDeleteTemplate(template.templateId)}
+                        onClose={() => setOpenSetting(null)}
+                        positionClass="left-full -top-3 ml-1"
                       />
-                    </button>
-                    {openModal === rowIdx && (
+                    )}
+                    {/* DaySelectModal */}
+                    {openDayModal === rowIdx && (
                       <DaySelectModal
                         days={daysKr}
                         templateId={template.templateId}
-                        onClose={() => setOpenModal(null)}
+                        onClose={() => setOpenDayModal(null)}
                         positionClass="left-full -top-3 ml-1"
                       />
                     )}
@@ -246,37 +249,24 @@ const TaskTable: React.FC<TaskTableProps> = ({ assignments, groupMembers }) => {
                 })}
               </tr>
             ))}
-          <tr>
-            <td colSpan={days.length + 1} className="bg-white border-t border-gray-300 p-0">
-              <div className="flex justify-center items-center py-2.5">
-                <button
-                  type="button"
-                  onClick={handleAddTask}
-                  className="bg-transparent border-none p-0 m-0"
-                  style={{ cursor: 'pointer', lineHeight: 1 }}
-                >
-                  <PlusCircleFill size={18} color="gray" />
-                </button>
-              </div>
-            </td>
-          </tr>
+          {isLeader && (
+            <tr>
+              <td colSpan={days.length + 1} className="bg-white border-t border-gray-300 p-0">
+                <div className="flex justify-center items-center py-2.5">
+                  <button
+                    type="button"
+                    onClick={handleAddTask}
+                    className="bg-transparent border-none p-0 m-0"
+                    style={{ cursor: 'pointer', lineHeight: 1 }}
+                  >
+                    <PlusCircleFill size={18} color="gray" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
-      {templates.map((template, idx) => (
-        <button
-          key={template.templateId}
-          type="button"
-          onClick={() => handleDeleteTemplate(template.templateId)}
-          aria-label="템플릿 삭제"
-          title="템플릿 삭제"
-          className={`absolute -right-2 text-red-500 cursor-pointer border-none bg-transparent p-0 select-none z-10 leading-none text-lg`}
-          style={{
-            top: `${45 + idx * 40}px`,
-          }}
-        >
-          ×
-        </button>
-      ))}
     </div>
   )
 }
