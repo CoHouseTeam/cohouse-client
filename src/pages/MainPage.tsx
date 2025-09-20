@@ -213,15 +213,6 @@ const MainPage = () => {
           <>
             {!hasGroups ? (
               <div className="space-y-6">
-                {/* 웰컴 섹션 */}
-                <div className="text-center py-8 sm:py-12">
-                  <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-4">
-                    CoHouse에 오신 것을 환영합니다
-                  </h1>
-                  <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-                    함께 생활하는 동료들과 소통하고, 업무를 체계적으로 관리해보세요
-                  </p>
-                </div>
 
                 {/* 그룹 참여 섹션 */}
                 <div className="w-full">
