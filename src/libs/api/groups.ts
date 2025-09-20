@@ -139,13 +139,17 @@ export async function updateMyGroupMemberInfo(groupId: number, memberData: {
     console.error('❌ 그룹 멤버 정보 수정 실패:', error)
     throw error
   }
-// 현재 사용자의 그룹 멤버 정보 조회 (memberId 포함)
-export async function getMyGroupMemberInfo(groupId: number) {
-  // getMyGroupMemberInfo 호출
+}
 
-  const response = await api.put(GROUP_ENDPOINTS.UPDATE_MY_INFO(groupId), {})
-  // 내 그룹 멤버 정보 조회 성공
-  return response.data
+// 내 그룹 멤버 정보 조회
+export async function getMyGroupMemberInfo(groupId: number) {
+  try {
+    const response = await api.get(GROUP_ENDPOINTS.UPDATE_MY_INFO(groupId))
+    return response.data
+  } catch (error) {
+    console.error('❌ 내 그룹 멤버 정보 조회 실패:', error)
+    throw error
+  }
 }
 
 // 그룹 탈퇴 요청
@@ -170,15 +174,4 @@ export async function requestGroupLeave(
   })
 
   return data
-}
-
-// 내 그룹 멤버 정보 조회
-export async function getMyGroupMemberInfo(groupId: number) {
-  try {
-    const response = await api.get(GROUP_ENDPOINTS.UPDATE_MY_INFO(groupId))
-    return response.data
-  } catch (error) {
-    console.error('❌ 내 그룹 멤버 정보 조회 실패:', error)
-    throw error
-  }
 }

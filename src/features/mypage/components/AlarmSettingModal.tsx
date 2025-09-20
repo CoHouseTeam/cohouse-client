@@ -45,8 +45,8 @@ export default function AlarmSettingModal({ onClose }: OnCloseProps) {
         setMinute((prev) => (prev === (parsed?.minute ?? 0) ? prev : (parsed?.minute ?? 0)))
       } else {
         // 레거시 객체 형태도 방어적으로 지원
-        const h = (me.alertTime as any)?.hour ?? 9
-        const m = (me.alertTime as any)?.minute ?? 0
+        const h = (me.alertTime as { hour?: number })?.hour ?? 9
+        const m = (me.alertTime as { minute?: number })?.minute ?? 0
         setHour((prev) => (prev === h ? prev : h))
         setMinute((prev) => (prev === m ? prev : m))
       }
