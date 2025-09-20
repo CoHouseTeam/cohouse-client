@@ -8,6 +8,7 @@ import { getCurrentGroupId, fetchGroupMembers, updateMyGroupMemberInfo } from '.
 import { getCurrentMemberId, getCurrentUser, getAccessToken } from '../libs/utils/auth'
 import { useAuth } from '../libs/hooks/useAuth'
 import { getProfile } from '../libs/api/profile'
+import { safeArray } from '../libs/utils/safeArray'
 import type { BoardPost, BoardPostDetail, PageResponse, BoardColor, PostLikeResponse } from '../types/main'
 
 type TabKey = 'FREE' | 'ANNOUNCEMENT'
@@ -119,7 +120,7 @@ export default function Board() {
       try {
         const groupInfo = await fetchGroupMembers(groupId)
         console.log('✅ 그룹 멤버 정보 설정 완료:', groupInfo)
-        console.log('✅ 그룹 멤버 상세 정보:', groupInfo.map((member: { id: number; memberId: number; nickname: string; isLeader: boolean }) => ({
+        console.log('✅ 그룹 멤버 상세 정보:', safeArray(groupInfo).map((member: any) => ({
           id: member.id,
           memberId: member.memberId,
           nickname: member.nickname,
@@ -129,7 +130,7 @@ export default function Board() {
         
         // 내 그룹 멤버 정보 찾기 (그룹 멤버 목록에서)
         if (currentMemberId) {
-          const myInfo = groupInfo.find((member: { memberId: number }) => member.memberId === currentMemberId)
+          const myInfo = safeArray(groupInfo).find((member: any) => member.memberId === currentMemberId) as any
           if (myInfo) {
             console.log('✅ 내 그룹 멤버 정보:', myInfo)
             setMyGroupMemberInfo(myInfo)
@@ -168,7 +169,7 @@ export default function Board() {
           setPageData(data)
           
           // 각 게시글의 좋아요 수 가져오기
-          const likeCountPromises = data.content.map(async (post) => {
+          const likeCountPromises = safeArray<BoardPost>(data.content).map(async (post) => {
             try {
               const likeCount = await fetchPostLikesCount(post.id)
               return { postId: post.id, count: likeCount.count }
@@ -199,7 +200,7 @@ export default function Board() {
   }, [activeTab, currentPage, size, groupId])
 
   // 게시글 목록 (API 데이터 사용)
-  const posts = useMemo(() => pageData?.content ?? [], [pageData])
+  const posts = useMemo(() => safeArray<BoardPost>(pageData?.content), [pageData])
 
   // memberId로 닉네임을 찾는 함수
   const getNicknameByMemberId = (memberId: number) => {
