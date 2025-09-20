@@ -17,6 +17,7 @@ import LoadingSpinner from '../features/common/LoadingSpinner'
 import { announcementsSummary, fetchMySimple } from '../libs/api'
 import { MemberAssignmentsHistories } from '../libs/api/tasks'
 import { useGroupStore } from '../app/store'
+import { safeArray } from '../libs/utils/safeArray'
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
@@ -76,20 +77,21 @@ const MainPage = () => {
 
   // 선택한 날짜 공지 제목 리스트
   const announcementSelectedDate = useMemo(() => {
-    if (!announcements || announcements.length === 0) return []
-    return announcements.filter((a) => a.date === selectedDateKey).map((a) => a.title)
+    const safeAnnouncements = safeArray(announcements) as any[]
+    if (safeAnnouncements.length === 0) return []
+    return safeAnnouncements.filter((a: any) => a.date === selectedDateKey).map((a: any) => a.title)
   }, [announcements, selectedDateKey])
 
   // 오늘 날짜 내 할당 업무
   const todayAssignments = useMemo(
     () =>
-      assignments
-        .filter((a) => {
+      (safeArray(assignments) as any[])
+        .filter((a: any) => {
           if (!a.date) return false
           const assignmentDate = formatDateKey(new Date(a.date))
           return isAssignedToUser(a, myMemberId) && assignmentDate === todayKey
         })
-        .map((a) => ({
+        .map((a: any) => ({
           assignmentId: a.assignmentId,
           category: a.category,
           checked: false,
@@ -106,9 +108,9 @@ const MainPage = () => {
 
   const selectedDaySettlementTitles = useMemo(
     () =>
-      simpleSettlements
-        .filter((s) => formatDateKey(new Date(s.createdAt)) === selectedDateKey)
-        .map((s) => s.title),
+      (safeArray(simpleSettlements) as any[])
+        .filter((s: any) => formatDateKey(new Date(s.createdAt)) === selectedDateKey)
+        .map((s: any) => s.title),
     [simpleSettlements, selectedDateKey]
   )
 

@@ -11,6 +11,7 @@ import type { SettlementListItem as SettlementListItemType } from '../types/sett
 import SettlementItemWithDetail from '../features/settlements/components/SettlementItemWithDetail'
 import Pagination from '../features/common/Pagination'
 import { useGroupStore } from '../app/store'
+import { safeArray } from '../libs/utils/safeArray'
 
 // 카테고리 라벨
 const CATEGORY_LIST = ['전체', '식비', '생활용품', '문화생활', '기타'] as const
@@ -141,7 +142,7 @@ export default function SettlementHistory() {
   // --------------------------------------------------------------------------------
   const sorted = useMemo(
     () =>
-      [...rawList]
+      safeArray(rawList)
         .filter((s) => s.status !== 'PENDING')
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [rawList]
@@ -154,7 +155,7 @@ export default function SettlementHistory() {
   // --------------------------------------------------------------------------------
   const filtered = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
-    return sorted.filter((s) => {
+    return safeArray(sorted).filter((s) => {
       const matchesSearch = (s.title ?? '').toLowerCase().includes(term)
       const matchesCategory =
         selectedCategory === '전체' || fromCategory(s.category) === selectedCategory

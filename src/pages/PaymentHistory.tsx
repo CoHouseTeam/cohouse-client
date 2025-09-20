@@ -10,6 +10,7 @@ import PaymentsListItem from '../features/payments/components/paymentsListItem'
 import { fetchMyPayments } from '../libs/api/payments'
 import { useMySettlements } from '../libs/hooks/settlements/useMySettlements'
 import { useMyPayments } from '../libs/hooks/payments/useMyPayments'
+import { safeArray } from '../libs/utils/safeArray'
 
 import type {
   PaymentHistoryItem,
@@ -159,7 +160,7 @@ export default function PaymentsHistory() {
   const filtered = useMemo(() => {
     const statuses = CAT_TO_STATUSES[selectedCategory]
     const term = searchTerm.trim().toLowerCase()
-    return sorted.filter((p) => {
+    return safeArray(sorted).filter((p) => {
       if (!statuses.includes(p.status)) return false
       if (!term) return true
       const title = (settlementMap.get(p.settlementId)?.title ?? '').toLowerCase()

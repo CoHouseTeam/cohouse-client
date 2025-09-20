@@ -8,6 +8,7 @@ import {
   useNotificationList,
   useNotifications,
 } from '../libs/hooks/useNotifications'
+import { safeArray } from '../libs/utils/safeArray'
 
 interface NotificationSidebarProps {
   isOpen: boolean
@@ -18,7 +19,8 @@ export default function NotificationSidebar({ isOpen, onClose }: NotificationSid
   const { isAuthenticated } = useAuth()
   const { updateUnreadCount } = useNotifications()
 
-  const { data: list = [], isLoading, refetch } = useNotificationList()
+  const { data: rawList = [], isLoading, refetch } = useNotificationList()
+  const list = safeArray(rawList) as any[]
   const { mutateAsync: markRead } = useMarkNotificationRead()
   const { mutateAsync: clearAll, isPending: deleting } = useDeleteAllNotifications()
 
