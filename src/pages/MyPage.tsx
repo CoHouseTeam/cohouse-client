@@ -73,11 +73,12 @@ export default function MyPage() {
       await withdrawUser()
       setShowWithdrawModal(false)
       setShowWithdrawSuccessModal(true)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('회원 탈퇴 실패:', error)
+      const axiosError = error && typeof error === 'object' && 'response' in error ? error as { response?: { data?: { message?: string }; status?: number } } : null
       const errorMessage =
-        error?.response?.data?.message ??
-        (error?.response?.status === 409
+        axiosError?.response?.data?.message ??
+        (axiosError?.response?.status === 409
           ? '서버에서 탈퇴를 거부했습니다. 관리자에게 문의해주세요.'
           : '회원 탈퇴에 실패했습니다. 다시 시도해주세요.')
       setInfoMsg(errorMessage)
@@ -106,17 +107,18 @@ export default function MyPage() {
       return
     }
     try {
-      const res = await requestLeave({ groupId, reason })
+      const res = await requestLeave({ groupId, reason }) as { status: string }
       if (res.status === 'PENDING') {
         setLeavePendingLocal(true)
       }
       setShowLeaveReasonModal(false)
       setInfoMsg('그룹장에게 탈퇴 요청이 전달되었습니다. 승인 후 반영됩니다.')
       setShowInfoModal(true)
-    } catch (e: any) {
+    } catch (e: unknown) {
       setShowLeaveReasonModal(false)
+      const axiosError = e && typeof e === 'object' && 'response' in e ? e as { response?: { data?: { message?: string } } } : null
       const msg =
-        e?.response?.data?.message ?? '그룹 탈퇴 요청에 실패했습니다. 잠시 후 다시 시도해주세요.'
+        axiosError?.response?.data?.message ?? '그룹 탈퇴 요청에 실패했습니다. 잠시 후 다시 시도해주세요.'
       setInfoMsg(msg)
       setShowInfoModal(true)
     }
