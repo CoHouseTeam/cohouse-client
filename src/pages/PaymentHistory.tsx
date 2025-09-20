@@ -17,19 +17,21 @@ import type {
   TransferStatus,
   PageParams,
 } from '../types/settlement'
+import { useGroupStore } from '../app/store'
 
 // UI 카테고리
-const CATEGORY_LIST = ['전체', '송금 완료', '송금 실패', '송금 취소'] as const
+const CATEGORY_LIST = ['전체', '송금 완료', '송금 대기', '송금 취소', '송금 실패'] as const
 type Category = (typeof CATEGORY_LIST)[number]
 
 type SettlementsData = Settlement[] | { content?: Settlement[] | null } | undefined | null
 
 // 카테고리 → 상태 매핑
 const CAT_TO_STATUSES: Record<Category, TransferStatus[]> = {
-  전체: ['PENDING', 'PAID', 'REFUNDED', 'FAILED', 'CANCELED'],
+  전체: ['PENDING', 'PAID', 'REFUNDED', 'REFUND_FAILED', 'CANCELED', 'FAILED'],
   '송금 완료': ['PAID'],
-  '송금 실패': ['FAILED'],
-  '송금 취소': ['CANCELED'],
+  '송금 대기': ['PENDING'],
+  '송금 취소': ['REFUNDED', 'CANCELED'],
+  '송금 실패': ['FAILED', 'REFUND_FAILED'],
 }
 
 // 페이지 사이즈
@@ -37,6 +39,9 @@ const PAGE_SIZE = 10 // 화면 표시용
 const BULK_SIZE = 100 // 필터 ON 전체 수집용(서버가 허용하는 큰 값)
 
 export default function PaymentsHistory() {
+  const groupId = useGroupStore((s) => s.groupId)
+  if (groupId == null) return <LoadingSpinner />
+
   // 드롭다운 & 필터 상태
   const [open, setOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<Category>('전체')
@@ -162,6 +167,15 @@ export default function PaymentsHistory() {
     })
   }, [sorted, selectedCategory, searchTerm, settlementMap])
 
+  useEffect(() => {
+    const counts = rawList.reduce<Record<string, number>>((acc, p) => {
+      const st = (p.status as string).toUpperCase()
+      acc[st] = (acc[st] ?? 0) + 1
+      return acc
+    }, {})
+    console.log('status counts:', counts)
+  }, [rawList])
+
   // -------------------------------
   // ⑥ 실제 렌더 목록
   // -------------------------------
@@ -199,7 +213,7 @@ export default function PaymentsHistory() {
   return (
     <div className="space-y-6 w-full max-w-5xl mx-auto">
       <div className="grid grid-cols-1 gap-6">
-        <h1 className="text-2xl font-bold text-black">송금 히스토리</h1>
+        <h1 className="text-3xl font-bold text-black">송금 히스토리</h1>
 
         {/* 검색 + 카테고리 */}
         <div className="flex gap-2 mt-2">
@@ -272,7 +286,12 @@ export default function PaymentsHistory() {
         <>
           {/* 리스트 */}
           {listToRender.map((p) => (
-            <PaymentsListItem key={p.id} item={p} settlement={settlementMap.get(p.settlementId)} />
+            <PaymentsListItem
+              key={p.id}
+              item={p}
+              settlement={settlementMap.get(p.settlementId)}
+              groupId={groupId}
+            />
           ))}
 
           {/* 페이지네이션 바 */}

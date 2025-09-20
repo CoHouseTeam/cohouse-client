@@ -13,6 +13,7 @@ export interface TodoItem {
   assignmentId?: number
   category: string
   status?: 'COMPLETED' | 'PENDING' | string
+  date?: string
 }
 
 export interface Member {
@@ -39,6 +40,12 @@ export interface CalendarBoxProps {
   onDateSelect: (date: Date) => void
   value: Date
   scheduledDates: string[]
+}
+
+export interface TodoListBoxProps {
+  todos: TodoItem[]
+  groupId: number | null
+  memberId: number | null
 }
 
 export interface ModalProps {

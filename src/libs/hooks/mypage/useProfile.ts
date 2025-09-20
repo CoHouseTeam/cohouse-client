@@ -3,7 +3,7 @@ import {
   deleteProfileImage,
   getProfile,
   Profile,
-  refreshPassword,
+  resetPassword,
   updateAlertTime,
   updateProfile,
   UpdateProfileDto,
@@ -18,7 +18,8 @@ export function useProfile() {
   return useQuery<Profile>({
     queryKey: PROFILE_KEY,
     queryFn: getProfile,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 }
 
@@ -69,19 +70,20 @@ export function useDeleteProfileImage() {
 export function useUpdateAlertTime() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ hour, minute }: { hour: number; minute: number }) =>
-      updateAlertTime(hour, minute),
-    onSuccess: (p: Profile) => {
-      qc.setQueryData(PROFILE_KEY, p)
+    mutationFn: ({ alertTime }: { alertTime: string }) => updateAlertTime(alertTime),
+    onSuccess: (_data, { alertTime }) => {
+      qc.setQueryData(PROFILE_KEY, (old: Profile | undefined) =>
+        old ? { ...old, alertTime } : old
+      )
+      qc.invalidateQueries({ queryKey: PROFILE_KEY })
     },
   })
 }
 
 // 비밀번호 변경
-
 export function useResetPassword() {
   return useMutation({
-    mutationFn: ({ token, newPassword }: { token: string; newPassword: string }) =>
-      refreshPassword(token, newPassword),
+    mutationFn: ({ newPassword, token }: { newPassword: string; token: string }) =>
+      resetPassword(newPassword, token),
   })
 }

@@ -17,17 +17,25 @@ export default function AppLayout({ children }: PropsWithChildren) {
     }
 
     checkAuthFromStorage()
-    
+
     // 주기적으로 인증 상태 확인
     const interval = setInterval(checkAuthFromStorage, 100)
-    
+
     return () => clearInterval(interval)
   }, [])
 
   const isAuthenticated = permissions.isAuthenticated || isAuthFromStorage
 
   // 공개 페이지 목록 (인증 불필요)
-  const publicPaths = ['/login', '/register', '/forgot-password', '/', '/oauth/callback/naver', '/oauth/callback/google']
+  const publicPaths = [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/',
+    '/oauth/callback/naver',
+    '/oauth/callback/google',
+    '/create-complete',
+  ]
   const isPublicPage = publicPaths.includes(location.pathname)
 
   // 공개 페이지는 보호하지 않음
@@ -58,8 +66,12 @@ export default function AppLayout({ children }: PropsWithChildren) {
           <h1 className="text-2xl font-bold mb-4">로그인이 필요합니다</h1>
           <p className="text-gray-600 mb-6">이 페이지에 접근하려면 로그인해주세요.</p>
           <div className="space-x-4">
-            <a href="/login" className="btn btn-primary rounded-lg">로그인</a>
-            <a href="/register" className="btn btn-outline rounded-lg">회원가입</a>
+            <a href="/login" className="btn btn-primary rounded-lg">
+              로그인
+            </a>
+            <a href="/register" className="btn btn-outline rounded-lg">
+              회원가입
+            </a>
           </div>
         </div>
       </div>

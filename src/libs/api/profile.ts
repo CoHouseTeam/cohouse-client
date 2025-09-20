@@ -1,7 +1,6 @@
 import api from './axios'
 import { AUTH_ENDPOINTS, PROFILE_ENDPOINTS } from './endpoints'
 
-
 export type Profile = {
   id: number
   email: string
@@ -56,8 +55,8 @@ export async function deleteProfileImage(): Promise<Profile> {
 }
 
 // 알림 시간 변경
-export async function updateAlertTime(hour: number, minute: number): Promise<Profile> {
-  const { data } = await api.put<Profile>(PROFILE_ENDPOINTS.UPDATE_ALERT_TIME, { hour, minute })
+export async function updateAlertTime(alertTime: string): Promise<Profile> {
+  const { data } = await api.put<Profile>(PROFILE_ENDPOINTS.UPDATE_ALERT_TIME, { alertTime })
   return data
 }
 
@@ -73,8 +72,11 @@ export async function getMyMemberId(): Promise<number> {
 }
 
 // 비밀번호 변경
-export async function refreshPassword(token: string, newPassword: string) {
-  const { data } = await api.post(AUTH_ENDPOINTS.REFRESH, { token, newPassword })
+type ResetPasswordPayload = { newPassword: string; token: string }
 
+export async function resetPassword(newPassword: string, token: string) {
+  const payload: ResetPasswordPayload = { newPassword, token }
+
+  const { data } = await api.post(AUTH_ENDPOINTS.RESET_PASSWORD, payload)
   return data
 }

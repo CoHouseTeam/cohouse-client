@@ -2,6 +2,7 @@ import React from 'react'
 import { KorDay } from '../libs/utils/dayMapping'
 
 export interface Member {
+  memberId?: number
   name: string
   profileImageUrl: string
 }
@@ -22,8 +23,9 @@ export interface ExchangeModalProps {
   open: boolean
   members: Member[]
   selected: number[]
+  currentUserId: number
   onSelect: (selected: number[]) => void
-  onRequest: () => void
+  onRequest: (selected: number[]) => void
   onClose: () => void
 }
 
@@ -90,6 +92,7 @@ export interface TaskHistory {
   date: string
   task: string
   status: 'COMPLETED' | 'PENDING'
+  category: string
 }
 
 export interface HistoryModalProps {
@@ -120,4 +123,30 @@ export interface OverrideRequestBody {
   targetIds: number[]
   requesterId: number
   swapAssignmentId: number
+}
+
+// 세팅 모달
+export interface SettingModalProps {
+  onSelectDay: () => void
+  onDeleteTemplate: () => void
+  onClose: () => void
+  positionClass?: string
+}
+
+// 미이행 모달
+export interface UncompletedAssignment {
+  assignmentId: number
+  groupMemberId: number
+  templateId: number
+  date: string
+  status: string
+  createdAt: string
+  repeatType: string
+  category: string
+}
+
+export interface UncompletedMember {
+  memberId: number
+  nickname: string
+  profileImageUrl: string
 }

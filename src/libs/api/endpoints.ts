@@ -32,7 +32,6 @@ export const GROUP_ENDPOINTS = {
 
   // 탈퇴 요청
   LEAVE_REQUESTS: (groupId: number) => `/api/groups/${groupId}/leave-requests`,
-  LEAVE_REQUEST: (groupId: number) => `/api/groups/${groupId}/leave-requests`,
   APPROVE_LEAVE: (groupId: number, requestId: number) =>
     `/api/groups/${groupId}/leave-requests/${requestId}`,
 
@@ -78,6 +77,7 @@ export const SETTLEMENT_ENDPOINTS = {
   MY_HISTORY: 'api/settlements/my/history',
   GROUP_LIST: (groupId: number) => `api/settlements/group/${groupId}`,
   PAYMENT_HISTORIES: 'api/settlements/payment-histories',
+  MY_SIMPLE: '/api/settlements/my/simple',
 
   // 정산별 상세
   DETAIL: (settlementId: number) => `api/settlements/${settlementId}`,
@@ -107,12 +107,12 @@ export const PROFILE_ENDPOINTS = {
 
 // Tasks endpoints
 export const TASKS_ENDPOINTS = {
-  LIST: '/tasks',
-  CREATE: '/tasks',
-  DETAIL: (id: string) => `/tasks/${id}`,
-  UPDATE: (id: string) => `/tasks/${id}`,
-  DELETE: (id: string) => `/tasks/${id}`,
-  COMPLETE: (id: string) => `/tasks/${id}/complete`,
+  LIST: '/api/tasks',
+  CREATE: '/api/tasks',
+  DETAIL: (id: string) => `/api/tasks/${id}`,
+  UPDATE: (id: string) => `/api/tasks/${id}`,
+  DELETE: (id: string) => `/api/tasks/${id}`,
+  COMPLETE: (id: string) => `/api/tasks/${id}/complete`,
 }
 
 // 💳 Payment endpoints
@@ -153,4 +153,7 @@ export const NOTIFICATION_ENDPOINTS = {
 
   // 모든 알림 삭제
   DELETE_ALL: 'api/notifications/all',
+
+  // 알림 설정 (GET / PUT 공용)
+  SETTINGS: 'api/notifications/settings',
 } as const

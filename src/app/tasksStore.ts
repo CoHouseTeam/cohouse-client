@@ -1,7 +1,9 @@
 import { create } from 'zustand'
 import { Assignment, GroupMember, RepeatDay, Template } from '../types/tasks'
 import { AnnouncementSummary } from '../types/main'
+import { Settlement } from '../types/settlement'
 
+// 캘린더
 interface CalendarState {
   selectedDate: Date
   setSelectedDate: (date: Date) => void
@@ -17,6 +19,7 @@ export const useCalendarStore = create<CalendarState>((set) => {
   }
 })
 
+// 업무
 interface TaskState {
   assignments: Assignment[]
   setAssignments: (assignments: Assignment[]) => void
@@ -38,6 +41,9 @@ interface TaskState {
 
   loadingAssignments: boolean
   setLoadingAssignments: (loading: boolean) => void
+
+  loadingTemplates: boolean
+  setLoadingTemplates: (loading: boolean) => void
 
   errorAssignments: string
   setErrorAssignments: (error: string) => void
@@ -83,6 +89,9 @@ export const useTaskStore = create<TaskState>((set) => ({
   loadingAssignments: false,
   setLoadingAssignments: (loading) => set({ loadingAssignments: loading }),
 
+  loadingTemplates: false,
+  setLoadingTemplates: (loading) => set({ loadingTemplates: loading }),
+
   errorAssignments: '',
   setErrorAssignments: (error) => set({ errorAssignments: error }),
 
@@ -105,6 +114,7 @@ export const useTaskStore = create<TaskState>((set) => ({
   setError: (error) => set({ error }),
 }))
 
+// 공지
 interface AnnouncementState {
   announcements: AnnouncementSummary[]
   setAnnouncements: (announcements: AnnouncementSummary[]) => void
@@ -121,4 +131,27 @@ export const useAnnouncementStore = create<AnnouncementState>((set) => ({
   setLoadingAnnouncements: (loading) => set({ loadingAnnouncements: loading }),
   errorAnnouncements: '',
   setErrorAnnouncements: (error) => set({ errorAnnouncements: error }),
+}))
+
+// 정산
+interface SettlementState {
+  simpleSettlements: Settlement[]
+  setSimpleSettlements: (list: Settlement[]) => void
+
+  loadingSettlements: boolean
+  setLoadingSettlements: (loading: boolean) => void
+
+  errorSettlements: string
+  setErrorSettlements: (error: string) => void
+}
+
+export const useSettlementStore = create<SettlementState>((set) => ({
+  simpleSettlements: [],
+  setSimpleSettlements: (list) => set({ simpleSettlements: list }),
+
+  loadingSettlements: false,
+  setLoadingSettlements: (loading) => set({ loadingSettlements: loading }),
+
+  errorSettlements: '',
+  setErrorSettlements: (error) => set({ errorSettlements: error }),
 }))

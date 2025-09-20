@@ -15,3 +15,12 @@ export function from24h(hour24: number, minute: number) {
   const hour12 = ((hour24 + 11) % 12) + 1 // 0→12, 13→1
   return { hour12, minute, meridiem }
 }
+
+export const formatHHmm = (h: number, m: number) =>
+  `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+
+export const parseHHmm = (s: string) => {
+  const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(s)
+  if (!m) return null
+  return { hour: Number(m[1]), minute: Number(m[2]) }
+}

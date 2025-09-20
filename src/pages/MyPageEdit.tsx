@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import { CameraFill, ChevronLeft } from 'react-bootstrap-icons'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import DatePicker, { registerLocale } from 'react-datepicker'
 import { ko } from 'date-fns/locale'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -16,6 +16,7 @@ import ImageViewer from '../features/common/ImageViewer'
 import { formatYYYYMMDDLocal, parseLocalYYYYMMDD } from '../libs/utils/date-local'
 import axios, { AxiosError } from 'axios'
 import { isDefaultProfileUrl } from '../libs/utils/profile-image'
+import { api, AUTH_ENDPOINTS } from '../libs/api'
 
 registerLocale('ko', ko)
 
@@ -31,11 +32,12 @@ type ApiErrorField = { field?: string; defaultMessage?: string; message?: string
 type ApiErrorData = { message?: string; errors?: ApiErrorField[] }
 
 export default function MyPageEdit() {
-  const [pwOpen, setPwOpen] = useState(false)
-
   // 알림 컴포넌트
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMsg, setAlertMsg] = useState('')
+
+  const navigate = useNavigate()
+  const [lastActionSuccess, setLastActionSuccess] = useState(false)
 
   // 생년월일
   const [selectedBtdDate, setSelectedBtdDate] = useState<Date | null>(null)
@@ -43,8 +45,9 @@ export default function MyPageEdit() {
   // 프로필 미리보기
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
-  // 저장 시 업로드할 파일 예약
+  // 저장 시 업로드/삭제 보류 상태
   const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [pendingDelete, setPendingDelete] = useState(false)
 
   // 프로필 이미지 삭제
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -63,6 +66,11 @@ export default function MyPageEdit() {
   const closeAlert = () => {
     setAlertOpen(false)
     setAlertMsg('')
+
+    if (lastActionSuccess) {
+      setLastActionSuccess(false)
+      navigate('/mypage')
+    }
   }
 
   // 프로필 사진
@@ -71,11 +79,11 @@ export default function MyPageEdit() {
 
   // 프로필 기본 이미지 판별
   const serverUrl = me?.profileImageUrl ?? null
-  const displayUrl = previewUrl ?? serverUrl
+  const displayUrl = previewUrl ?? (pendingDelete ? null : serverUrl)
   const isDefault = isDefaultProfileUrl(serverUrl)
 
   // 기본 이미지거나 미리보기 중이면 삭제 버튼 숨김
-  const canDelete = !!serverUrl && !isDefault && !previewUrl
+  const canDeleteServerImage = !!serverUrl && !isDefault && !previewUrl && !pendingDelete
 
   // 의존성 배열 추가 + me 로드 후 초기값 주입
   useEffect(() => {
@@ -96,6 +104,7 @@ export default function MyPageEdit() {
   // 프로필 이미지 삭제 API
   const { mutateAsync: deleteImage, isPending: deleting } = useDeleteProfileImage()
 
+  //삭제 버튼
   const askDelete = () => {
     // 처리 중에는 열지 않기
     if (uploading || deleting) return
@@ -142,6 +151,9 @@ export default function MyPageEdit() {
 
       // 서버 업로드는 저장 버튼에서 → 파일만 예약
       setPendingFile(file)
+
+      // 새 파일을 선택하면 과거의 삭제 보류는 무시
+      setPendingDelete(false)
     } catch (err) {
       showAlert('미리보기에 실패했어요. 잠시 후 다시 시도해 주세요.')
       if (previewUrl) {
@@ -154,42 +166,60 @@ export default function MyPageEdit() {
     }
   }
 
-  // 삭제는 즉시 서버에 반영
+  // 삭제 확인(저장 지연형 로직)
+  // 미리보기 중이면: 미리보기/보류 업로드만 취소 (서버 호출 X)
+  // 서버 이미지만 있으면: pendingDelete = true로 표시 (서버 호출 X, 저장 시 실제 삭제)
   const confirmDelete = async () => {
     try {
-      // 서버에서 프로필 이미지 삭제
-      await deleteImage()
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl)
         setPreviewUrl(null)
+        setPendingFile(null) // 업로드 보류 취소
+      } else if (serverUrl) {
+        setPendingDelete(true) // 삭제 보류
       }
-      // 업로드 예약이 있다면 취소
-      setPendingFile(null)
-    } catch (err) {
-      showAlert('사진 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.')
     } finally {
       setDeleteOpen(false)
     }
   }
-
   // 이미지 보기
   const [viewerOpen, setViewerOpen] = useState(false)
-  const currentImageSrc = previewUrl ?? me?.profileImageUrl ?? null
+  const currentImageSrc = displayUrl ?? null
   const openViewer = () => {
     if (!currentImageSrc) return
     if (uploading || deleting) return
     setViewerOpen(true)
   }
 
+  // 이메일 발송 버튼(비밀번호 변경)
+  const onClickSendResetMail = async () => {
+    if (!me?.email) {
+      showAlert('이메일 정보를 불러오지 못했습니다.')
+      return
+    }
+
+    try {
+      await api.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, { email: me.email, name: me.name })
+      showAlert('비밀번호 변경 이메일을 발송했습니다. 메일함을 확인해주세요.')
+    } catch (e) {
+      showAlert('메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.')
+    }
+  }
+
   // 저장 버튼에서만 실제 업로드 실행
+  // 우선순위
+  // 1) pendingFile 이 있으면 → 업로드(이 경우 삭제 보류는 무시)
+  // 2) pendingFile 이 없고 pendingDelete === true → 삭제
+  // 3) 이미지 변경 없으면 → 프로필 정보만 업데이트 or 변경 없음 안내
   const onSave = async () => {
     try {
       if (!me) {
+        setLastActionSuccess(false)
         showAlert('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.')
         return
       }
 
-      // 0) 이미지 먼저 처리(있을 때만)
+      // 이미지 먼저 처리(있을 때만)
       if (pendingFile) {
         await uploadImage(pendingFile)
         setPendingFile(null)
@@ -197,6 +227,10 @@ export default function MyPageEdit() {
           URL.revokeObjectURL(previewUrl)
           setPreviewUrl(null)
         }
+        setPendingDelete(false) // 업로드가 우선이므로 삭제 보류 해제
+      } else if (pendingDelete) {
+        await deleteImage()
+        setPendingDelete(false)
       }
 
       const nextBirth = selectedBtdDate
@@ -204,26 +238,37 @@ export default function MyPageEdit() {
         : (me.birthDate ?? '')
 
       if (!nextBirth) {
+        setLastActionSuccess(false)
         showAlert('생년월일을 선택해 주세요.')
         return
       }
 
-      // gender: 화면에서 선택된 값 우선, 없으면 기존값
-      const allowed = new Set(['MALE', 'FEMALE'])
-      const nextGenderRaw = (gender || me.gender || '').toString().trim().toUpperCase()
-      const nextGender = allowed.has(nextGenderRaw) ? nextGenderRaw : 'OTHER'
+      const nextGender = (gender || me.gender || '').toString().trim()
 
-      // 변경이 없으면 굳이 호출 안 해도 되지만, 서버가 전체 업데이트를 요구한다면 호출
-      if (nextBirth === me.birthDate && nextGender === me.gender) {
+      if (nextGender !== '남자' && nextGender !== '여자') {
+        setLastActionSuccess(false)
+        showAlert('성별을 선택해 주세요.')
+        return
+      }
+
+      // 변경 여부 판단
+      const imageChanged = !!pendingFile || pendingDelete
+      const profileChanged = nextBirth !== me.birthDate || nextGender !== me.gender
+
+      if (!imageChanged && !profileChanged) {
+        setLastActionSuccess(false)
         showAlert('변경된 내용이 없습니다.')
         return
       }
 
-      // 항상 둘 다 전송
-      await updateMe({ birthDate: nextBirth, gender: nextGender })
+      if (profileChanged) {
+        await updateMe({ birthDate: nextBirth, gender: nextGender })
+      }
 
+      setLastActionSuccess(true)
       showAlert('저장되었습니다.')
     } catch (e: unknown) {
+      setLastActionSuccess(false)
       if (axios.isAxiosError(e)) {
         const d = (e as AxiosError<ApiErrorData>).response?.data
         const fieldMsg = d?.errors
@@ -296,7 +341,7 @@ export default function MyPageEdit() {
             </div>
 
             {/* 사진 삭제 버튼 (이미지/미리보기 있을 때만 노출) */}
-            {(canDelete || previewUrl) && (
+            {(canDeleteServerImage || previewUrl || pendingDelete) && (
               <div className="flex justify-center mt-3">
                 <button
                   type="button"
@@ -348,19 +393,6 @@ export default function MyPageEdit() {
                     <span className="text-sm">{opt.label}</span>
                   </label>
                 ))}
-
-                {/* 선택 해제용(선택 안 함) 필요하면 주석 해제 */}
-                {/* <label className="inline-flex items-center gap-2 cursor-pointer">
-      <input
-        type="radio"
-        name="gender"
-        className="radio"
-        value=""
-        checked={gender === ''}
-        onChange={() => setGender('')}
-      />
-      <span className="text-sm text-neutral-500">선택 안 함</span>
-    </label> */}
               </div>
             </div>
 
@@ -390,26 +422,18 @@ export default function MyPageEdit() {
               <span className="text-sm font-semibold text-neutral-500">보안</span>
               <button
                 className="border border-neutral rounded-full h-fit w-fit py-1 px-2 text-sm"
-                onClick={() => setPwOpen(!pwOpen)}
+                onClick={onClickSendResetMail}
               >
-                {pwOpen ? '변경 취소' : '비밀번호 변경'}
+                비밀번호 변경
               </button>
             </div>
 
-            <div
+            {/* <div
               className={`overflow-hidden transition-all duration-500 ${
                 pwOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
               }`}
             >
               <div className="flex flex-col gap-4">
-                {/* <div className="flex flex-col gap-2">
-                  <span className="text-sm">현재 비밀번호</span>
-                  <input
-                    type="password"
-                    className="input input-bordered h-10 md:max-w-md text-sm rounded-lg"
-                    placeholder="비밀번호를 입력해 주세요"
-                  />
-                </div> */}
                 <div className="flex flex-col gap-2">
                   <span className="text-sm p-1">새 비밀번호</span>
                   <input
@@ -427,7 +451,7 @@ export default function MyPageEdit() {
                   />
                 </div>
               </div>
-            </div>
+            </div> */}
           </section>
         </div>
       </main>

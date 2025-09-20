@@ -1,19 +1,15 @@
-interface CalendarDotsProps {
-  colors: string[]
-  dayLength?: number // 날짜 문자열 길이: 1(한자리) 또는 2(두자리)
-}
+import { CalendarDotsProps } from '../../../types/main'
 
-const CalendarDateDots = ({ colors, dayLength = 2 }: CalendarDotsProps) => {
-  const adjust = dayLength === 1 ? -5 : -9
+const CalendarDateDots = ({ colors }: CalendarDotsProps) => {
   return (
-    <div style={{ position: 'relative', height: 8, marginTop: 2 }}>
+    <div className="absolute h-1 w-full mt-1.5">
       {colors.map((color, idx) => (
         <span
           key={idx}
           className="calendar-date-dot"
           style={{
             backgroundColor: color,
-            left: `calc(50% + ${(idx - (colors.length - 1) / 2) * 8}px + ${adjust}px)`,
+            left: `calc(50% + ${(idx - (colors.length - 1) / 2) * 8}px)`,
           }}
         />
       ))}
