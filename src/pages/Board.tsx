@@ -41,7 +41,17 @@ export default function Board() {
   const [showNicknameModal, setShowNicknameModal] = useState(false)
   const [currentNickname, setCurrentNickname] = useState('')
   const [isUpdatingNickname, setIsUpdatingNickname] = useState(false)
-  const [myGroupMemberInfo, setMyGroupMemberInfo] = useState<any>(null)
+  const [myGroupMemberInfo, setMyGroupMemberInfo] = useState<{
+    id: number
+    groupId: number
+    memberId: number
+    nickname: string
+    isLeader: boolean
+    status: string
+    joinedAt: string
+    leavedAt: string | null
+    profileImageUrl: string
+  } | null>(null)
 
   // API 상태 관리
   const [loading, setLoading] = useState(false)
@@ -109,7 +119,7 @@ export default function Board() {
       try {
         const groupInfo = await fetchGroupMembers(groupId)
         console.log('✅ 그룹 멤버 정보 설정 완료:', groupInfo)
-        console.log('✅ 그룹 멤버 상세 정보:', groupInfo.map((member: any) => ({
+        console.log('✅ 그룹 멤버 상세 정보:', groupInfo.map((member: { id: number; memberId: number; nickname: string; isLeader: boolean }) => ({
           id: member.id,
           memberId: member.memberId,
           nickname: member.nickname,
@@ -119,7 +129,7 @@ export default function Board() {
         
         // 내 그룹 멤버 정보 찾기 (그룹 멤버 목록에서)
         if (currentMemberId) {
-          const myInfo = groupInfo.find((member: any) => member.memberId === currentMemberId)
+          const myInfo = groupInfo.find((member: { memberId: number }) => member.memberId === currentMemberId)
           if (myInfo) {
             console.log('✅ 내 그룹 멤버 정보:', myInfo)
             setMyGroupMemberInfo(myInfo)
@@ -544,7 +554,13 @@ export default function Board() {
       // 현재 정보를 복사하고 닉네임만 변경
       const updatedMemberData = {
         ...myGroupMemberInfo,
-        nickname: newNickname
+        nickname: newNickname,
+        // 누락될 수 있는 필수 속성들 추가
+        id: myGroupMemberInfo?.id || 0,
+        groupId: groupId,
+        joinedAt: myGroupMemberInfo?.joinedAt || new Date().toISOString(),
+        leavedAt: myGroupMemberInfo?.leavedAt || null,
+        profileImageUrl: myGroupMemberInfo?.profileImageUrl || ''
       }
 
       console.log('📤 API 요청 데이터:', updatedMemberData)
@@ -562,19 +578,22 @@ export default function Board() {
       setGroupMembers(groupInfo)
       
       console.log('✅ 닉네임 수정 완료:', newNickname)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ 닉네임 수정 실패:', {
         error,
-        message: error?.message,
-        response: error?.response?.data,
-        status: error?.response?.status
+        message: error instanceof Error ? error.message : 'Unknown error',
+        response: error && typeof error === 'object' && 'response' in error ? (error as { response?: { data?: unknown } }).response?.data : undefined,
+        status: error && typeof error === 'object' && 'response' in error ? (error as { response?: { status?: number } }).response?.status : undefined
       })
       
       // 더 구체적인 에러 메시지 제공
       let errorMessage = '닉네임 수정에 실패했습니다.'
-      if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message
-      } else if (error?.message) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { message?: string } } }
+        if (axiosError.response?.data?.message) {
+          errorMessage = axiosError.response.data.message
+        }
+      } else if (error instanceof Error) {
         errorMessage = error.message
       }
       

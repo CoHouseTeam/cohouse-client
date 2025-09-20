@@ -36,9 +36,10 @@ const GroupInviteInputModal: React.FC<ModalProps> = ({ onClose }) => {
       toast.success('그룹 참여가 완료되었습니다!')
       navigate(window.location.href = '/')
       onClose()
-    } catch (err: any) {
-      toast.error(err.message || '그룹 참여에 실패했습니다.')
-      setError(err.message || '그룹 참여에 실패했습니다.')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '그룹 참여에 실패했습니다.'
+      toast.error(errorMessage)
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

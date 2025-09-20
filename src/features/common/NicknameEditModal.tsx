@@ -39,9 +39,9 @@ export default function NicknameEditModal({
       setError('')
       await onSave(nickname.trim())
       onClose()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('닉네임 수정 실패:', error)
-      const errorMessage = error?.message || '닉네임 수정에 실패했습니다.'
+      const errorMessage = error instanceof Error ? error.message : '닉네임 수정에 실패했습니다.'
       setError(errorMessage)
     }
   }

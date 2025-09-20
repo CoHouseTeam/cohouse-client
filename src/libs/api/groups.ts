@@ -140,3 +140,14 @@ export async function updateMyGroupMemberInfo(groupId: number, memberData: {
     throw error
   }
 }
+
+// 내 그룹 멤버 정보 조회
+export async function getMyGroupMemberInfo(groupId: number) {
+  try {
+    const response = await api.get(GROUP_ENDPOINTS.UPDATE_MY_INFO(groupId))
+    return response.data
+  } catch (error) {
+    console.error('❌ 내 그룹 멤버 정보 조회 실패:', error)
+    throw error
+  }
+}

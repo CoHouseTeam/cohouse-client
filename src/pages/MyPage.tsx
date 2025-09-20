@@ -29,16 +29,17 @@ export default function MyPage() {
       await withdrawUser()
       setShowWithdrawModal(false)
       setShowWithdrawSuccessModal(true)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('회원 탈퇴 실패:', error)
-      console.error('응답 데이터:', error.response?.data)
-      console.error('상태 코드:', error.response?.status)
+      const axiosError = error && typeof error === 'object' && 'response' in error ? error as { response?: { data?: { message?: string }; status?: number } } : null
+      console.error('응답 데이터:', axiosError?.response?.data)
+      console.error('상태 코드:', axiosError?.response?.status)
       
       let errorMessage = '회원 탈퇴에 실패했습니다. 다시 시도해주세요.'
       
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message
-      } else if (error.response?.status === 409) {
+      if (axiosError?.response?.data?.message) {
+        errorMessage = axiosError.response.data.message
+      } else if (axiosError?.response?.status === 409) {
         errorMessage = '서버에서 탈퇴를 거부했습니다. 관리자에게 문의해주세요.'
       }
       
