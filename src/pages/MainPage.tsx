@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { Users } from 'lucide-react'
 import CalendarBox from '../features/mainpage/components/CalendarBox'
 import CalendarDateDetails from '../features/mainpage/components/CalendarDateDetail'
 import TodoListBox from '../features/mainpage/components/TodoListBox'
@@ -192,10 +193,10 @@ const MainPage = () => {
   }, [userAuthenticated, groupId, myMemberId, selectedDate])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
 
       {/* 메인 컨텐츠 */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {loadingGroup && (
           <div className="flex justify-center items-center py-16">
             <LoadingSpinner />
@@ -203,71 +204,117 @@ const MainPage = () => {
         )}
         
         {errorGroup && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-            <p className="text-red-600 font-medium">{errorGroup}</p>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-6 text-center">
+            <p className="text-red-600 font-medium text-sm sm:text-base">{errorGroup}</p>
           </div>
         )}
 
         {!loadingGroup && !errorGroup && (
           <>
             {!hasGroups ? (
-              <GroupBox />
+              <div className="space-y-6">
+                {/* 웰컴 섹션 */}
+                <div className="text-center py-8 sm:py-12">
+                  <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-4">
+                    CoHouse에 오신 것을 환영합니다
+                  </h1>
+                  <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+                    함께 생활하는 동료들과 소통하고, 업무를 체계적으로 관리해보세요
+                  </p>
+                </div>
+
+                {/* 그룹 참여 섹션 */}
+                <div className="w-full">
+                  <GroupBox />
+                </div>
+
+                {/* 기능 소개 섹션 */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8">
+                  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 text-center shadow-sm hover:shadow-md transition-all duration-300">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">그룹 관리</h3>
+                    <p className="text-gray-600 text-xs sm:text-sm">동료들과 함께 그룹을 만들어 효율적으로 관리하세요</p>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 text-center shadow-sm hover:shadow-md transition-all duration-300">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">일정 관리</h3>
+                    <p className="text-gray-600 text-xs sm:text-sm">캘린더로 일정을 한눈에 보고 체계적으로 관리하세요</p>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 text-center shadow-sm hover:shadow-md transition-all duration-300 sm:col-span-2 lg:col-span-1">
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                    </div>
+                    <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">업무 관리</h3>
+                    <p className="text-gray-600 text-xs sm:text-sm">할 일을 체계적으로 정리하고 팀원들과 공유하세요</p>
+                  </div>
+                </div>
+              </div>
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-4 sm:space-y-8">
                 {/* 로딩 상태들 */}
                 {loadingAssignments && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-6">
-                    <div className="flex items-center justify-center py-8">
+                  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+                    <div className="flex items-center justify-center py-6 sm:py-8">
                       <LoadingSpinner />
-                      <span className="ml-3 text-gray-600">업무를 불러오는 중...</span>
+                      <span className="ml-3 text-gray-600 text-sm sm:text-base">업무를 불러오는 중...</span>
                     </div>
                   </div>
                 )}
                 
                 {errorAssignments && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-                    <p className="text-red-600 font-medium">{errorAssignments}</p>
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-6">
+                    <p className="text-red-600 font-medium text-sm sm:text-base">{errorAssignments}</p>
                   </div>
                 )}
 
                 {loadingAnnouncements && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-6">
-                    <div className="flex items-center justify-center py-8">
+                  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+                    <div className="flex items-center justify-center py-6 sm:py-8">
                       <LoadingSpinner />
-                      <span className="ml-3 text-gray-600">공지사항을 불러오는 중...</span>
+                      <span className="ml-3 text-gray-600 text-sm sm:text-base">공지사항을 불러오는 중...</span>
                     </div>
                   </div>
                 )}
                 
                 {errorAnnouncements && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-                    <p className="text-red-600 font-medium">{errorAnnouncements}</p>
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-6">
+                    <p className="text-red-600 font-medium text-sm sm:text-base">{errorAnnouncements}</p>
                   </div>
                 )}
 
                 {loadingSettlements && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-6">
-                    <div className="flex items-center justify-center py-8">
+                  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+                    <div className="flex items-center justify-center py-6 sm:py-8">
                       <LoadingSpinner />
-                      <span className="ml-3 text-gray-600">정산 내역을 불러오는 중...</span>
+                      <span className="ml-3 text-gray-600 text-sm sm:text-base">정산 내역을 불러오는 중...</span>
                     </div>
                   </div>
                 )}
                 
                 {errorSettlements && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-                    <p className="text-red-600 font-medium">{errorSettlements}</p>
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-6">
+                    <p className="text-red-600 font-medium text-sm sm:text-base">{errorSettlements}</p>
                   </div>
                 )}
 
                 {/* 오늘의 할 일 */}
                 {!loadingAssignments && !errorAssignments && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="p-6 border-b border-gray-100">
-                      <h2 className="text-xl font-bold text-black">오늘의 할 일</h2>
-                      <p className="text-gray-600 mt-1">오늘 해야 할 업무를 확인해보세요</p>
+                    <div className="p-4 sm:p-6 border-b border-gray-100">
+                      <h2 className="text-lg sm:text-xl font-bold text-black">오늘의 할 일</h2>
+                      <p className="text-gray-600 mt-1 text-sm sm:text-base">오늘 해야 할 업무를 확인해보세요</p>
                     </div>
-                    <div className="p-6">
+                    <div className="p-4 sm:p-6">
                       <TodoListBox todos={todayAssignments} groupId={groupId} memberId={myMemberId} />
                     </div>
                   </div>
@@ -275,11 +322,11 @@ const MainPage = () => {
 
                 {/* 캘린더 섹션 */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-black">캘린더</h2>
-                    <p className="text-gray-600 mt-1">일정과 이벤트를 한눈에 확인하세요</p>
+                  <div className="p-4 sm:p-6 border-b border-gray-100">
+                    <h2 className="text-lg sm:text-xl font-bold text-black">캘린더</h2>
+                    <p className="text-gray-600 mt-1 text-sm sm:text-base">일정과 이벤트를 한눈에 확인하세요</p>
                   </div>
-                  <div className="p-6">
+                  <div className="p-4 sm:p-6">
                     <CalendarBox
                       onDateSelect={setSelectedDate}
                       value={selectedDate}
@@ -292,8 +339,8 @@ const MainPage = () => {
 
                 {/* 선택한 날짜 상세 */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-black">
+                  <div className="p-4 sm:p-6 border-b border-gray-100">
+                    <h2 className="text-lg sm:text-xl font-bold text-black">
                       {selectedDate.toLocaleDateString('ko-KR', { 
                         year: 'numeric', 
                         month: 'long', 
@@ -301,9 +348,9 @@ const MainPage = () => {
                         weekday: 'long'
                       })}
                     </h2>
-                    <p className="text-gray-600 mt-1">선택한 날짜의 이벤트와 할 일입니다</p>
+                    <p className="text-gray-600 mt-1 text-sm sm:text-base">선택한 날짜의 이벤트와 할 일입니다</p>
                   </div>
-                  <div className="p-6">
+                  <div className="p-4 sm:p-6">
                     <CalendarDateDetails
                       selectedDate={selectedDate}
                       events={[
