@@ -160,7 +160,7 @@ export default function PaymentsHistory() {
   const filtered = useMemo(() => {
     const statuses = CAT_TO_STATUSES[selectedCategory]
     const term = searchTerm.trim().toLowerCase()
-    return safeArray(sorted).filter((p) => {
+    return (safeArray(sorted) as any[]).filter((p: any) => {
       if (!statuses.includes(p.status)) return false
       if (!term) return true
       const title = (settlementMap.get(p.settlementId)?.title ?? '').toLowerCase()

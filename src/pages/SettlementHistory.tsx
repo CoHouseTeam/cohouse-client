@@ -142,9 +142,9 @@ export default function SettlementHistory() {
   // --------------------------------------------------------------------------------
   const sorted = useMemo(
     () =>
-      safeArray(rawList)
-        .filter((s) => s.status !== 'PENDING')
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+      (safeArray(rawList) as any[])
+        .filter((s: any) => s.status !== 'PENDING')
+        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [rawList]
   )
 
@@ -155,7 +155,7 @@ export default function SettlementHistory() {
   // --------------------------------------------------------------------------------
   const filtered = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
-    return safeArray(sorted).filter((s) => {
+    return (safeArray(sorted) as any[]).filter((s: any) => {
       const matchesSearch = (s.title ?? '').toLowerCase().includes(term)
       const matchesCategory =
         selectedCategory === '전체' || fromCategory(s.category) === selectedCategory
