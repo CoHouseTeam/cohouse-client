@@ -5,7 +5,7 @@ import NicknameEditModal from '../features/common/NicknameEditModal'
 import { createPost, deletePost, togglePostLike, getPostLikes, updatePost } from '../libs/api/posts'
 import { fetchGroupPosts, fetchPost, fetchPostLikesCount, fetchPostLikeStatus } from '../services/posts'
 import { getCurrentGroupId, fetchGroupMembers, updateMyGroupMemberInfo } from '../libs/api/groups'
-import { getCurrentMemberId, getCurrentUser, getAccessToken } from '../libs/utils/auth'
+import { getCurrentMemberId, getCurrentUser } from '../libs/utils/auth'
 import { useAuth } from '../libs/hooks/useAuth'
 import { getProfile } from '../libs/api/profile'
 import { safeArray } from '../libs/utils/safeArray'
@@ -79,18 +79,14 @@ export default function Board() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        console.log('🔍 초기 데이터 가져오기 시작')
         
         // 현재 사용자 ID 가져오기
         const memberId = await getCurrentMemberId()
-        console.log('🔍 getCurrentMemberId() 결과:', memberId)
         
         setCurrentMemberId(memberId)
-        console.log('✅ 현재 사용자 ID 설정 완료:', memberId)
         
         // 그룹 ID 가져오기
         const currentGroupId = await getCurrentGroupId()
-        console.log('✅ 그룹 ID 가져오기 성공:', currentGroupId)
         setGroupId(currentGroupId)
         
         // 그룹이 없는 경우 에러가 아닌 안내 메시지로 설정
@@ -100,7 +96,7 @@ export default function Board() {
           setError(null)
         }
       } catch (error) {
-        console.error('❌ 초기 데이터 가져오기 실패:', error)
+        console.error('초기 데이터 가져오기 실패:', error)
         setError('그룹 정보를 가져올 수 없습니다. 로그인이 필요할 수 있습니다.')
         setGroupId(null)
       }
@@ -112,35 +108,24 @@ export default function Board() {
   useEffect(() => {
     const fetchGroupInfo = async () => {
       if (!groupId) {
-        console.log('⚠️ groupId가 없어서 멤버 정보를 가져오지 않습니다.')
         return
       }
       
-      console.log('🔍 그룹 멤버 정보 가져오기 시작, groupId:', groupId)
       try {
         const groupInfo = await fetchGroupMembers(groupId)
-        console.log('✅ 그룹 멤버 정보 설정 완료:', groupInfo)
-        console.log('✅ 그룹 멤버 상세 정보:', safeArray(groupInfo).map((member: any) => ({
-          id: member.id,
-          memberId: member.memberId,
-          nickname: member.nickname,
-          isLeader: member.isLeader
-        })))
         setGroupMembers(groupInfo)
         
         // 내 그룹 멤버 정보 찾기 (그룹 멤버 목록에서)
         if (currentMemberId) {
           const myInfo = safeArray(groupInfo).find((member: any) => member.memberId === currentMemberId) as any
           if (myInfo) {
-            console.log('✅ 내 그룹 멤버 정보:', myInfo)
             setMyGroupMemberInfo(myInfo)
             setCurrentNickname(myInfo.nickname || '')
           } else {
-            console.log('⚠️ 내 그룹 멤버 정보를 찾을 수 없음')
           }
         }
       } catch (error) {
-        console.error('❌ 그룹 멤버 정보 가져오기 실패:', error)
+        console.error('그룹 멤버 정보 가져오기 실패:', error)
         // 에러가 발생해도 빈 배열로 설정하여 앱이 계속 작동하도록 함
         setGroupMembers([])
       }
@@ -204,41 +189,23 @@ export default function Board() {
 
   // memberId로 닉네임을 찾는 함수
   const getNicknameByMemberId = (memberId: number) => {
-    console.log('🔍 getNicknameByMemberId 호출:', {
-      memberId,
-      groupMembersLength: groupMembers?.length || 0,
-      groupMembers: groupMembers
-    })
     
     if (!groupMembers || groupMembers.length === 0) {
-      console.log('⚠️ groupMembers가 없음, 기본값 반환')
       return '익명'
     }
     
     const member = groupMembers.find(m => m.memberId === memberId)
-    console.log('🔍 찾은 멤버:', {
-      member,
-      memberId,
-      found: !!member,
-      nickname: member?.nickname,
-      nicknameType: typeof member?.nickname,
-      nicknameLength: member?.nickname?.length
-    })
     
     // nickname이 null, undefined, 빈 문자열인 경우 익명 반환
     if (!member) {
-      console.log('❌ 멤버를 찾을 수 없음')
       return '익명'
     }
     
     if (!member.nickname || member.nickname.trim() === '') {
-      console.log('❌ nickname이 없거나 빈 문자열')
       return '익명'
     }
     
-    const result = member.nickname
-    console.log('✅ 최종 결과:', result)
-    return result
+    return member.nickname
   }
 
   
@@ -310,7 +277,6 @@ export default function Board() {
       return isAuthor
     }
     
-    console.log('❌ 사용자 ID를 찾을 수 없습니다.')
     return false
   }
 
@@ -343,7 +309,6 @@ export default function Board() {
         getPostLikes(post.id)
       ])
       
-      console.log('📄 게시글 상세 정보:', postDetail)
       
       setModalData({ 
         post: postDetail, 
@@ -426,7 +391,6 @@ export default function Board() {
       return
     }
 
-    console.log('🚀 게시글 수정 시작')
     setIsEditing(true)
     try {
       const updateData = {
@@ -436,10 +400,8 @@ export default function Board() {
         color: editPostColor
       }
 
-      console.log('📤 수정할 데이터:', updateData)
 
       await updatePost(selectedPost.id, updateData)
-      console.log('📥 수정 API 응답 완료')
       
       // 수정 후 목록 새로고침
       if (groupId) {
@@ -450,10 +412,9 @@ export default function Board() {
       // 모달 닫기
       closeEditModal()
       closeModal()
-      console.log('🔒 모달 닫기 완료')
     } catch (e: unknown) {
       const error = e as { response?: { status?: number; data?: unknown; headers?: unknown } }
-      console.error('❌ [updatePost] FAILED', {
+      console.error('[updatePost] FAILED', {
         error: e,
         status: error?.response?.status,
         data: error?.response?.data,
@@ -461,7 +422,6 @@ export default function Board() {
       })
       alert('게시글 수정에 실패했습니다.')
     } finally {
-      console.log('🏁 수정 프로세스 종료, isEditing:', false)
       setIsEditing(false)
     }
   }
@@ -535,12 +495,6 @@ export default function Board() {
 
   // 닉네임 수정 처리
   const handleNicknameUpdate = async (newNickname: string) => {
-    console.log('🚀 닉네임 수정 시작:', {
-      newNickname,
-      groupId,
-      myGroupMemberInfo,
-      currentMemberId
-    })
 
     if (!groupId) {
       throw new Error('그룹 ID를 찾을 수 없습니다.')
@@ -564,11 +518,8 @@ export default function Board() {
         profileImageUrl: myGroupMemberInfo?.profileImageUrl || ''
       }
 
-      console.log('📤 API 요청 데이터:', updatedMemberData)
-      console.log('📡 요청 URL:', `/api/groups/${groupId}/members/me`)
 
-      const response = await updateMyGroupMemberInfo(groupId, updatedMemberData)
-      console.log('📥 API 응답:', response)
+      await updateMyGroupMemberInfo(groupId, updatedMemberData)
       
       // 성공 시 상태 업데이트
       setCurrentNickname(newNickname)
@@ -578,9 +529,8 @@ export default function Board() {
       const groupInfo = await fetchGroupMembers(groupId)
       setGroupMembers(groupInfo)
       
-      console.log('✅ 닉네임 수정 완료:', newNickname)
     } catch (error: unknown) {
-      console.error('❌ 닉네임 수정 실패:', {
+      console.error('닉네임 수정 실패:', {
         error,
         message: error instanceof Error ? error.message : 'Unknown error',
         response: error && typeof error === 'object' && 'response' in error ? (error as { response?: { data?: unknown } }).response?.data : undefined,
@@ -617,28 +567,18 @@ export default function Board() {
     }
 
     // 사용자 ID 디버깅 및 fallback 처리
-    console.log('🔍 사용자 ID 확인:', {
-      currentMemberId,
-      type: typeof currentMemberId,
-      fromAuth: getCurrentMemberId(),
-      hasToken: !!getAccessToken(),
-      tokenValue: getAccessToken() ? getAccessToken()?.substring(0, 20) + '...' : 'NO_TOKEN'
-    })
 
     let memberIdToUse = currentMemberId
     
     if (!memberIdToUse) {
       // JWT 토큰에서 직접 추출 시도
       const userFromToken = getCurrentUser()
-      console.log('🔍 JWT 토큰에서 사용자 정보 추출 시도:', userFromToken)
       
       if (userFromToken?.memberId) {
         memberIdToUse = userFromToken.memberId
-        console.log('✅ JWT 토큰에서 memberId 추출 성공:', memberIdToUse)
       } else {
         // 마지막 fallback: 임시 ID 사용 (테스트용)
         memberIdToUse = 7
-        console.log('⚠️ 임시 memberId 사용 (테스트용):', memberIdToUse)
       }
     }
 
@@ -647,10 +587,8 @@ export default function Board() {
       return
     }
 
-    console.log('🚀 새 글 작성 시작')
     setIsSubmitting(true)
     
-    console.log(userName)
     
     // API 요청 데이터 준비 (catch 블록에서도 접근 가능하도록 try 블록 밖에 선언)
     const postData = {
@@ -670,28 +608,11 @@ export default function Board() {
         throw new Error(`유효하지 않은 색상입니다: ${newPostColor}`)
       }
 
-      console.log('📤 전송할 데이터:', postData)
-      console.log('📤 userName 값:', userName)
 
-      console.log('🚀 API 요청 시작:', {
-        endpoint: 'POST /api/posts',
-        data: postData,
-        dataStringified: JSON.stringify(postData)
-      })
 
       // API 요청 전 최종 데이터 검증
-      console.log('🔍 최종 데이터 검증:', {
-        groupId: typeof groupId === 'number' ? groupId : 'INVALID',
-        memberId: typeof memberIdToUse === 'number' ? memberIdToUse : 'INVALID',
-        type: newPostCategory,
-        title: newPostTitle.trim(),
-        content: newPostContent.trim(),
-        color: newPostColor,
-        colorValid: validColors.includes(newPostColor)
-      })
 
       await createPost(postData)
-      console.log('📥 API 응답 완료')
       
       // 새 글 작성 후 목록 새로고침
       const data = await fetchGroupPosts({ groupId, type: activeTab, status: 'ACTIVE' })
@@ -699,7 +620,6 @@ export default function Board() {
       setCurrentPage(1)
       
       closeNewPostModal()
-      console.log('🔒 모달 닫기 완료')
     } catch (e: unknown) {
       const error = e as { 
         response?: { 
@@ -716,7 +636,7 @@ export default function Board() {
         config?: unknown; 
         message?: string 
       }
-      console.error('❌ [createPost] FAILED', {
+      console.error('[createPost] FAILED', {
         error: e,
         status: error?.response?.status,
         statusText: error?.response?.statusText,
@@ -748,7 +668,6 @@ export default function Board() {
       setErrorMessage(errorMessage)
       setShowErrorModal(true)
     } finally {
-      console.log('🏁 작성 프로세스 종료, isSubmitting:', false)
       setIsSubmitting(false)
     }
   }

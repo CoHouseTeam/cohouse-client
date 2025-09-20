@@ -71,11 +71,6 @@ export const useAuth = () => {
                 m.email === currentUser.email
               )
               isGroupLeader = userMember?.isLeader === true
-              console.log('🔍 그룹 멤버 정보:', {
-                currentUser: currentUser.name,
-                userMember,
-                isGroupLeader
-              })
             }
           } catch (groupError) {
             console.log('그룹 멤버 정보 가져오기 실패:', groupError)
@@ -107,14 +102,6 @@ export const useAuth = () => {
       // 그룹 멤버 정보가 있으면 무조건 모든 메뉴 접근 가능
       const canAccessFeatures = isGroupMember || hasGroup
 
-      console.log('🔍 최종 권한 설정:', {
-        hasGroup,
-        isGroupMember,
-        isGroupLeader,
-        canAccessFeatures,
-        canShareGroup,
-        canCreateAnnouncement
-      })
 
       setPermissions({
         isAuthenticated,

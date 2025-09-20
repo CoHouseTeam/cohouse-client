@@ -21,7 +21,7 @@ import { safeArray } from '../libs/utils/safeArray'
 
 const MainPage = () => {
   const { selectedDate, setSelectedDate } = useCalendarStore()
-  const { userAuthenticated, userName } = useUserProfile()
+  const { userAuthenticated } = useUserProfile()
   const { loadingGroup, errorGroup, hasGroups, groupId } = useGroupData(userAuthenticated)
   const myMemberId = useGroupStore((state) => state.myMemberId)
 
@@ -192,50 +192,133 @@ const MainPage = () => {
   }, [userAuthenticated, groupId, myMemberId, selectedDate])
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-#242424">반가워요, {userName || '사용자'}님!</h3>
+    <div className="min-h-screen bg-gray-50">
 
-      {loadingGroup && <LoadingSpinner />}
-      {errorGroup && <div className="text-red-600">{errorGroup}</div>}
+      {/* 메인 컨텐츠 */}
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {loadingGroup && (
+          <div className="flex justify-center items-center py-16">
+            <LoadingSpinner />
+          </div>
+        )}
+        
+        {errorGroup && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+            <p className="text-red-600 font-medium">{errorGroup}</p>
+          </div>
+        )}
 
-      {!loadingGroup && !errorGroup && (
-        <>
-          {!hasGroups ? (
-            <GroupBox />
-          ) : (
-            <>
-              {loadingAssignments && <LoadingSpinner />}
-              {errorAssignments && <div className="text-red-600">{errorAssignments}</div>}
+        {!loadingGroup && !errorGroup && (
+          <>
+            {!hasGroups ? (
+              <GroupBox />
+            ) : (
+              <div className="space-y-8">
+                {/* 로딩 상태들 */}
+                {loadingAssignments && (
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <div className="flex items-center justify-center py-8">
+                      <LoadingSpinner />
+                      <span className="ml-3 text-gray-600">업무를 불러오는 중...</span>
+                    </div>
+                  </div>
+                )}
+                
+                {errorAssignments && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                    <p className="text-red-600 font-medium">{errorAssignments}</p>
+                  </div>
+                )}
 
-              {loadingAnnouncements && <LoadingSpinner />}
-              {errorAnnouncements && <div className="text-red-600">{errorAnnouncements}</div>}
+                {loadingAnnouncements && (
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <div className="flex items-center justify-center py-8">
+                      <LoadingSpinner />
+                      <span className="ml-3 text-gray-600">공지사항을 불러오는 중...</span>
+                    </div>
+                  </div>
+                )}
+                
+                {errorAnnouncements && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                    <p className="text-red-600 font-medium">{errorAnnouncements}</p>
+                  </div>
+                )}
 
-              {loadingSettlements && <LoadingSpinner />}
-              {errorSettlements && <div className="text-red-600">{errorSettlements}</div>}
+                {loadingSettlements && (
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <div className="flex items-center justify-center py-8">
+                      <LoadingSpinner />
+                      <span className="ml-3 text-gray-600">정산 내역을 불러오는 중...</span>
+                    </div>
+                  </div>
+                )}
+                
+                {errorSettlements && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                    <p className="text-red-600 font-medium">{errorSettlements}</p>
+                  </div>
+                )}
 
-              {!loadingAssignments && !errorAssignments && (
-                <TodoListBox todos={todayAssignments} groupId={groupId} memberId={myMemberId} />
-              )}
+                {/* 오늘의 할 일 */}
+                {!loadingAssignments && !errorAssignments && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <h2 className="text-xl font-bold text-black">오늘의 할 일</h2>
+                      <p className="text-gray-600 mt-1">오늘 해야 할 업무를 확인해보세요</p>
+                    </div>
+                    <div className="p-6">
+                      <TodoListBox todos={todayAssignments} groupId={groupId} memberId={myMemberId} />
+                    </div>
+                  </div>
+                )}
 
-              <CalendarBox
-                onDateSelect={setSelectedDate}
-                value={selectedDate}
-                scheduledDates={assignmentDates}
-                announcementDates={announcementDates}
-                settlementDates={settlementDates}
-              />
-              <CalendarDateDetails
-                selectedDate={selectedDate}
-                events={[
-                  ...myAssignments,
-                  ...announcementSelectedDate,
-                  ...selectedDaySettlementTitles,
-                ]}
-              />
-            </>
-          )}
-        </>
-      )}
+                {/* 캘린더 섹션 */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-black">캘린더</h2>
+                    <p className="text-gray-600 mt-1">일정과 이벤트를 한눈에 확인하세요</p>
+                  </div>
+                  <div className="p-6">
+                    <CalendarBox
+                      onDateSelect={setSelectedDate}
+                      value={selectedDate}
+                      scheduledDates={assignmentDates}
+                      announcementDates={announcementDates}
+                      settlementDates={settlementDates}
+                    />
+                  </div>
+                </div>
+
+                {/* 선택한 날짜 상세 */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-black">
+                      {selectedDate.toLocaleDateString('ko-KR', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        weekday: 'long'
+                      })}
+                    </h2>
+                    <p className="text-gray-600 mt-1">선택한 날짜의 이벤트와 할 일입니다</p>
+                  </div>
+                  <div className="p-6">
+                    <CalendarDateDetails
+                      selectedDate={selectedDate}
+                      events={[
+                        ...myAssignments,
+                        ...announcementSelectedDate,
+                        ...selectedDaySettlementTitles,
+                      ]}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   )
 }
