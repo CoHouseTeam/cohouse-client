@@ -35,7 +35,7 @@ VITE_API_BASE_URL=/api
 VITE_USE_MSW=false
 
 # Vercel deployment
-VITE_API_BASE_URL=/api/proxy
+VITE_API_BASE_URL=/api
 VITE_USE_MSW=false
 ```
 
