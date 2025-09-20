@@ -46,6 +46,8 @@ const GroupInviteInputModal: React.FC<ModalProps> = ({ onClose }) => {
       }
       toast.error(errorMessage)
       setError(errorMessage)
+    } finally {
+      setLoading(false)
     }
   }
 
