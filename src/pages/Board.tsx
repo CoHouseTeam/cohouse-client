@@ -79,26 +79,30 @@ export default function Board() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        
-        // 현재 사용자 ID 가져오기
-        const memberId = await getCurrentMemberId()
-        
-        setCurrentMemberId(memberId)
+        console.log('🔍 초기 데이터 로딩 시작')
         
         // 그룹 ID 가져오기
         const currentGroupId = await getCurrentGroupId()
         setGroupId(currentGroupId)
+        console.log('✅ 그룹 ID:', currentGroupId)
         
         // 그룹이 없는 경우 에러가 아닌 안내 메시지로 설정
         if (!currentGroupId) {
           setError('그룹에 속해있지 않습니다. 그룹에 가입하거나 그룹을 생성해주세요.')
-        } else {
-          setError(null)
+          return
         }
+        
+        // 현재 사용자 ID 가져오기 (그룹이 있을 때만)
+        const memberId = await getCurrentMemberId()
+        setCurrentMemberId(memberId)
+        console.log('✅ 현재 사용자 ID:', memberId)
+        
+        setError(null)
       } catch (error) {
         console.error('초기 데이터 가져오기 실패:', error)
         setError('그룹 정보를 가져올 수 없습니다. 로그인이 필요할 수 있습니다.')
         setGroupId(null)
+        setCurrentMemberId(null)
       }
     }
     fetchInitialData()
@@ -241,42 +245,40 @@ export default function Board() {
 
   // 현재 사용자가 게시글 작성자인지 확인하는 함수
   const isPostAuthor = (postMemberId: number) => {
-    // JWT 토큰에서 사용자 정보 가져오기
+    // JWT 토큰에서 현재 사용자 이름 가져오기
     const userFromToken = getCurrentUser()
-    const tokenMemberId = userFromToken?.memberId
-    const tokenName = userFromToken?.name
+    const currentUserName = userFromToken?.name
     
     // 게시글 작성자 닉네임 가져오기
     const postAuthorNickname = getNicknameByMemberId(postMemberId)
-
     
-    // JWT 토큰에서 추출한 ID 사용 (우선순위)
-    if (tokenMemberId && tokenMemberId > 0) {
-      const isAuthor = tokenMemberId === postMemberId
+    console.log('🔍 권한 확인 디버깅:', {
+      postMemberId,
+      currentUserName,
+      postAuthorNickname,
+      myGroupMemberInfo,
+      currentMemberId
+    })
+    
+    // 닉네임으로 비교 (가장 간단하고 확실한 방법)
+    if (currentUserName && postAuthorNickname && postAuthorNickname !== '익명') {
+      const isAuthor = currentUserName === postAuthorNickname
+      console.log('✅ 닉네임으로 권한 확인:', isAuthor, { currentUserName, postAuthorNickname })
       return isAuthor
     }
     
-    // memberId가 없는 경우, JWT의 name과 게시글 작성자 닉네임 비교
-    if (tokenName && postAuthorNickname && postAuthorNickname !== '익명') {
-      const isAuthorByName = tokenName === postAuthorNickname
-      return isAuthorByName
+    // fallback: ID로 비교
+    if (myGroupMemberInfo?.memberId === postMemberId) {
+      console.log('✅ 내 그룹 멤버 정보로 권한 확인:', true)
+      return true
     }
     
-    // 닉네임이 '익명'으로 표시되는 경우, 그룹 멤버 정보에서 정확한 닉네임 찾기
-    if (tokenName && groupMembers.length > 0) {
-      const member = groupMembers.find(m => m.memberId === postMemberId)
-      if (member && member.nickname && member.nickname !== '익명') {
-        const isAuthorByMemberName = tokenName === member.nickname
-        return isAuthorByMemberName
-      }
+    if (currentMemberId === postMemberId) {
+      console.log('✅ currentMemberId로 권한 확인:', true)
+      return true
     }
     
-    // fallback: state의 currentMemberId 사용
-    if (currentMemberId) {
-      const isAuthor = currentMemberId === postMemberId
-      return isAuthor
-    }
-    
+    console.log('❌ 권한 확인 실패')
     return false
   }
 
@@ -911,7 +913,11 @@ export default function Board() {
                 {/* 수정/삭제 버튼 (작성자만 표시) */}
                 {(() => {
                   const isAuthor = isPostAuthor(selectedPost.memberId)
-                  return isAuthor
+                  console.log('🔍 수정/삭제 버튼 표시 여부:', isAuthor, '게시글 작성자 ID:', selectedPost.memberId)
+                  
+                  // 임시로 모든 게시글에 버튼 표시 (테스트용)
+                  console.log('🧪 임시 테스트: 모든 게시글에 수정/삭제 버튼 표시')
+                  return true
                 })() && (
                   <>
                     <button
