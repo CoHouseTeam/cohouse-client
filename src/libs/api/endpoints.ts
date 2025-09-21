@@ -143,17 +143,25 @@ export const POST_ENDPOINTS = {
 // 🔔 Notification endpoints
 export const NOTIFICATION_ENDPOINTS = {
   // 알림 목록 (타입 및 읽음 상태 필터링 지원)
-  LIST: 'api/notifications',
+  LIST: '/api/notifications',
 
   // 읽지 않은 알림 개수
-  UNREAD_COUNT: 'api/notifications/unread-count',
+  UNREAD_COUNT: '/api/notifications/unread-count',
 
   // 알림 읽음 처리
-  MARK_READ: (notificationId: number) => `api/notifications/${notificationId}/read`,
+  MARK_READ: (notificationId: number) => `/api/notifications/${notificationId}/read`,
 
   // 모든 알림 삭제
-  DELETE_ALL: 'api/notifications/all',
+  DELETE_ALL: '/api/notifications/all',
 
   // 알림 설정 (GET / PUT 공용)
-  SETTINGS: 'api/notifications/settings',
+  SETTINGS: '/api/notifications/settings',
+} as const
+
+export const PUSH_ENDPOINTS = {
+  // POST: 토큰 등록
+  REGISTER: '/api/fcm-tokens',
+
+  // DELETE: 토큰 삭제
+  DELETE_BY_ID: (tokenId: number) => `/api/fcm-tokens/${tokenId}`,
 } as const

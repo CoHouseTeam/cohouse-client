@@ -9,19 +9,19 @@ import { NOTIFICATION_ENDPOINTS } from './endpoints'
 
 // 알림 목록 조회
 export const getNotifications = async (): Promise<Notification[]> => {
-  const response = await api.get('/api/notifications')
+  const response = await api.get(NOTIFICATION_ENDPOINTS.LIST)
   return response.data
 }
 
 // 읽지 않은 알림 개수 조회
 export const getUnreadCount = async (): Promise<UnreadCountResponse> => {
-  const response = await api.get('/api/notifications/unread-count')
+  const response = await api.get(NOTIFICATION_ENDPOINTS.UNREAD_COUNT)
   return response.data
 }
 
 // 알림 읽음 처리
 export const markNotificationAsRead = async (notificationId: number): Promise<void> => {
-  await api.put(`/api/notifications/${notificationId}/read`)
+  await api.put(NOTIFICATION_ENDPOINTS.MARK_READ(notificationId))
 }
 
 // 새 알림 생성
@@ -33,7 +33,7 @@ export const createNotification = async (
     console.log('📤 알림 생성 요청 데이터:', data)
     console.log('📤 isAppActive:', isAppActive)
 
-    const response = await api.post('/api/notifications', data, {
+    const response = await api.post(NOTIFICATION_ENDPOINTS.LIST, data, {
       headers: {
         isAppActive: isAppActive.toString(),
       },
@@ -70,7 +70,7 @@ export const createNotification = async (
 
 // 모든 알림 삭제
 export const deleteAllNotifications = async (): Promise<void> => {
-  await api.delete('/api/notifications/all')
+  await api.delete(NOTIFICATION_ENDPOINTS.DELETE_ALL)
 }
 
 export type NotificationSettings = {

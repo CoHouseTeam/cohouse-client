@@ -3,6 +3,7 @@ import { Bell, X, Trash2, Check } from 'lucide-react'
 
 import { useAuth } from '../contexts/AuthContext'
 import {
+  // useCreateNotification,
   useDeleteAllNotifications,
   useMarkNotificationRead,
   useNotificationList,
@@ -21,6 +22,8 @@ export default function NotificationSidebar({ isOpen, onClose }: NotificationSid
   const { data: list = [], isLoading, refetch } = useNotificationList()
   const { mutateAsync: markRead } = useMarkNotificationRead()
   const { mutateAsync: clearAll, isPending: deleting } = useDeleteAllNotifications()
+
+  // const { mutateAsync: createTest } = useCreateNotification()
 
   // 터치 제스처를 위한 ref와 상태
   const sidebarRef = useRef<HTMLDivElement>(null)
@@ -128,6 +131,23 @@ export default function NotificationSidebar({ isOpen, onClose }: NotificationSid
     if (diffInHours < 48) return '어제'
     return date.toLocaleDateString('ko-KR')
   }
+
+  // 임시 테스트 알림 생성 버튼 핸들러
+  // const handleCreateTest = async () => {
+  //   try {
+  //     await createTest({
+  //       body: {
+  //         type: 'SETTLEMENT',
+  //         title: '테스트 알림',
+  //         content: '프론트에서 직접 생성했어요',
+  //       },
+  //       // isAppActive: false  // 필요시
+  //     })
+  //     alert('테스트 알림 생성 요청 보냈습니다 ✅')
+  //   } catch (e) {
+  //     console.error('❌ 알림 생성 실패:', e)
+  //   }
+  // }
 
   if (!isOpen) return null
 
